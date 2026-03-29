@@ -280,10 +280,12 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-seri
     <button class="chip" onclick="selIntro(30)">30秒</button>
   </div>
   
-  <div class="sec-lbl" style="margin:20px 0 10px">URLで遊ぶ (YouTube公開プレイリスト)</div>
-  <div style="display:flex;gap:8px;margin-bottom:28px">
-    <input type="text" id="custom-url" class="setup-inp" style="margin-top:0;flex:1" placeholder="https://youtube.com/playlist?list=...">
-    <button class="btn-sm" style="background:var(--red);color:#fff;border:none;padding:0 16px;font-weight:700" onclick="loadCustomUrl()">開始</button>
+  <div id="yt-url-section" class="hidden">
+    <div class="sec-lbl" style="margin:20px 0 10px">URLで遊ぶ (YouTube公開プレイリスト)</div>
+    <div style="display:flex;gap:8px;margin-bottom:28px">
+      <input type="text" id="custom-url" class="setup-inp" style="margin-top:0;flex:1" placeholder="https://youtube.com/playlist?list=...">
+      <button class="btn-sm" style="background:var(--red);color:#fff;border:none;padding:0 16px;font-weight:700" onclick="loadCustomUrl()">開始</button>
+    </div>
   </div>
 
   <button class="btn-start" id="btn-start" onclick="goPlaylist()">自分のプレイリストを選ぶ ▶</button>
@@ -408,6 +410,7 @@ function applyTheme(){
   const bar=document.getElementById('q-bar');if(bar)bar.className=`prog-fill ${y?'yt':'sp'}`;
   const sc=document.getElementById('q-score');if(sc)sc.className=`score-badge ${y?'yt':'sp'}`;
   document.querySelectorAll('.wave-bar').forEach(el=>el.classList.toggle('yt',y));
+  const urlSec=document.getElementById('yt-url-section');if(urlSec)urlSec.classList.toggle('hidden',!y);
 }
 
 // SERVICE
@@ -495,7 +498,7 @@ function goPlaylist(){const y=svc==='youtube';const m=document.getElementById('p
 // CUSTOM URL
 async function loadCustomUrl() {
   if (svc !== 'youtube') {
-    showDlg('YouTubeモードに切り替えてください', 'URL入力機能は現在YouTubeのプレイリストにのみ対応しています。画面上部の「切替」ボタンからYouTubeを選択してください。', [{l:'閉じる', a:()=>{}}]);
+    showDlg('YouTube Musicに切り替えてください', 'URL入力機能は現在YouTubeのプレイリストにのみ対応しています。画面上部の「切替」ボタンからYouTube Musicを選択してください。', [{l:'閉じる', a:()=>{}}]);
     return;
   }
   const urlStr = document.getElementById('custom-url').value.trim();

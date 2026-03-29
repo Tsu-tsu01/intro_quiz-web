@@ -1,0 +1,1425 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>イントロクイズ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #0a0a0f;
+  --surface: #141420;
+  --card:    #1c1c2e;
+  --green:   #1db954;
+  --green2:  #17a347;
+  --accent:  #9b59b6;
+  --gold:    #ffd700;
+  --wrong:   #e74c3c;
+  --correct: #2ecc71;
+  --text:    #eeeeee;
+  --sub:     #888899;
+  --border:  #2a2a3e;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans JP', 'Space Grotesk', sans-serif;
+  min-height: 100vh;
+  background-image:
+    radial-gradient(ellipse at 20% 50%, rgba(29,185,84,.07) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 20%, rgba(155,89,182,.05) 0%, transparent 50%);
+}
+
+/* ── ユーティリティ ── */
+.hidden { display: none !important; }
+.fade-in { animation: fadeIn .3s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:none } }
+@keyframes scaleIn { from { transform:scale(.7); opacity:0 } to { transform:scale(1); opacity:1 } }
+@keyframes slideUp { from { opacity:0; transform:translateY(20px) } to { opacity:1; transform:none } }
+@keyframes pulse { 0%,100% { transform:scale(1) } 50% { transform:scale(1.06) } }
+
+/* ── レイアウト ── */
+#app { max-width: 560px; margin: 0 auto; min-height: 100vh; display:flex; flex-direction:column; }
+
+/* ═══════════════════════════════════════
+   LOGIN
+═══════════════════════════════════════ */
+#screen-login {
+  flex:1; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; padding:40px 32px;
+}
+.logo-wrap {
+  width:96px; height:96px; border-radius:28px;
+  background: linear-gradient(135deg, var(--green), var(--green2));
+  display:flex; align-items:center; justify-content:center;
+  box-shadow: 0 0 40px rgba(29,185,84,.4);
+  animation: scaleIn .5s cubic-bezier(.34,1.56,.64,1);
+  margin-bottom:28px;
+  font-size: 48px;
+}
+.app-title {
+  font-size:32px; font-weight:700; letter-spacing:3px;
+  animation: slideUp .4s .15s both ease;
+}
+.app-sub {
+  color:var(--sub); font-size:14px; line-height:1.8;
+  text-align:center; margin-top:8px;
+  animation: slideUp .4s .25s both ease;
+}
+.btn-login {
+  margin-top:48px; width:100%; padding:16px 32px;
+  background:var(--green); color:#000;
+  border:none; border-radius:32px; font-size:16px;
+  font-weight:700; cursor:pointer; transition:opacity .2s,transform .1s;
+  font-family: inherit;
+  animation: slideUp .4s .4s both ease;
+}
+.btn-login:hover { opacity:.88; transform:translateY(-1px); }
+.login-note {
+  margin-top:16px; font-size:11px; color:var(--sub); text-align:center;
+  animation: slideUp .4s .5s both ease;
+}
+
+/* ═══════════════════════════════════════
+   HOME
+═══════════════════════════════════════ */
+#screen-home {
+  flex:1; display:flex; flex-direction:column; padding:24px 20px;
+}
+.home-header { display:flex; align-items:center; gap:12px; margin-bottom:28px; }
+.home-icon {
+  width:38px; height:38px; border-radius:11px;
+  background:linear-gradient(135deg,var(--green),var(--green2));
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px;
+}
+.home-title { font-size:20px; font-weight:700; flex:1; }
+.btn-logout {
+  background:none; border:1px solid var(--border); color:var(--sub);
+  padding:6px 12px; border-radius:8px; cursor:pointer; font-size:12px;
+  font-family:inherit; transition: border-color .2s;
+}
+.btn-logout:hover { border-color:var(--sub); color:var(--text); }
+
+.section-label {
+  font-size:12px; font-weight:700; color:var(--sub);
+  letter-spacing:1.5px; text-transform:uppercase; margin-bottom:10px;
+}
+.mode-card {
+  display:flex; align-items:center; gap:14px;
+  padding:14px 18px; border-radius:16px; border:1.5px solid var(--border);
+  background:var(--card); cursor:pointer; margin-bottom:10px;
+  transition: all .2s; user-select:none;
+}
+.mode-card:hover { border-color:var(--green); }
+.mode-card.selected {
+  background:linear-gradient(135deg,var(--green),var(--green2));
+  border-color:transparent;
+  box-shadow: 0 4px 20px rgba(29,185,84,.35);
+}
+.mode-emoji { font-size:26px; }
+.mode-info { flex:1; }
+.mode-name {
+  font-size:16px; font-weight:700; color:var(--text);
+  transition:color .15s;
+}
+.mode-card.selected .mode-name,
+.mode-card.selected .mode-desc { color:#000; }
+.mode-desc { font-size:12px; color:var(--sub); margin-top:2px; transition:color .15s; }
+.mode-check { font-size:20px; opacity:0; transition:opacity .15s; }
+.mode-card.selected .mode-check { opacity:1; }
+
+.intro-chips { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:28px; }
+.chip {
+  padding:8px 16px; border-radius:20px; border:1.5px solid var(--border);
+  background:var(--card); color:var(--text); font-size:14px; font-weight:700;
+  cursor:pointer; transition:all .18s; font-family:inherit;
+}
+.chip.selected { background:var(--green); border-color:var(--green); color:#000; }
+.chip:hover:not(.selected) { border-color:var(--sub); }
+
+.btn-start {
+  margin-top:auto; width:100%; padding:18px; border:none; border-radius:32px;
+  background:var(--green); color:#000; font-size:17px; font-weight:700;
+  cursor:pointer; transition:opacity .2s, transform .1s; font-family:inherit;
+}
+.btn-start:hover { opacity:.88; transform:translateY(-1px); }
+
+/* ═══════════════════════════════════════
+   PLAYLIST
+═══════════════════════════════════════ */
+#screen-playlist { flex:1; display:flex; flex-direction:column; }
+.screen-header {
+  display:flex; align-items:center; gap:8px; padding:12px 16px 8px;
+}
+.btn-back {
+  background:none; border:none; color:var(--text); font-size:22px;
+  cursor:pointer; padding:4px 8px; border-radius:8px;
+  transition:background .15s;
+}
+.btn-back:hover { background:var(--surface); }
+.screen-title { font-size:17px; font-weight:700; flex:1; }
+.screen-meta { font-size:12px; color:var(--green); }
+
+.relogin-banner {
+  margin:0 16px 8px; padding:10px 14px;
+  background:rgba(29,185,84,.1); border:1px solid rgba(29,185,84,.3);
+  border-radius:10px; font-size:12px; color:var(--green);
+  display:flex; align-items:center; gap:8px;
+}
+.btn-relogin {
+  background:none; border:1px solid rgba(29,185,84,.5); color:var(--green);
+  padding:4px 10px; border-radius:6px; font-size:11px; cursor:pointer;
+  font-family:inherit; margin-left:auto; white-space:nowrap;
+  transition:background .15s;
+}
+.btn-relogin:hover { background:rgba(29,185,84,.15); }
+
+.playlist-grid {
+  display:grid; grid-template-columns:1fr 1fr; gap:12px;
+  padding:4px 16px 24px; overflow-y:auto; flex:1;
+}
+.playlist-card {
+  border-radius:16px; overflow:hidden; cursor:pointer;
+  border:1.5px solid var(--border);
+  background:linear-gradient(135deg,#1c1c30,#141422);
+  transition:transform .15s, border-color .15s, box-shadow .15s;
+}
+.playlist-card:hover {
+  transform:translateY(-3px); border-color:var(--green);
+  box-shadow:0 8px 24px rgba(29,185,84,.2);
+}
+.playlist-img {
+  width:100%; aspect-ratio:1; object-fit:cover; display:block;
+  background:var(--surface);
+}
+.playlist-img-placeholder {
+  width:100%; aspect-ratio:1;
+  background:var(--surface); display:flex; align-items:center;
+  justify-content:center; font-size:40px; color:var(--border);
+}
+.playlist-info { padding:10px; }
+.playlist-name {
+  font-size:13px; font-weight:700; color:var(--text);
+  display:-webkit-box; -webkit-line-clamp:2;
+  -webkit-box-orient:vertical; overflow:hidden;
+}
+
+.loading-center {
+  flex:1; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:16px;
+}
+.spinner {
+  width:40px; height:40px; border:3px solid var(--border);
+  border-top-color:var(--green); border-radius:50%;
+  animation:spin .8s linear infinite;
+}
+@keyframes spin { to { transform:rotate(360deg) } }
+.loading-text { color:var(--sub); font-size:14px; text-align:center; line-height:1.7; }
+
+/* ═══════════════════════════════════════
+   QUIZ
+═══════════════════════════════════════ */
+#screen-quiz {
+  flex:1; display:flex; flex-direction:column; padding:12px 16px 12px;
+}
+.quiz-topbar {
+  display:flex; align-items:center; gap:8px; margin-bottom:8px;
+}
+.btn-quit {
+  background:none; border:none; color:var(--sub); font-size:20px;
+  cursor:pointer; padding:4px; border-radius:6px; transition:color .15s;
+}
+.btn-quit:hover { color:var(--text); }
+.quiz-progress { flex:1; }
+.quiz-progress-label {
+  font-size:14px; font-weight:700; color:var(--text); margin-bottom:3px;
+}
+.progress-bar-wrap {
+  height:3px; background:var(--border); border-radius:2px; overflow:hidden;
+}
+.progress-bar-fill {
+  height:100%; background:var(--green); border-radius:2px;
+  transition:width .3s ease;
+}
+.combo-badge {
+  padding:3px 10px; border-radius:10px;
+  border:1px solid var(--accent); color:var(--accent);
+  font-size:12px; font-weight:700; background:rgba(155,89,182,.15);
+  animation: pulse .4s ease;
+}
+.lives { display:flex; gap:2px; font-size:16px; }
+.score-badge {
+  padding:4px 12px; border-radius:12px;
+  background:linear-gradient(135deg,var(--green),var(--green2));
+  color:#000; font-weight:700; font-size:15px;
+}
+
+/* タイマー */
+.timer-wrap {
+  display:flex; align-items:center; justify-content:center;
+  flex:0 0 auto; margin:8px 0;
+}
+.timer-svg { width:min(44vw,200px); height:min(44vw,200px); }
+.timer-center {
+  position:absolute; display:flex; align-items:center;
+  justify-content:center; flex-direction:column;
+}
+.timer-container {
+  position:relative; display:flex; align-items:center; justify-content:center;
+}
+
+/* 波形アニメーション */
+.wave { display:flex; align-items:center; gap:4px; height:52px; }
+.wave-bar {
+  width:7px; border-radius:4px; background:var(--green);
+  animation:waveAnim 1s ease-in-out infinite;
+}
+.wave-bar:nth-child(1) { animation-delay:0s; }
+.wave-bar:nth-child(2) { animation-delay:.15s; }
+.wave-bar:nth-child(3) { animation-delay:.3s; }
+.wave-bar:nth-child(4) { animation-delay:.15s; }
+.wave-bar:nth-child(5) { animation-delay:0s; }
+@keyframes waveAnim {
+  0%,100% { height:12px; opacity:.5 }
+  50% { height:44px; opacity:1 }
+}
+
+/* アルバムアート（回答後） */
+.album-art {
+  width:min(44vw,200px); height:min(44vw,200px);
+  border-radius:50%; object-fit:cover;
+  animation:scaleIn .4s cubic-bezier(.34,1.56,.64,1);
+  box-shadow:0 0 32px rgba(29,185,84,.3);
+}
+.album-placeholder {
+  width:min(44vw,200px); height:min(44vw,200px); border-radius:50%;
+  background:var(--surface); display:flex; align-items:center;
+  justify-content:center; font-size:64px;
+}
+
+/* ポイント */
+.points-label {
+  text-align:center; font-size:20px; font-weight:700; color:var(--gold);
+  height:28px; animation:scaleIn .2s ease;
+}
+
+/* 曲情報 */
+.track-info {
+  text-align:center; margin:4px 0; min-height:40px;
+  animation:fadeIn .3s ease;
+}
+.track-name { font-size:16px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.track-artist { font-size:13px; color:var(--sub); }
+
+/* 4択 */
+.choices { display:flex; flex-direction:column; gap:8px; flex:1; justify-content:center; }
+.choice-btn {
+  display:flex; align-items:center; gap:12px;
+  padding:11px 14px; border-radius:14px;
+  border:1.5px solid var(--border); background:var(--card);
+  cursor:pointer; transition:all .2s; text-align:left;
+  position:relative; overflow:hidden;
+  animation:slideUp .2s ease both;
+}
+.choice-btn:nth-child(1) { animation-delay:0ms }
+.choice-btn:nth-child(2) { animation-delay:60ms }
+.choice-btn:nth-child(3) { animation-delay:120ms }
+.choice-btn:nth-child(4) { animation-delay:180ms }
+.choice-btn:hover:not(.answered) {
+  border-color:var(--green); background:rgba(29,185,84,.08);
+}
+.choice-btn.focused:not(.answered) {
+  border-color:var(--green); background:rgba(29,185,84,.12);
+  box-shadow:0 0 0 2px rgba(29,185,84,.3);
+}
+.choice-btn.correct {
+  background:rgba(46,204,113,.22); border-color:var(--correct);
+}
+.choice-btn.wrong {
+  background:rgba(231,76,60,.18); border-color:var(--wrong);
+}
+.choice-btn.missed {
+  background:rgba(29,185,84,.1); border-color:var(--green);
+}
+
+.choice-label {
+  width:30px; height:30px; border-radius:8px; background:var(--surface);
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; font-weight:700; color:var(--green); flex-shrink:0;
+  transition:all .2s;
+}
+.choice-btn.correct   .choice-label { background:rgba(0,0,0,.2); color:#000; }
+.choice-btn.wrong     .choice-label { background:rgba(0,0,0,.15); color:var(--wrong); }
+.choice-btn.missed    .choice-label { background:rgba(0,0,0,.1);  color:var(--green); }
+
+.choice-text { flex:1; min-width:0; }
+.choice-track {
+  font-size:14px; font-weight:700; color:var(--text);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.choice-artist {
+  font-size:12px; color:var(--sub);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.choice-icon { font-size:18px; flex-shrink:0; }
+
+/* キーボードヒント */
+.key-hint {
+  display:flex; justify-content:center; align-items:center; gap:6px;
+  font-size:11px; color:var(--border); margin-top:6px; height:20px;
+}
+.key {
+  padding:2px 6px; border-radius:4px; border:1px solid var(--border);
+  font-size:10px; font-weight:700; color:var(--sub);
+}
+
+/* ═══════════════════════════════════════
+   RESULT
+═══════════════════════════════════════ */
+#screen-result {
+  flex:1; display:flex; flex-direction:column;
+  padding:24px 24px; overflow-y:auto;
+}
+.result-new-high {
+  display:inline-flex; align-items:center; gap:6px;
+  padding:5px 14px; border-radius:20px; margin-bottom:12px;
+  background:linear-gradient(135deg,var(--green),var(--green2));
+  color:#000; font-size:13px; font-weight:700;
+  animation:scaleIn .6s cubic-bezier(.34,1.56,.64,1);
+}
+.result-emoji { font-size:64px; text-align:center; margin:4px 0; animation:scaleIn .5s .1s both cubic-bezier(.34,1.56,.64,1); }
+.result-rank { font-size:22px; font-weight:700; text-align:center; animation:slideUp .4s .25s both; }
+.result-playlist { font-size:13px; color:var(--sub); text-align:center; margin-top:4px; animation:slideUp .4s .3s both; }
+
+.result-card {
+  background:linear-gradient(135deg,#1c1c30,#141422);
+  border:1px solid var(--border); border-radius:20px;
+  padding:20px; margin:20px 0;
+  animation:slideUp .4s .4s both;
+}
+.result-score {
+  text-align:center; font-size:64px; font-weight:700;
+  color:var(--green); line-height:1;
+}
+.result-score-unit { font-size:14px; color:var(--sub); text-align:center; margin-bottom:16px; }
+.result-divider { height:1px; background:var(--border); margin:16px 0; }
+.result-stats { display:flex; justify-content:space-around; }
+.result-stat { text-align:center; }
+.result-stat-val { font-size:18px; font-weight:700; }
+.result-stat-label { font-size:11px; color:var(--sub); margin-top:3px; }
+.result-mode-chip {
+  margin-top:12px; text-align:center;
+  padding:6px 14px; border-radius:10px; background:var(--surface);
+  font-size:12px; color:var(--sub); display:inline-block;
+}
+
+.btn-action {
+  width:100%; padding:15px; border:none; border-radius:28px;
+  font-size:15px; font-weight:700; cursor:pointer; margin-bottom:10px;
+  font-family:inherit; transition:opacity .2s, transform .1s;
+}
+.btn-action:hover { opacity:.88; transform:translateY(-1px); }
+.btn-primary { background:var(--green); color:#000; }
+.btn-secondary { background:var(--card); color:var(--text); border:1px solid var(--border); }
+.btn-accent { background:rgba(155,89,182,.25); color:var(--accent); border:1px solid var(--accent); }
+
+/* ── 復習 ── */
+.review-list { margin-top:12px; display:flex; flex-direction:column; gap:10px; }
+.review-card {
+  display:flex; align-items:center; gap:12px;
+  padding:12px 14px; border-radius:14px;
+  background:var(--card); border:1px solid var(--border);
+  animation:fadeIn .3s ease both;
+}
+.review-art {
+  width:52px; height:52px; border-radius:10px; object-fit:cover;
+  background:var(--surface); flex-shrink:0;
+}
+.review-info { flex:1; min-width:0; }
+.review-correct {
+  display:flex; align-items:center; gap:4px;
+  font-size:13px; font-weight:700; color:var(--text);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.review-artist { font-size:12px; color:var(--sub); margin-top:2px; }
+.review-wrong {
+  display:inline-flex; align-items:center; gap:4px; margin-top:4px;
+  padding:2px 8px; border-radius:6px;
+  background:rgba(231,76,60,.12); font-size:11px; color:var(--wrong);
+  max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.review-time { font-size:11px; color:var(--sub); flex-shrink:0; }
+
+/* ═══════════════════════════════════════
+   ERROR DIALOG
+═══════════════════════════════════════ */
+.dialog-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,.7);
+  display:flex; align-items:center; justify-content:center;
+  z-index:999; padding:24px; backdrop-filter:blur(4px);
+}
+.dialog {
+  background:var(--card); border-radius:20px; padding:24px;
+  max-width:380px; width:100%; border:1px solid var(--border);
+  animation:scaleIn .25s ease;
+}
+.dialog-title { font-size:17px; font-weight:700; margin-bottom:12px; }
+.dialog-body { font-size:13px; color:var(--sub); line-height:1.8; margin-bottom:20px; }
+.dialog-actions { display:flex; gap:10px; justify-content:flex-end; }
+.btn-dialog {
+  padding:8px 16px; border-radius:10px; border:none;
+  font-size:14px; font-weight:700; cursor:pointer; font-family:inherit;
+  transition:opacity .15s;
+}
+.btn-dialog:hover { opacity:.82; }
+.btn-dialog-cancel { background:var(--surface); color:var(--sub); }
+.btn-dialog-ok { background:var(--green); color:#000; }
+
+@media (max-width: 400px) {
+  .playlist-grid { grid-template-columns:1fr 1fr; gap:8px; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ── LOGIN ── -->
+<div id="screen-login">
+  <div class="logo-wrap">🎵</div>
+  <div class="app-title">イントロクイズ</div>
+  <div class="app-sub">Spotifyのプレイリストで<br>イントロ早押しクイズ</div>
+  <button class="btn-login" onclick="startLogin()">Spotifyでログイン</button>
+  <div class="login-note">
+    ※ Spotifyアプリ（Android/iPhone）+ Premiumアカウントが必要です<br>
+    キーボード操作対応（↑↓で選択、Enterで回答、Sでスキップ）
+  </div>
+</div>
+
+<!-- ── HOME ── -->
+<div id="screen-home" class="hidden">
+  <div class="home-header">
+    <div class="home-icon">🎵</div>
+    <div class="home-title">イントロクイズ</div>
+    <button class="btn-logout" onclick="logout()">ログアウト</button>
+  </div>
+
+  <div class="section-label" style="margin-bottom:10px">モード</div>
+  <div class="mode-card selected" data-mode="10" onclick="selectMode(this,'10')">
+    <div class="mode-emoji">🎵</div>
+    <div class="mode-info">
+      <div class="mode-name">10問</div>
+      <div class="mode-desc">10問でスコアを競う</div>
+    </div>
+    <div class="mode-check">✓</div>
+  </div>
+  <div class="mode-card" data-mode="25" onclick="selectMode(this,'25')">
+    <div class="mode-emoji">🎸</div>
+    <div class="mode-info">
+      <div class="mode-name">25問</div>
+      <div class="mode-desc">25問でスコアを競う</div>
+    </div>
+    <div class="mode-check">✓</div>
+  </div>
+  <div class="mode-card" data-mode="endless" onclick="selectMode(this,'endless')">
+    <div class="mode-emoji">♾️</div>
+    <div class="mode-info">
+      <div class="mode-name">エンドレス</div>
+      <div class="mode-desc">ハート3つ → ゲームオーバー</div>
+    </div>
+    <div class="mode-check">✓</div>
+  </div>
+
+  <div class="section-label" style="margin:20px 0 10px">イントロの長さ</div>
+  <div class="intro-chips">
+    <button class="chip" data-sec="3" onclick="selectIntro(this,3)">3秒</button>
+    <button class="chip" data-sec="5" onclick="selectIntro(this,5)">5秒</button>
+    <button class="chip selected" data-sec="10" onclick="selectIntro(this,10)">10秒</button>
+    <button class="chip" data-sec="15" onclick="selectIntro(this,15)">15秒</button>
+    <button class="chip" data-sec="30" onclick="selectIntro(this,30)">30秒</button>
+  </div>
+
+  <button class="btn-start" onclick="goPlaylist()">プレイリストを選ぶ ▶</button>
+</div>
+
+<!-- ── PLAYLIST ── -->
+<div id="screen-playlist" class="hidden">
+  <div class="screen-header">
+    <button class="btn-back" onclick="showHome()">←</button>
+    <div>
+      <div class="screen-title">プレイリスト選択</div>
+      <div class="screen-meta" id="playlist-meta"></div>
+    </div>
+    <button class="btn-relogin" onclick="reLogin()">再ログイン</button>
+  </div>
+  <div class="relogin-banner">
+    <span>ℹ️</span>
+    <span>エラーが出たら「再ログイン」をお試しください</span>
+  </div>
+  <div id="playlist-body" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+    <div class="loading-center">
+      <div class="spinner"></div>
+      <div class="loading-text">プレイリストを読み込み中...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── QUIZ ── -->
+<div id="screen-quiz" class="hidden">
+  <div class="quiz-topbar">
+    <button class="btn-quit" onclick="confirmQuit()">✕</button>
+    <div class="quiz-progress">
+      <div class="quiz-progress-label" id="q-label">1 / 10</div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="q-bar" style="width:0%"></div>
+      </div>
+    </div>
+    <div id="q-combo" class="combo-badge hidden">0コンボ</div>
+    <div id="q-lives" class="lives hidden"></div>
+    <div id="q-score" class="score-badge">0</div>
+  </div>
+
+  <!-- タイマーリング -->
+  <div class="timer-wrap">
+    <div class="timer-container">
+      <svg class="timer-svg" viewBox="0 0 200 200">
+        <circle cx="100" cy="100" r="88" fill="none" stroke="var(--border)" stroke-width="7"/>
+        <circle id="timer-ring" cx="100" cy="100" r="88" fill="none"
+          stroke="var(--green)" stroke-width="7" stroke-linecap="round"
+          stroke-dasharray="553" stroke-dashoffset="0"
+          transform="rotate(-90 100 100)"
+          style="transition:stroke-dashoffset 80ms linear,stroke .3s"/>
+      </svg>
+      <div class="timer-center" id="timer-center">
+        <div class="wave" id="wave-icon">
+          <div class="wave-bar"></div><div class="wave-bar"></div>
+          <div class="wave-bar"></div><div class="wave-bar"></div>
+          <div class="wave-bar"></div>
+        </div>
+        <img id="album-art" class="album-art hidden" src="" alt="album">
+        <div id="album-placeholder" class="album-placeholder hidden">🎵</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="points-label" id="points-label">&nbsp;</div>
+
+  <div class="track-info" id="track-info" style="opacity:0">
+    <div class="track-name" id="track-name"></div>
+    <div class="track-artist" id="track-artist"></div>
+  </div>
+
+  <div class="choices" id="choices"></div>
+
+  <div class="key-hint" id="key-hint">
+    <span class="key">↑↓</span>選択
+    <span class="key">Enter</span>回答
+    <span class="key">S</span>スキップ
+  </div>
+</div>
+
+<!-- ── RESULT ── -->
+<div id="screen-result" class="hidden">
+  <div style="text-align:center">
+    <div id="result-newhigh" class="result-new-high hidden">⭐ NEW HIGH SCORE!</div>
+    <div id="result-emoji" class="result-emoji"></div>
+    <div id="result-rank" class="result-rank"></div>
+    <div id="result-playlist-name" class="result-playlist"></div>
+  </div>
+  <div class="result-card">
+    <div id="result-score" class="result-score">0</div>
+    <div class="result-score-unit">pt</div>
+    <div class="result-divider"></div>
+    <div class="result-stats">
+      <div class="result-stat">
+        <div id="r-correct" class="result-stat-val" style="color:var(--correct)">0/0</div>
+        <div class="result-stat-label">正解数</div>
+      </div>
+      <div class="result-stat">
+        <div id="r-avg" class="result-stat-val" style="color:var(--accent)">0.0秒</div>
+        <div class="result-stat-label">平均回答</div>
+      </div>
+      <div class="result-stat">
+        <div id="r-combo" class="result-stat-val" style="color:var(--gold)">0</div>
+        <div class="result-stat-label">最大コンボ</div>
+      </div>
+    </div>
+    <div style="text-align:center">
+      <span id="r-mode" class="result-mode-chip"></span>
+    </div>
+  </div>
+
+  <div id="result-review-section"></div>
+
+  <button class="btn-action btn-primary" onclick="playAgain()">▶ もう一度</button>
+  <button class="btn-action btn-secondary" onclick="showHome()">🏠 ホームへ</button>
+</div>
+
+</div><!-- #app -->
+
+<!-- エラーダイアログ -->
+<div id="dialog" class="dialog-overlay hidden">
+  <div class="dialog">
+    <div id="dialog-title" class="dialog-title"></div>
+    <div id="dialog-body" class="dialog-body"></div>
+    <div class="dialog-actions" id="dialog-actions"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════════════════
+const CLIENT_ID   = '1f9e3f02aa1645d0a77c579a384edc3e';
+const REDIRECT    = location.origin + location.pathname; // 自動でURLを使う
+const SCOPE_VER   = '3';
+const SCOPES      = [
+  'playlist-read-private',
+  'playlist-read-collaborative',
+  'user-read-private',
+  'user-modify-playback-state',
+  'user-read-playback-state',
+].join(' ');
+
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+let accessToken   = null;
+let gameMode      = '10';
+let introSeconds  = 10;
+let allTracks     = [];
+let usedIds       = new Set();
+let currentPlaylist = null;
+
+let questionNum   = 0;
+let totalScore    = 0;
+let combo         = 0;
+let lives         = 3;
+let results       = [];
+let correctTrack  = null;
+let choices       = [];
+let answered      = false;
+let focusedChoice = 0;
+
+let tickInterval  = null;
+let autoNextTimer = null;
+let pauseTimer    = null;
+let questionStart = null;
+
+// HighScore: { score, correct, total, avgMs, bestCombo }
+function getHighScores() {
+  try { return JSON.parse(localStorage.getItem('hs_v2') || '{}'); } catch { return {}; }
+}
+function saveHighScore(playlistId, mode, session) {
+  const hs  = getHighScores();
+  const key = `${playlistId}_${mode}`;
+  const cur = hs[key];
+  if (!cur || session.score > cur.score) {
+    hs[key] = {
+      score:    session.score,
+      correct:  session.correct,
+      total:    session.total,
+      avgMs:    session.avgMs,
+      bestCombo:session.bestCombo,
+      date:     new Date().toISOString().slice(0,10),
+    };
+    localStorage.setItem('hs_v2', JSON.stringify(hs));
+    return true;
+  }
+  return false;
+}
+
+// ═══════════════════════════════════════════════════════
+//  PKCE OAuth
+// ═══════════════════════════════════════════════════════
+function b64url(buf) {
+  return btoa(String.fromCharCode(...new Uint8Array(buf)))
+    .replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
+}
+async function pkce() {
+  const v = b64url(crypto.getRandomValues(new Uint8Array(64)));
+  const h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(v));
+  return { verifier: v, challenge: b64url(h) };
+}
+
+async function startLogin() {
+  const { verifier, challenge } = await pkce();
+  sessionStorage.setItem('pkce_v', verifier);
+  localStorage.setItem('scope_ver', SCOPE_VER);
+  const url = new URL('https://accounts.spotify.com/authorize');
+  url.searchParams.set('response_type',         'code');
+  url.searchParams.set('client_id',             CLIENT_ID);
+  url.searchParams.set('scope',                 SCOPES);
+  url.searchParams.set('redirect_uri',          REDIRECT);
+  url.searchParams.set('code_challenge_method', 'S256');
+  url.searchParams.set('code_challenge',        challenge);
+  location.href = url.toString();
+}
+
+async function handleCallback(code) {
+  const verifier = sessionStorage.getItem('pkce_v');
+  if (!verifier) { showLogin(); return; }
+
+  const res = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type:    'authorization_code',
+      code,
+      redirect_uri:  REDIRECT,
+      client_id:     CLIENT_ID,
+      code_verifier: verifier,
+    }),
+  });
+
+  if (!res.ok) { showLogin(); return; }
+  const d = await res.json();
+  accessToken = d.access_token;
+  localStorage.setItem('access_token', accessToken);
+  localStorage.setItem('refresh_token', d.refresh_token || '');
+  const exp = Date.now() + (d.expires_in || 3600) * 1000;
+  localStorage.setItem('token_expiry', exp);
+  localStorage.setItem('scope_ver', SCOPE_VER);
+
+  history.replaceState({}, '', location.pathname);
+  sessionStorage.removeItem('pkce_v');
+  showHome();
+}
+
+async function getToken() {
+  const storedVer = localStorage.getItem('scope_ver');
+  if (storedVer !== SCOPE_VER) { logout(); return null; }
+
+  const expiry = parseInt(localStorage.getItem('token_expiry') || '0');
+  if (Date.now() > expiry - 300000) {
+    const ref = localStorage.getItem('refresh_token');
+    if (!ref) { logout(); return null; }
+    const res = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        grant_type:    'refresh_token',
+        refresh_token: ref,
+        client_id:     CLIENT_ID,
+      }),
+    });
+    if (!res.ok) { logout(); return null; }
+    const d = await res.json();
+    accessToken = d.access_token;
+    localStorage.setItem('access_token', accessToken);
+    localStorage.setItem('token_expiry', Date.now() + (d.expires_in||3600)*1000);
+    if (d.refresh_token) localStorage.setItem('refresh_token', d.refresh_token);
+  }
+  return accessToken || localStorage.getItem('access_token');
+}
+
+function logout() {
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+  localStorage.removeItem('token_expiry');
+  localStorage.removeItem('scope_ver');
+  accessToken = null;
+  showLogin();
+}
+function reLogin() { logout(); }
+
+// ═══════════════════════════════════════════════════════
+//  SCREEN HELPERS
+// ═══════════════════════════════════════════════════════
+function showOnly(id) {
+  ['login','home','playlist','quiz','result'].forEach(s => {
+    document.getElementById('screen-'+s).classList.toggle('hidden', s !== id);
+  });
+}
+function showLogin()    { showOnly('login'); }
+function showHome()     { showOnly('home'); }
+function showPlaylist() { showOnly('playlist'); }
+function showQuiz()     { showOnly('quiz'); }
+function showResult()   { showOnly('result'); }
+
+// ═══════════════════════════════════════════════════════
+//  HOME
+// ═══════════════════════════════════════════════════════
+function selectMode(el, mode) {
+  document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  gameMode = mode;
+}
+function selectIntro(el, sec) {
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  introSeconds = sec;
+}
+function goPlaylist() {
+  document.getElementById('playlist-meta').textContent =
+    `${gameMode==='endless'?'♾️ エンドレス':gameMode==='25'?'🎸 25問':'🎵 10問'}  ·  イントロ${introSeconds}秒`;
+  showPlaylist();
+  loadPlaylists();
+}
+
+// ═══════════════════════════════════════════════════════
+//  PLAYLIST
+// ═══════════════════════════════════════════════════════
+async function loadPlaylists() {
+  const body = document.getElementById('playlist-body');
+  body.innerHTML = `<div class="loading-center">
+    <div class="spinner"></div>
+    <div class="loading-text">プレイリストを読み込み中...</div>
+  </div>`;
+
+  const token = await getToken();
+  if (!token) return;
+
+  const playlists = [];
+  let url = 'https://api.spotify.com/v1/me/playlists?limit=50';
+
+  while (url) {
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+    if (res.status === 401 || res.status === 403) {
+      showDialog('再ログインが必要です',
+        `エラー ${res.status}。スコープが不足しています。再ログインしてください。`,
+        [{ label:'キャンセル', action:()=>{} },
+         { label:'再ログイン', action:reLogin, primary:true }]
+      );
+      return;
+    }
+    if (!res.ok) { body.innerHTML = `<div class="loading-center"><div class="loading-text">エラー: ${res.status}</div></div>`; return; }
+
+    const d = await res.json();
+    (d.items || []).forEach(item => {
+      if (!item?.id) return;
+      playlists.push({
+        id:       item.id,
+        name:     item.name || '',
+        imageUrl: item.images?.[0]?.url || null,
+      });
+    });
+    url = d.next || null;
+  }
+
+  if (playlists.length === 0) {
+    body.innerHTML = `<div class="loading-center">
+      <div class="loading-text">プレイリストが見つかりません</div>
+    </div>`;
+    return;
+  }
+
+  const grid = document.createElement('div');
+  grid.className = 'playlist-grid';
+  playlists.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'playlist-card fade-in';
+    card.innerHTML = p.imageUrl
+      ? `<img class="playlist-img" src="${p.imageUrl}" loading="lazy" onerror="this.parentElement.querySelector('.playlist-img-placeholder').style.display='flex';this.style.display='none'">`
+      : '';
+    card.innerHTML += `<div class="playlist-img-placeholder" style="${p.imageUrl?'display:none':''}">🎵</div>
+      <div class="playlist-info"><div class="playlist-name">${escHtml(p.name)}</div></div>`;
+    card.onclick = () => startQuiz(p);
+    grid.appendChild(card);
+  });
+  body.innerHTML = '';
+  body.appendChild(grid);
+}
+
+// ═══════════════════════════════════════════════════════
+//  QUIZ
+// ═══════════════════════════════════════════════════════
+async function startQuiz(playlist) {
+  currentPlaylist = playlist;
+  showQuiz();
+
+  document.getElementById('timer-center').innerHTML = `
+    <div class="loading-center" style="position:absolute">
+      <div class="spinner"></div>
+      <div class="loading-text" style="font-size:12px">読み込み中...</div>
+    </div>`;
+
+  const token = await getToken();
+  if (!token) return;
+
+  // トラック全取得
+  const tracks = [];
+  let url = `https://api.spotify.com/v1/playlists/${playlist.id}/tracks?limit=100`;
+  while (url) {
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+    if (res.status === 401 || res.status === 403) {
+      showDialog('再ログインが必要です',
+        `エラー ${res.status}。再ログインしてください。`,
+        [{ label:'戻る', action:showPlaylist },
+         { label:'再ログイン', action:reLogin, primary:true }]
+      );
+      return;
+    }
+    if (!res.ok) break;
+    const d = await res.json();
+    (d.items || []).forEach(item => {
+      const t = item?.track;
+      if (!t?.id) return;
+      const artists = (t.artists||[]).map(a=>a.name).join(', ') || 'Unknown';
+      const img = t.album?.images?.[0]?.url || null;
+      tracks.push({ id:t.id, name:t.name||'?', artist:artists, img, uri:`spotify:track:${t.id}` });
+    });
+    url = d.next || null;
+  }
+
+  if (tracks.length < 4) {
+    showDialog('曲が少なすぎます',
+      `このプレイリストには${tracks.length}曲しかありません。最低4曲必要です。`,
+      [{ label:'戻る', action:showPlaylist }]
+    );
+    return;
+  }
+
+  allTracks    = tracks;
+  usedIds      = new Set();
+  questionNum  = 0;
+  totalScore   = 0;
+  combo        = 0;
+  lives        = 3;
+  results      = [];
+
+  // DOMをquizモードに戻す
+  document.getElementById('timer-center').innerHTML = `
+    <div class="wave" id="wave-icon">
+      <div class="wave-bar"></div><div class="wave-bar"></div>
+      <div class="wave-bar"></div><div class="wave-bar"></div>
+      <div class="wave-bar"></div>
+    </div>
+    <img id="album-art" class="album-art hidden" src="" alt="album">
+    <div id="album-placeholder" class="album-placeholder hidden">🎵</div>`;
+
+  setupQuestion();
+}
+
+async function setupQuestion() {
+  const limit = gameMode === 'endless' ? null : parseInt(gameMode);
+  if (limit && questionNum >= limit) { endQuiz(); return; }
+  if (gameMode === 'endless' && lives <= 0) { endQuiz(); return; }
+
+  clearTimers();
+  answered     = false;
+  focusedChoice = 0;
+
+  correctTrack = pickNext();
+  usedIds.add(correctTrack.id);
+  choices = buildChoices(correctTrack);
+
+  // UI更新
+  updateTopBar();
+  showWave();
+  document.getElementById('track-info').style.opacity  = '0';
+  document.getElementById('points-label').innerHTML    = '&nbsp;';
+
+  const choicesEl = document.getElementById('choices');
+  choicesEl.innerHTML = '';
+  choices.forEach((t, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.id = `choice-${i}`;
+    btn.innerHTML = `
+      <div class="choice-label">${['A','B','C','D'][i]}</div>
+      <div class="choice-text">
+        <div class="choice-track">${escHtml(t.name)}</div>
+        <div class="choice-artist">${escHtml(t.artist)}</div>
+      </div>
+      <div class="choice-icon"></div>`;
+    btn.onclick = () => onAnswer(i);
+    choicesEl.appendChild(btn);
+  });
+  updateFocus();
+
+  // タイマーリセット
+  setTimerProgress(1.0);
+
+  // 再生
+  const token = await getToken();
+  if (!token) return;
+
+  const res = await fetch('https://api.spotify.com/v1/me/player/play', {
+    method: 'PUT',
+    headers: { Authorization:`Bearer ${token}`, 'Content-Type':'application/json' },
+    body: JSON.stringify({ uris:[correctTrack.uri], position_ms:0 }),
+  });
+
+  if (res.status === 403 || res.status === 401) {
+    showDialog('再ログインが必要です',
+      `エラー ${res.status}。スコープが不足しているか、認証が切れています。\n再ログインしてください。`,
+      [{ label:'キャンセル', action:showHome },
+       { label:'再ログイン', action:reLogin, primary:true }]
+    );
+    return;
+  }
+  if (res.status === 404) {
+    showDialog('Spotifyアプリを起動してください',
+      '① スマホでSpotifyアプリを起動\n② 任意の曲を一度再生して停止\n③「再試行」をタップ',
+      [{ label:'戻る', action:showHome },
+       { label:'再試行', action:()=>setupQuestion(), primary:true }]
+    );
+    return;
+  }
+
+  // タイマー開始
+  await sleep(300);
+  questionStart = Date.now();
+  startTimer();
+
+  pauseTimer = setTimeout(() => { if(!answered) pausePlayback(); }, introSeconds*1000);
+}
+
+function pickNext() {
+  const avail = allTracks.filter(t => !usedIds.has(t.id));
+  if (avail.length === 0) { usedIds.clear(); return allTracks[randInt(allTracks.length)]; }
+  return avail[randInt(avail.length)];
+}
+
+function buildChoices(correct) {
+  const pool = allTracks.filter(t => t.id !== correct.id);
+  shuffle(pool);
+  const arr = [correct, ...pool.slice(0,3)];
+  shuffle(arr);
+  return arr;
+}
+
+// ── タイマー ──────────────────────────────────────────────
+function startTimer() {
+  const totalMs = introSeconds * 1000;
+  tickInterval = setInterval(() => {
+    const elapsed = Date.now() - questionStart;
+    const p = Math.max(0, 1 - elapsed / totalMs);
+    setTimerProgress(p);
+    if (p <= 0) { clearInterval(tickInterval); if(!answered) timeUp(); }
+  }, 80);
+}
+
+function setTimerProgress(p) {
+  const ring = document.getElementById('timer-ring');
+  if (!ring) return;
+  const circ = 553;
+  ring.style.strokeDashoffset = circ * (1 - p);
+  ring.style.stroke = p > 0.5 ? 'var(--green)' : p > 0.25 ? '#ffb300' : 'var(--wrong)';
+}
+
+function timeUp() {
+  pausePlayback();
+  recordResult(null);
+  revealAnswer();
+  scheduleNext();
+}
+
+// ── 回答 ──────────────────────────────────────────────────
+function onAnswer(i) {
+  if (answered) return;
+  clearTimers();
+  pausePlayback();
+  answered = true;
+  recordResult(choices[i]);
+  revealAnswer(i);
+  scheduleNext();
+}
+
+function onSkip() {
+  if (answered) return;
+  clearTimers();
+  pausePlayback();
+  answered = true;
+  recordResult(null);
+  revealAnswer(-1);
+  scheduleNext();
+}
+
+function recordResult(selected) {
+  const elapsed = questionStart ? Date.now() - questionStart : introSeconds*1000;
+  const isCorrect = selected?.id === correctTrack.id;
+  let pts = 0;
+
+  if (isCorrect) {
+    combo++;
+    const mult = combo >= 10 ? 3 : combo >= 5 ? 2 : combo >= 3 ? 1.5 : 1;
+    const tb = Math.floor(50 * (1 - Math.min(1, elapsed/(introSeconds*1000))));
+    pts = Math.floor((100 + tb) * mult);
+    totalScore += pts;
+    const multLabel = mult > 1 ? ` ×${mult%1===0?mult:mult}` : '';
+    const el = document.getElementById('points-label');
+    el.textContent = `+${pts}${multLabel}`;
+    el.style.animation = 'none'; el.offsetHeight;
+    el.style.animation = 'scaleIn .2s ease';
+  } else {
+    if (gameMode === 'endless' && selected !== null) lives--;
+    combo = 0;
+  }
+
+  results.push({
+    correct:    correctTrack,
+    selected,
+    isCorrect,
+    elapsedMs:  elapsed,
+    pts,
+    combo,
+  });
+  questionNum++;
+  updateTopBar();
+}
+
+function revealAnswer(selectedIdx) {
+  // アルバムアート表示
+  showAlbum(correctTrack.img);
+
+  // 曲情報表示
+  const info = document.getElementById('track-info');
+  document.getElementById('track-name').textContent   = correctTrack.name;
+  document.getElementById('track-artist').textContent = correctTrack.artist;
+  info.style.opacity   = '1';
+  info.style.animation = 'fadeIn .3s ease';
+
+  // 選択肢に色付け
+  choices.forEach((t, i) => {
+    const btn = document.getElementById(`choice-${i}`);
+    if (!btn) return;
+    btn.classList.add('answered');
+    const icon = btn.querySelector('.choice-icon');
+    if (t.id === correctTrack.id) {
+      btn.classList.add(selectedIdx === i ? 'correct' : 'missed');
+      icon.textContent = selectedIdx === i ? '✓' : '⭐';
+    } else if (i === selectedIdx) {
+      btn.classList.add('wrong');
+      icon.textContent = '✗';
+    }
+  });
+}
+
+function scheduleNext() {
+  clearTimeout(autoNextTimer);
+  autoNextTimer = setTimeout(setupQuestion, 3000);
+}
+
+// ── UI ──────────────────────────────────────────────────
+function showWave() {
+  const wv = document.getElementById('wave-icon');
+  const art = document.getElementById('album-art');
+  const ph  = document.getElementById('album-placeholder');
+  if (wv)  { wv.style.display = 'flex'; }
+  if (art) { art.classList.add('hidden'); art.src = ''; }
+  if (ph)  { ph.classList.add('hidden'); }
+}
+
+function showAlbum(imgUrl) {
+  const wv  = document.getElementById('wave-icon');
+  const art = document.getElementById('album-art');
+  const ph  = document.getElementById('album-placeholder');
+  if (wv) wv.style.display = 'none';
+  if (imgUrl && art) {
+    art.src = imgUrl;
+    art.classList.remove('hidden');
+    if (ph) ph.classList.add('hidden');
+  } else if (ph) {
+    ph.classList.remove('hidden');
+    if (art) art.classList.add('hidden');
+  }
+}
+
+function updateTopBar() {
+  const limit = gameMode === 'endless' ? null : parseInt(gameMode);
+  document.getElementById('q-label').textContent =
+    limit ? `${Math.min(questionNum+1, limit)} / ${limit}` : `${questionNum+1}問目`;
+  document.getElementById('q-bar').style.width =
+    limit ? `${Math.min(100, (questionNum/limit)*100)}%` : '100%';
+  document.getElementById('q-score').textContent = totalScore;
+
+  const comboEl = document.getElementById('q-combo');
+  if (combo >= 2) {
+    comboEl.textContent = `${combo}コンボ`;
+    comboEl.classList.remove('hidden');
+  } else {
+    comboEl.classList.add('hidden');
+  }
+
+  const livesEl = document.getElementById('q-lives');
+  if (gameMode === 'endless') {
+    livesEl.classList.remove('hidden');
+    livesEl.innerHTML = [0,1,2].map(i => i < lives ? '❤️' : '🖤').join('');
+  } else {
+    livesEl.classList.add('hidden');
+  }
+}
+
+function updateFocus() {
+  choices.forEach((_, i) => {
+    const btn = document.getElementById(`choice-${i}`);
+    if (btn) btn.classList.toggle('focused', i === focusedChoice);
+  });
+}
+
+// ── 再生制御 ───────────────────────────────────────────
+async function pausePlayback() {
+  const token = await getToken();
+  if (!token) return;
+  fetch('https://api.spotify.com/v1/me/player/pause', {
+    method:'PUT',
+    headers:{ Authorization:`Bearer ${token}` },
+  }).catch(()=>{});
+}
+
+// ═══════════════════════════════════════════════════════
+//  RESULT
+// ═══════════════════════════════════════════════════════
+function endQuiz() {
+  clearTimers();
+  pausePlayback();
+
+  const correct   = results.filter(r => r.isCorrect).length;
+  const total     = results.length;
+  const avgMs     = total ? results.reduce((s,r)=>s+r.elapsedMs,0)/total : 0;
+  const bestCombo = results.reduce((m,r)=>Math.max(m,r.combo),0);
+  const acc       = total ? correct/total : 0;
+
+  const rank = acc===1?'🏆':acc>=.8?'🎸':acc>=.6?'🎵':acc>=.4?'🎤':'🎶';
+  const msg  = acc===1?'パーフェクト!!':acc>=.8?'すごい！':acc>=.6?'なかなか！':acc>=.4?'もう少し！':'練習あるのみ！';
+
+  const session = { score:totalScore, correct, total, avgMs, bestCombo };
+  const isNew = saveHighScore(currentPlaylist.id, gameMode, session);
+
+  document.getElementById('result-newhigh').classList.toggle('hidden', !isNew);
+  document.getElementById('result-emoji').textContent = rank;
+  document.getElementById('result-rank').textContent  = msg;
+  document.getElementById('result-playlist-name').textContent = currentPlaylist.name;
+  document.getElementById('result-score').textContent = totalScore;
+  document.getElementById('r-correct').textContent = `${correct}/${total}`;
+  document.getElementById('r-avg').textContent = `${(avgMs/1000).toFixed(1)}秒`;
+  document.getElementById('r-combo').textContent = bestCombo;
+  document.getElementById('r-mode').textContent =
+    `${gameMode==='endless'?'♾️ エンドレス':gameMode==='25'?'🎸 25問':'🎵 10問'}  ·  ${introSeconds}秒`;
+
+  // 復習セクション
+  const wrong = results.filter(r => !r.isCorrect);
+  const rev   = document.getElementById('result-review-section');
+  if (wrong.length > 0) {
+    rev.innerHTML = `
+      <div style="font-size:14px;font-weight:700;color:var(--accent);margin-bottom:8px">
+        不正解を復習（${wrong.length}曲）
+      </div>
+      <div class="review-list">
+        ${wrong.map((r,i) => `
+          <div class="review-card fade-in" style="animation-delay:${i*50}ms">
+            ${r.correct.img
+              ? `<img class="review-art" src="${r.correct.img}" loading="lazy">`
+              : `<div class="review-art" style="display:flex;align-items:center;justify-content:center;font-size:28px">🎵</div>`}
+            <div class="review-info">
+              <div class="review-correct">✓ ${escHtml(r.correct.name)}</div>
+              <div class="review-artist">${escHtml(r.correct.artist)}</div>
+              <div class="review-wrong">
+                ${r.selected ? `✗ ${escHtml(r.selected.name)}` : '⏱ 時間切れ'}
+              </div>
+            </div>
+            <div class="review-time">${(r.elapsedMs/1000).toFixed(1)}秒</div>
+          </div>`).join('')}
+      </div>`;
+  } else {
+    rev.innerHTML = '';
+  }
+
+  showResult();
+}
+
+function playAgain() {
+  startQuiz(currentPlaylist);
+}
+
+// ═══════════════════════════════════════════════════════
+//  DIALOG
+// ═══════════════════════════════════════════════════════
+function showDialog(title, body, buttons) {
+  document.getElementById('dialog-title').textContent = title;
+  document.getElementById('dialog-body').textContent  = body;
+  const acts = document.getElementById('dialog-actions');
+  acts.innerHTML = '';
+  buttons.forEach(b => {
+    const btn = document.createElement('button');
+    btn.className = `btn-dialog ${b.primary?'btn-dialog-ok':'btn-dialog-cancel'}`;
+    btn.textContent = b.label;
+    btn.onclick = () => {
+      document.getElementById('dialog').classList.add('hidden');
+      b.action();
+    };
+    acts.appendChild(btn);
+  });
+  document.getElementById('dialog').classList.remove('hidden');
+}
+
+function confirmQuit() {
+  clearTimers();
+  pausePlayback();
+  showDialog('クイズを中断', '中断するとスコアはリセットされます。', [
+    { label:'続ける', action:()=>{ if(!answered) startTimer(); } },
+    { label:'中断', action:showHome },
+  ]);
+}
+
+// ═══════════════════════════════════════════════════════
+//  KEYBOARD
+// ═══════════════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  const quizVisible = !document.getElementById('screen-quiz').classList.contains('hidden');
+  if (!quizVisible || answered) return;
+
+  if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') {
+    e.preventDefault();
+    focusedChoice = (focusedChoice + 3) % 4;
+    updateFocus();
+  } else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+    e.preventDefault();
+    focusedChoice = (focusedChoice + 1) % 4;
+    updateFocus();
+  } else if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    onAnswer(focusedChoice);
+  } else if (e.key.toLowerCase() === 's') {
+    onSkip();
+  } else if (e.key === '1') { onAnswer(0); }
+  else if (e.key === '2') { onAnswer(1); }
+  else if (e.key === '3') { onAnswer(2); }
+  else if (e.key === '4') { onAnswer(3); }
+});
+
+// ═══════════════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════════════
+function clearTimers() {
+  clearInterval(tickInterval);
+  clearTimeout(autoNextTimer);
+  clearTimeout(pauseTimer);
+}
+function randInt(n) { return Math.floor(Math.random()*n); }
+function shuffle(a) { for(let i=a.length-1;i>0;i--){const j=randInt(i+1);[a[i],a[j]]=[a[j],a[i]];} }
+function sleep(ms)  { return new Promise(r=>setTimeout(r,ms)); }
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+(async () => {
+  const params = new URLSearchParams(location.search);
+  const code   = params.get('code');
+
+  if (code) {
+    await handleCallback(code);
+    return;
+  }
+
+  const storedVer = localStorage.getItem('scope_ver');
+  const token     = localStorage.getItem('access_token');
+  const expiry    = parseInt(localStorage.getItem('token_expiry')||'0');
+
+  if (token && storedVer === SCOPE_VER && Date.now() < expiry) {
+    accessToken = token;
+    showHome();
+  } else {
+    showLogin();
+  }
+})();
+</script>
+</body>
+</html>

@@ -491,7 +491,7 @@ async function fetchSpPl(){
   const tok=await getSpTok();if(!tok)return null;
   let userId='';
   try{const ur=await fetch('https://api.spotify.com/v1/me',{headers:{Authorization:`Bearer ${tok}`}});if(ur.ok){const ud=await ur.json();userId=ud.id;}}catch(e){}
-  const pl=[{id:'saved_tracks',name:'❤️ お気に入り楽曲 (Saved Tracks)',img:null}];
+  const pl=[];
   let url='https://api.spotify.com/v1/me/playlists?limit=50';
   while(url){
     const r=await fetch(url,{headers:{Authorization:`Bearer ${tok}`}});
@@ -501,7 +501,7 @@ async function fetchSpPl(){
     (d.items||[]).forEach(i=>{
       if(i?.id){
         if(userId && i.owner && i.owner.id !== userId) return;
-        pl.push({id:i.id,name:i.name||'',img:i.images?.[0]?.url||null});
+        pl.push({id:i.id,name:i.name||'',img:i.images?.[0]?.url||null,tracksUrl:i.tracks?.href});
       }
     });
     url=d.next||null;
@@ -512,17 +512,15 @@ async function fetchYtPl(){const tok=await getYtTok();if(!tok)return null;const 
 function renderPl(pl){const body=document.getElementById('pl-body');if(!pl.length){body.innerHTML='<div class="loading-center"><div class="load-txt">プレイリストが見つかりません</div></div>';return;}const y=svc==='youtube';const g=document.createElement('div');g.className='pl-grid';pl.forEach(p=>{const c=document.createElement('div');c.className=`pl-card ${y?'yt':'sp'} fade-in`;c.innerHTML=(p.img?`<img class="pl-img" src="${p.img}" loading="lazy">`:'<div class="pl-ph">🎵</div>')+`<div class="pl-info"><div class="pl-name">${esc(p.name)}</div></div>`;c.onclick=()=>startQuiz(p);g.appendChild(c);});body.innerHTML='';body.appendChild(g);}
 
 // QUIZ
-async function startQuiz(pl){curPl=pl;showOnly('quiz');applyTheme();document.getElementById('timer-ctr').innerHTML=`<div class="loading-center" style="position:absolute"><div class="spinner ${svc==='youtube'?'yt':''}"></div><div class="load-txt" style="font-size:12px">読み込み中...</div></div>`;const tr=svc==='youtube'?await fetchYtTr(pl.id):await fetchSpTr(pl.id);if(!tr){showOnly('playlist');return;}if(tr.length<4){showDlg('曲が少なすぎます',`${tr?.length||0}曲しかありません。最低4曲必要です。`,[{l:'戻る',a:()=>showOnly('playlist')}]);return;}allTracks=tr;usedIds=new Set();qNum=0;score=0;combo=0;lives=3;results=[];const y=svc==='youtube';document.getElementById('timer-ctr').innerHTML=`<div class="wave" id="wave-icon">${'<div class="wave-bar'+(y?' yt':'')+'"></div>'.repeat(5)}</div><img id="album-art" class="album-art${y?' yt':''} hidden" src="" alt=""><div id="album-ph" class="album-ph hidden">🎵</div>`;setupQ();}
-async function fetchSpTr(id){
+async function startQuiz(pl){curPl=pl;showOnly('quiz');applyTheme();document.getElementById('timer-ctr').innerHTML=`<div class="loading-center" style="position:absolute"><div class="spinner ${svc==='youtube'?'yt':''}"></div><div class="load-txt" style="font-size:12px">読み込み中...</div></div>`;const tr=svc==='youtube'?await fetchYtTr(pl.id):await fetchSpTr(pl);if(!tr){showOnly('playlist');return;}if(tr.length<4){showDlg('曲が少なすぎます',`${tr?.length||0}曲しかありません。最低4曲必要です。`,[{l:'戻る',a:()=>showOnly('playlist')}]);return;}allTracks=tr;usedIds=new Set();qNum=0;score=0;combo=0;lives=3;results=[];const y=svc==='youtube';document.getElementById('timer-ctr').innerHTML=`<div class="wave" id="wave-icon">${'<div class="wave-bar'+(y?' yt':'')+'"></div>'.repeat(5)}</div><img id="album-art" class="album-art${y?' yt':''} hidden" src="" alt=""><div id="album-ph" class="album-ph hidden">🎵</div>`;setupQ();}
+async function fetchSpTr(plObj){
   const tok=await getSpTok();if(!tok)return null;
   const tr=[];
-  let url = id === 'saved_tracks'
-    ? 'https://api.spotify.com/v1/me/tracks?limit=50'
-    : `https://api.spotify.com/v1/playlists/${id}/tracks?limit=100&market=from_token`;
+  let url = plObj.tracksUrl || `https://api.spotify.com/v1/playlists/${plObj.id}/tracks?limit=100`;
   try {
     while(url){
       const r=await fetch(url,{headers:{Authorization:`Bearer ${tok}`}});
-      if(r.status===403){ throw new Error("Spotify APIの制限によりこのプレイリストは取得できません。別のプレイリストか「❤️ お気に入り楽曲」をお試しください。"); }
+      if(r.status===403){ throw new Error("Spotify APIの制限によりこのプレイリストは取得できません。（403 Forbidden）\n別のプレイリストでお試しください。"); }
       if(!r.ok){ const err=await r.text(); throw new Error(`${r.status} ${err}`); }
       const d=await r.json();
       (d.items||[]).forEach(it=>{
@@ -531,7 +529,6 @@ async function fetchSpTr(id){
         tr.push({id:t.id,name:t.name||'?',artist:(t.artists||[]).map(a=>a.name).join(', ')||'Unknown',img:t.album?.images?.[0]?.url||null,uri:`spotify:track:${t.id}`});
       });
       url=d.next||null;
-      if(id === 'saved_tracks' && tr.length >= 150) break;
     }
   } catch(e) {
     alert("Spotify楽曲の取得エラー:\n" + e.message);

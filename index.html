@@ -121,7 +121,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-seri
 
 /* QUIZ */
 #screen-quiz{flex:1;display:flex;flex-direction:column;padding:12px 16px}
-#yt-player{position:fixed;top:-9999px;left:-9999px;width:1px;height:1px}
+#yt-player{position:fixed;top:0;left:0;width:200px;height:200px;opacity:0.01;pointer-events:none;z-index:-10}
 .quiz-top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
 .btn-quit{background:none;border:none;color:var(--sub);font-size:20px;cursor:pointer;padding:4px;border-radius:6px}
 .quiz-prog{flex:1}
@@ -381,10 +381,33 @@ const YT_SCOPE='https://www.googleapis.com/auth/youtube.readonly';
 let svc='spotify',gameMode='10',introSec=10,allTracks=[],usedIds=new Set(),curPl=null;
 let qNum=0,score=0,combo=0,lives=3,results=[],correct=null,choices=[],answered=false,focused=0;
 let tick=null,nextTimer=null,pauseT=null,qStart=null;
-let ytPlayer=null,ytReady=false;
+let ytPlayer=null,ytReady=false,ytPlayingCb=null;
 
 // YT PLAYER
-function onYouTubeIframeAPIReady(){ytPlayer=new YT.Player('yt-player',{height:'1',width:'1',playerVars:{autoplay:0,controls:0},events:{onReady:()=>{ytReady=true;}}})}
+function onYouTubeIframeAPIReady(){
+  ytPlayer=new YT.Player('yt-player',{
+    height:'200',width:'200',
+    playerVars:{autoplay:0,controls:0,origin:window.location.origin,playsinline:1},
+    events:{
+      onReady:()=>{ytReady=true;},
+      onStateChange:(e)=>{if(e.data===1&&ytPlayingCb){ytPlayingCb();ytPlayingCb=null;}},
+      onError:(e)=>{
+        if(document.getElementById('screen-quiz').classList.contains('hidden') || answered) return;
+        clearTimers();
+        pauseAll();
+        const lbl = document.getElementById('pts-lbl');
+        lbl.textContent = '🚫 制限された曲をスキップ...';
+        lbl.style.color = 'var(--wrong)';
+        lbl.style.fontSize = '14px';
+        setTimeout(()=>{
+          lbl.style.color = 'var(--gold)';
+          lbl.style.fontSize = '20px';
+          setupQ(); // ノーペナルティで次の曲を再抽選
+        }, 1500);
+      }
+    }
+  });
+}
 function ytPlay(vid){if(ytReady&&ytPlayer){ytPlayer.loadVideoById(vid,0);ytPlayer.playVideo();}}
 function ytPause(){try{if(ytPlayer&&ytReady)ytPlayer.pauseVideo();}catch(_){}}
 
@@ -602,8 +625,8 @@ async function fetchYtTr(id){
 }
 
 async function setupQ(){if(document.getElementById('screen-quiz').classList.contains('hidden'))return;const lim=gameMode==='endless'?null:parseInt(gameMode);if(lim&&qNum>=lim){endQuiz();return;}if(gameMode==='endless'&&lives<=0){endQuiz();return;}clearTimers();answered=false;focused=0;correct=pickNext();usedIds.add(correct.id);choices=buildChoices(correct);updateTop();showWave();document.getElementById('trk-info').style.opacity='0';document.getElementById('pts-lbl').innerHTML='&nbsp;';setRing(1);const el=document.getElementById('choices');el.innerHTML='';const y=svc==='youtube';choices.forEach((t,i)=>{const b=document.createElement('button');b.className='choice-btn';b.id=`c${i}`;b.innerHTML=`<div class="c-lbl ${y?'yt':'sp'}">${['A','B','C','D'][i]}</div><div class="c-txt"><div class="c-track">${esc(t.name)}</div><div class="c-artist">${esc(t.artist)}</div></div><div class="c-icon"></div>`;b.onclick=()=>onAns(i);el.appendChild(b);});updFocus();
-let ok=false;if(svc==='youtube'){ytPlay(correct.videoId);ok=true;}else{const tok=await getSpTok();if(tok){const r=await fetch('https://api.spotify.com/v1/me/player/play',{method:'PUT',headers:{Authorization:`Bearer ${tok}`,'Content-Type':'application/json'},body:JSON.stringify({uris:[correct.uri],position_ms:0})});if(r.status===403||r.status===401){showDlg('再ログインが必要です',`エラー ${r.status}`,[{l:'キャンセル',a:showHome},{l:'再ログイン',a:doLogout,ok:true}]);return;}if(r.status===404){showDlg('Spotifyアプリを起動してください','① スマホでSpotifyを起動\n② 曲を一度再生して停止\n③「再試行」をタップ',[{l:'戻る',a:showHome},{l:'再試行',a:()=>setupQ(),ok:true}]);return;}ok=true;}}
-if(!ok)return;await sleep(300);qStart=Date.now();startTick();pauseT=setTimeout(()=>{if(!answered)pauseAll();},introSec*1000);}
+let ok=false;if(svc==='youtube'){ok=true;ytPlay(correct.videoId);document.getElementById('pts-lbl').innerHTML='<span style="font-size:14px;color:var(--sub)">読み込み中...</span>';await new Promise(r=>{let to=setTimeout(()=>{ytPlayingCb=null;r();},8000);ytPlayingCb=()=>{clearTimeout(to);r();};});document.getElementById('pts-lbl').innerHTML='&nbsp;';}else{const tok=await getSpTok();if(tok){const r=await fetch('https://api.spotify.com/v1/me/player/play',{method:'PUT',headers:{Authorization:`Bearer ${tok}`,'Content-Type':'application/json'},body:JSON.stringify({uris:[correct.uri],position_ms:0})});if(r.status===403||r.status===401){showDlg('再ログインが必要です',`エラー ${r.status}`,[{l:'キャンセル',a:showHome},{l:'再ログイン',a:doLogout,ok:true}]);return;}if(r.status===404){showDlg('Spotifyアプリを起動してください','① スマホでSpotifyを起動\n② 曲を一度再生して停止\n③「再試行」をタップ',[{l:'戻る',a:showHome},{l:'再試行',a:()=>setupQ(),ok:true}]);return;}ok=true;}}
+if(!ok)return;if(svc!=='youtube')await sleep(300);qStart=Date.now();startTick();pauseT=setTimeout(()=>{if(!answered)pauseAll();},introSec*1000);}
 
 function pickNext(){const av=allTracks.filter(t=>!usedIds.has(t.id));if(!av.length){usedIds.clear();return allTracks[ri(allTracks.length)];}return av[ri(av.length)];}
 function buildChoices(c){const p=allTracks.filter(t=>t.id!==c.id);shuf(p);return[c,...p.slice(0,3)].sort(()=>Math.random()-.5);}

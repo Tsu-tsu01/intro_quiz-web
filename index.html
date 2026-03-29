@@ -6,208 +6,88 @@
 <title>イントロクイズ</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0a0a0f;--surface:#141420;--card:#1c1c2e;--green:#1db954;--green2:#17a347;--red:#ff0000;--red2:#cc0000;--accent:#9b59b6;--gold:#ffd700;--wrong:#e74c3c;--correct:#2ecc71;--text:#eeeeee;--sub:#888899;--border:#2a2a3e}
+:root{--bg:#0a0a0f;--surface:#141420;--card:#1c1c2e;--green:#1db954;--green2:#17a347;--red:#ff0000;--red2:#cc0000;--accent:#9b59b6;--gold:#ffd700;--wrong:#e74c3c;--correct:#2ecc71;--text:#eeeeee;--sub:#888899;--border:#2a2a3e;--p1:#3498db;--p2:#e91e63}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;min-height:100vh;background-image:radial-gradient(ellipse at 20% 50%,rgba(29,185,84,.07) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(155,89,182,.05) 0%,transparent 50%)}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;min-height:100vh;background-image:radial-gradient(ellipse at 20% 50%,rgba(255,0,0,.08) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(155,89,182,.06) 0%,transparent 50%)}
 #app{max-width:560px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
 .hidden{display:none!important}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @keyframes scaleIn{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
 @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
-@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes waveAnim{0%,100%{height:12px;opacity:.5}50%{height:44px;opacity:1}}
 .fade-in{animation:fadeIn .3s ease}
 
-/* SERVICE */
+/* SERVICE & HOME */
 #screen-service{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 32px;gap:20px}
 .svc-title{font-size:30px;font-weight:700;letter-spacing:2px;animation:slideUp .4s .1s both}
-.svc-sub{color:var(--sub);font-size:13px;animation:slideUp .4s .2s both}
-.svc-cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;animation:slideUp .4s .3s both}
-.svc-card{padding:28px 16px;border-radius:20px;border:2px solid var(--border);background:var(--card);cursor:pointer;text-align:center;transition:all .2s;user-select:none}
-.svc-card:hover{transform:translateY(-4px)}
-.svc-card.sp:hover{border-color:var(--green);box-shadow:0 8px 24px rgba(29,185,84,.25)}
+.svc-cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%}
+.svc-card{padding:28px 16px;border-radius:20px;border:2px solid var(--border);background:var(--card);cursor:pointer;text-align:center;transition:all .2s}
 .svc-card.yt:hover{border-color:var(--red);box-shadow:0 8px 24px rgba(255,0,0,.25)}
 .svc-icon{font-size:44px;margin-bottom:10px}
 .svc-name{font-size:15px;font-weight:700}
-.svc-desc{font-size:11px;color:var(--sub);margin-top:4px}
 
-/* YT SETUP */
-#screen-yt-setup{flex:1;display:flex;flex-direction:column;padding:20px 24px;overflow-y:auto}
-.back-btn{background:none;border:none;color:var(--sub);font-size:22px;cursor:pointer;padding:4px 8px;border-radius:8px;align-self:flex-start;margin-bottom:16px}
-.setup-h{font-size:20px;font-weight:700;margin-bottom:6px}
-.setup-sub{font-size:13px;color:var(--sub);line-height:1.7;margin-bottom:20px}
-.step{display:flex;gap:12px;margin-bottom:12px;padding:12px;background:var(--surface);border-radius:12px;border:1px solid var(--border)}
-.step-num{width:24px;height:24px;border-radius:50%;background:var(--red);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.step-body{flex:1;font-size:13px;line-height:1.7}
-.step-body a{color:var(--red)}
-.step-body code{background:var(--card);padding:2px 6px;border-radius:4px;font-size:11px;color:var(--accent);word-break:break-all}
-.setup-inp{width:100%;margin-top:8px;padding:10px 12px;background:var(--card);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;font-family:inherit}
-.setup-inp:focus{outline:none;border-color:var(--red)}
-.btn-yt-go{width:100%;padding:16px;border:none;border-radius:32px;background:linear-gradient(135deg,#ff0000,#cc0000);color:#fff;font-size:16px;font-weight:700;cursor:pointer;margin-top:20px;font-family:inherit;transition:opacity .2s}
-.btn-yt-go:hover{opacity:.85}
-
-/* LOGIN */
-#screen-login{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 32px}
-.login-logo{width:96px;height:96px;border-radius:28px;display:flex;align-items:center;justify-content:center;font-size:48px;margin-bottom:28px;animation:scaleIn .5s cubic-bezier(.34,1.56,.64,1)}
-.login-logo.sp{background:linear-gradient(135deg,var(--green),var(--green2));box-shadow:0 0 40px rgba(29,185,84,.4)}
-.login-logo.yt{background:linear-gradient(135deg,#ff0000,#cc0000);box-shadow:0 0 40px rgba(255,0,0,.4)}
-.login-title{font-size:28px;font-weight:700;letter-spacing:2px;animation:slideUp .4s .15s both}
-.login-sub{color:var(--sub);font-size:13px;line-height:1.8;text-align:center;margin-top:8px;animation:slideUp .4s .25s both}
-.btn-login{margin-top:44px;width:100%;padding:16px;border:none;border-radius:32px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;animation:slideUp .4s .4s both;transition:opacity .2s}
-.btn-login.sp{background:var(--green);color:#000}
-.btn-login.yt{background:linear-gradient(135deg,#ff0000,#cc0000);color:#fff}
-.btn-login:hover{opacity:.85}
-.login-note{margin-top:14px;font-size:11px;color:var(--sub);text-align:center;animation:slideUp .4s .5s both}
-.btn-svc-switch{margin-top:16px;background:none;border:1px solid var(--border);color:var(--sub);padding:7px 14px;border-radius:10px;font-size:12px;cursor:pointer;font-family:inherit;transition:all .15s}
-.btn-svc-switch:hover{border-color:var(--sub);color:var(--text)}
-
-/* HOME */
 #screen-home{flex:1;display:flex;flex-direction:column;padding:24px 20px}
 .home-hdr{display:flex;align-items:center;gap:12px;margin-bottom:28px}
-.home-icon{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px}
-.home-icon.sp{background:linear-gradient(135deg,var(--green),var(--green2))}
-.home-icon.yt{background:linear-gradient(135deg,#ff0000,#cc0000)}
+.home-icon{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;background:linear-gradient(135deg,#ff0000,#cc0000)}
 .home-ttl{font-size:20px;font-weight:700;flex:1}
-.home-acts{display:flex;gap:8px}
-.btn-sm{background:none;border:1px solid var(--border);color:var(--sub);padding:6px 10px;border-radius:8px;cursor:pointer;font-size:11px;font-family:inherit;transition:all .15s}
-.btn-sm:hover{border-color:var(--sub);color:var(--text)}
-.sec-lbl{font-size:12px;font-weight:700;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px}
-.mode-card{display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:16px;border:1.5px solid var(--border);background:var(--card);cursor:pointer;margin-bottom:10px;transition:all .2s;user-select:none}
-.mode-card.sel.sp-mode{background:linear-gradient(135deg,var(--green),var(--green2));border-color:transparent;box-shadow:0 4px 20px rgba(29,185,84,.35)}
-.mode-card.sel.yt-mode{background:linear-gradient(135deg,#ff0000,#cc0000);border-color:transparent;box-shadow:0 4px 20px rgba(255,0,0,.25)}
-.mode-card.sel .mode-name,.mode-card.sel.sp-mode .mode-desc{color:#000}
-.mode-card.sel.yt-mode .mode-name,.mode-card.sel.yt-mode .mode-desc{color:#fff}
-.mode-emoji{font-size:26px}.mode-info{flex:1}
-.mode-name{font-size:16px;font-weight:700;color:var(--text);transition:color .15s}
-.mode-desc{font-size:12px;color:var(--sub);margin-top:2px;transition:color .15s}
-.mode-chk{font-size:20px;opacity:0;transition:opacity .15s}
-.mode-card.sel .mode-chk{opacity:1}
-.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:28px}
-.chip{padding:8px 16px;border-radius:20px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-size:14px;font-weight:700;cursor:pointer;transition:all .18s;font-family:inherit}
-.chip.sel.sp-chip{background:var(--green);border-color:var(--green);color:#000}
-.chip.sel.yt-chip{background:var(--red);border-color:var(--red);color:#fff}
-.chip:hover:not(.sel){border-color:var(--sub)}
-.btn-start{margin-top:auto;width:100%;padding:18px;border:none;border-radius:32px;font-size:17px;font-weight:700;cursor:pointer;transition:opacity .2s;font-family:inherit}
-.btn-start.sp{background:var(--green);color:#000}
-.btn-start.yt{background:linear-gradient(135deg,#ff0000,#cc0000);color:#fff}
-.btn-start:hover{opacity:.85}
-
-/* PLAYLIST */
-#screen-playlist{flex:1;display:flex;flex-direction:column}
-.scr-hdr{display:flex;align-items:center;gap:8px;padding:12px 16px 8px}
-.btn-back{background:none;border:none;color:var(--text);font-size:22px;cursor:pointer;padding:4px 8px;border-radius:8px;transition:background .15s}
-.btn-back:hover{background:var(--surface)}
-.scr-ttl{font-size:17px;font-weight:700;flex:1}
-.scr-meta{font-size:12px}
-.scr-meta.sp{color:var(--green)}.scr-meta.yt{color:#ff6666}
-.banner{margin:0 16px 8px;padding:10px 14px;border-radius:10px;font-size:12px;display:flex;align-items:center;gap:8px}
-.banner.sp{background:rgba(29,185,84,.1);border:1px solid rgba(29,185,84,.3);color:var(--green)}
-.banner.yt{background:rgba(255,0,0,.08);border:1px solid rgba(255,0,0,.25);color:#ff8888}
-.btn-relogin{background:none;padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;margin-left:auto;white-space:nowrap}
-.btn-relogin.sp{border:1px solid rgba(29,185,84,.5);color:var(--green)}.btn-relogin.sp:hover{background:rgba(29,185,84,.12)}
-.btn-relogin.yt{border:1px solid rgba(255,0,0,.4);color:#ff8888}.btn-relogin.yt:hover{background:rgba(255,0,0,.08)}
-.pl-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:4px 16px 24px;overflow-y:auto;flex:1}
-.pl-card{border-radius:16px;overflow:hidden;cursor:pointer;border:1.5px solid var(--border);background:linear-gradient(135deg,#1c1c30,#141422);transition:transform .15s,border-color .15s,box-shadow .15s}
-.pl-card.sp:hover{transform:translateY(-3px);border-color:var(--green);box-shadow:0 8px 24px rgba(29,185,84,.2)}
-.pl-card.yt:hover{transform:translateY(-3px);border-color:var(--red);box-shadow:0 8px 24px rgba(255,0,0,.15)}
-.pl-img{width:100%;aspect-ratio:1;object-fit:cover;background:var(--surface)}
-.pl-ph{width:100%;aspect-ratio:1;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:40px;color:var(--border)}
-.pl-info{padding:10px}.pl-name{font-size:13px;font-weight:700;color:var(--text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.loading-center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
-.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite}
-.spinner.yt{border-top-color:var(--red)}
-.load-txt{color:var(--sub);font-size:14px;text-align:center;line-height:1.7}
+.btn-sm{background:none;border:1px solid var(--border);color:var(--sub);padding:6px 10px;border-radius:8px;cursor:pointer;font-size:11px}
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.mode-card{display:flex;flex-direction:column;gap:4px;padding:14px;border-radius:16px;border:1.5px solid var(--border);background:var(--card);cursor:pointer;transition:all .2s}
+.mode-card.sel{background:linear-gradient(135deg,#ff0000,#cc0000);border-color:transparent;box-shadow:0 4px 20px rgba(255,0,0,0.25)}
+.mode-card.sel .mode-name,.mode-card.sel .mode-desc{color:#fff}
+.mode-name{font-size:15px;font-weight:700}
+.mode-desc{font-size:11px;color:var(--sub)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.chip{padding:8px 16px;border-radius:20px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-size:14px;font-weight:700;cursor:pointer}
+.chip.sel{background:var(--red);border-color:var(--red);color:#fff}
+.btn-start{margin-top:auto;width:100%;padding:18px;border:none;border-radius:32px;font-size:17px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#ff0000,#cc0000);color:#fff}
 
 /* QUIZ */
 #screen-quiz{flex:1;display:flex;flex-direction:column;padding:12px 16px}
-#yt-player{position:fixed;top:0;left:0;width:200px;height:200px;opacity:0.01;pointer-events:none;z-index:-10}
+#yt-player{position:fixed;top:-10px;left:-10px;width:1px;height:1px;opacity:0.01;pointer-events:none}
 .quiz-top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.btn-quit{background:none;border:none;color:var(--sub);font-size:20px;cursor:pointer;padding:4px;border-radius:6px}
 .quiz-prog{flex:1}
-.q-lbl{font-size:14px;font-weight:700;color:var(--text);margin-bottom:3px}
-.prog-wrap{height:3px;background:var(--border);border-radius:2px;overflow:hidden}
-.prog-fill{height:100%;border-radius:2px;transition:width .3s ease}
-.prog-fill.sp{background:var(--green)}.prog-fill.yt{background:var(--red)}
-.combo-badge{padding:3px 10px;border-radius:10px;border:1px solid var(--accent);color:var(--accent);font-size:12px;font-weight:700;background:rgba(155,89,182,.15);animation:pulse .4s ease}
-.lives{display:flex;gap:2px;font-size:16px}
-.score-badge{padding:4px 12px;border-radius:12px;font-weight:700;font-size:15px}
-.score-badge.sp{background:linear-gradient(135deg,var(--green),var(--green2));color:#000}
-.score-badge.yt{background:linear-gradient(135deg,#ff0000,#cc0000);color:#fff}
-.timer-wrap{display:flex;align-items:center;justify-content:center;flex:0 0 auto;margin:8px 0}
-.timer-cont{position:relative;display:flex;align-items:center;justify-content:center}
-.timer-svg{width:min(44vw,200px);height:min(44vw,200px)}
-.timer-ctr{position:absolute;display:flex;align-items:center;justify-content:center;flex-direction:column}
-.wave{display:flex;align-items:center;gap:4px;height:52px}
-.wave-bar{width:7px;border-radius:4px;background:var(--green);animation:waveAnim 1s ease-in-out infinite}
-.wave-bar.yt{background:var(--red)}
-.wave-bar:nth-child(1){animation-delay:0s}.wave-bar:nth-child(2){animation-delay:.15s}.wave-bar:nth-child(3){animation-delay:.3s}.wave-bar:nth-child(4){animation-delay:.15s}.wave-bar:nth-child(5){animation-delay:0s}
-.album-art{width:min(44vw,200px);height:min(44vw,200px);border-radius:50%;object-fit:cover;animation:scaleIn .4s cubic-bezier(.34,1.56,.64,1);box-shadow:0 0 32px rgba(29,185,84,.3)}
-.album-art.yt{box-shadow:0 0 32px rgba(255,0,0,.3)}
-.album-ph{width:min(44vw,200px);height:min(44vw,200px);border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:64px}
-.pts-lbl{text-align:center;font-size:20px;font-weight:700;color:var(--gold);height:28px;animation:scaleIn .2s ease}
-.trk-info{text-align:center;margin:4px 0;min-height:40px;animation:fadeIn .3s ease}
-.trk-name{font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.trk-artist{font-size:13px;color:var(--sub)}
+.q-lbl{font-size:14px;font-weight:700;margin-bottom:3px}
+.prog-wrap{height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;background:var(--red);transition:width .3s ease}
+.q-score-solo{padding:4px 12px;border-radius:12px;font-weight:700;font-size:15px;background:var(--red);color:#fff}
+
+/* 2P Scores */
+.vs-header{display:flex;justify-content:space-between;gap:10px;margin-top:8px}
+.p-score-pill{flex:1;padding:4px 12px;border-radius:10px;font-weight:700;font-size:13px;display:flex;justify-content:space-between;align-items:center;border:1px solid transparent}
+.p-score-pill.p1{background:rgba(52,152,219,0.15);border-color:var(--p1);color:var(--p1)}
+.p-score-pill.p2{background:rgba(233,30,99,0.15);border-color:var(--p2);color:var(--p2)}
+
+.timer-wrap{display:flex;align-items:center;justify-content:center;margin:16px 0}
+.timer-cont{position:relative;display:flex;align-items:center;justify-content:center;width:180px;height:180px}
+.timer-svg{width:180px;height:180px;position:absolute}
+.central-area{width:140px;height:140px;border-radius:50%;background:rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+.q-album-art{width:100%;height:100%;object-fit:cover;position:absolute;animation:scaleIn .4s ease}
+
+.pts-lbl{text-align:center;font-size:20px;font-weight:700;color:var(--gold);height:28px}
+.trk-info{text-align:center;margin:4px 0;min-height:40px}
+.trk-name{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trk-artist{font-size:12px;color:var(--sub)}
+
 .choices{display:flex;flex-direction:column;gap:8px;flex:1;justify-content:center}
-.choice-btn{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:14px;border:1.5px solid var(--border);background:var(--card);cursor:pointer;transition:all .2s;text-align:left;animation:slideUp .2s ease both}
-.choice-btn:nth-child(1){animation-delay:0ms}.choice-btn:nth-child(2){animation-delay:60ms}.choice-btn:nth-child(3){animation-delay:120ms}.choice-btn:nth-child(4){animation-delay:180ms}
-.choice-btn.fsp:not(.ans){border-color:var(--green);background:rgba(29,185,84,.1);box-shadow:0 0 0 2px rgba(29,185,84,.25)}
-.choice-btn.fyt:not(.ans){border-color:var(--red);background:rgba(255,0,0,.08);box-shadow:0 0 0 2px rgba(255,0,0,.2)}
-.choice-btn:hover:not(.ans):not(.fsp):not(.fyt){border-color:var(--sub);background:rgba(255,255,255,.04)}
-.choice-btn.correct{background:rgba(46,204,113,.2);border-color:var(--correct)}
-.choice-btn.wrong{background:rgba(231,76,60,.18);border-color:var(--wrong)}
-.choice-btn.missed{background:rgba(255,215,0,.15);border-color:var(--gold)}
-.c-lbl{width:30px;height:30px;border-radius:8px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
-.c-lbl.sp{color:var(--green)}.c-lbl.yt{color:var(--red)}
-.c-txt{flex:1;min-width:0}
-.c-track{font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.c-artist{font-size:12px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.c-icon{font-size:18px;flex-shrink:0}
-.key-hint{display:flex;justify-content:center;align-items:center;gap:6px;font-size:11px;color:var(--border);margin-top:6px;height:20px}
-.key{padding:2px 6px;border-radius:4px;border:1px solid var(--border);font-size:10px;font-weight:700;color:var(--sub)}
+.choice-btn{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:14px;border:1.5px solid var(--border);background:var(--card);cursor:pointer;transition:all .2s;text-align:left;position:relative}
+.choice-btn.mode-2p-active{cursor:default}
+.choice-btn.ans{cursor:default}
+.choice-btn.correct{background:rgba(46,204,113,0.15);border-color:var(--correct)}
+.choice-btn.wrong{background:rgba(231,76,60,0.12);border-color:var(--wrong)}
+.choice-btn.missed{background:rgba(255,215,0,0.1);border-color:var(--gold)}
+.c-lbl{width:28px;height:28px;border-radius:8px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--red)}
+
+.p-ind-wrap{position:absolute;right:10px;top:50%;transform:translateY(-50%);display:flex;gap:4px}
+.p-ind{width:10px;height:10px;border-radius:50%;display:none}
+.p-ind.p1-on{display:block;background:var(--p1);box-shadow:0 0 8px var(--p1)}
+.p-ind.p2-on{display:block;background:var(--p2);box-shadow:0 0 8px var(--p2)}
 
 /* RESULT */
 #screen-result{flex:1;display:flex;flex-direction:column;padding:24px;overflow-y:auto}
-.res-nh{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;margin-bottom:12px;font-size:13px;font-weight:700;animation:scaleIn .6s cubic-bezier(.34,1.56,.64,1)}
-.res-nh.sp{background:linear-gradient(135deg,var(--green),var(--green2));color:#000}
-.res-nh.yt{background:linear-gradient(135deg,#ff0000,#cc0000);color:#fff}
-.res-emoji{font-size:64px;text-align:center;margin:4px 0;animation:scaleIn .5s .1s both cubic-bezier(.34,1.56,.64,1)}
-.res-rank{font-size:22px;font-weight:700;text-align:center;animation:slideUp .4s .25s both}
-.res-pl{font-size:13px;color:var(--sub);text-align:center;margin-top:4px;animation:slideUp .4s .3s both}
-.res-card{background:linear-gradient(135deg,#1c1c30,#141422);border:1px solid var(--border);border-radius:20px;padding:20px;margin:20px 0;animation:slideUp .4s .4s both}
-.res-score{text-align:center;font-size:64px;font-weight:700;line-height:1}
-.res-score.sp{color:var(--green)}.res-score.yt{color:var(--red)}
-.res-unit{font-size:14px;color:var(--sub);text-align:center;margin-bottom:16px}
-.res-div{height:1px;background:var(--border);margin:16px 0}
-.res-stats{display:flex;justify-content:space-around}
-.res-stat{text-align:center}
-.res-val{font-size:18px;font-weight:700}.res-lbl{font-size:11px;color:var(--sub);margin-top:3px}
-.res-mode{margin-top:12px;text-align:center;padding:6px 14px;border-radius:10px;background:var(--surface);font-size:12px;color:var(--sub);display:inline-block}
-.btn-act{width:100%;padding:15px;border:none;border-radius:28px;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;font-family:inherit;transition:opacity .2s}
-.btn-act:hover{opacity:.85}
-.btn-act.sp{background:var(--green);color:#000}.btn-act.yt{background:linear-gradient(135deg,#ff0000,#cc0000);color:#fff}
-.btn-act.sec{background:var(--card);color:var(--text);border:1px solid var(--border)}
-.rev-list{margin-top:12px;display:flex;flex-direction:column;gap:10px}
-.rev-card{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;background:var(--card);border:1px solid var(--border);animation:fadeIn .3s ease both}
-.rev-art{width:52px;height:52px;border-radius:10px;object-fit:cover;background:var(--surface);flex-shrink:0}
-.rev-info{flex:1;min-width:0}
-.rev-ok{display:flex;align-items:center;gap:4px;font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rev-artist{font-size:12px;color:var(--sub);margin-top:2px}
-.rev-ng{display:inline-flex;align-items:center;gap:4px;margin-top:4px;padding:2px 8px;border-radius:6px;background:rgba(231,76,60,.12);font-size:11px;color:var(--wrong);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rev-time{font-size:11px;color:var(--sub);flex-shrink:0}
-
-/* DIALOG */
-.dlg-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:999;padding:24px;backdrop-filter:blur(4px)}
-.dlg{background:var(--card);border-radius:20px;padding:24px;max-width:380px;width:100%;border:1px solid var(--border);animation:scaleIn .25s ease}
-.dlg-title{font-size:17px;font-weight:700;margin-bottom:12px}
-.dlg-body{font-size:13px;color:var(--sub);line-height:1.8;margin-bottom:20px;white-space:pre-wrap}
-.dlg-acts{display:flex;gap:10px;justify-content:flex-end}
-.btn-dlg{padding:8px 16px;border-radius:10px;border:none;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity .15s}
-.btn-dlg:hover{opacity:.82}
-.btn-dlg.cancel{background:var(--surface);color:var(--sub)}
-.btn-dlg.ok-sp{background:var(--green);color:#000}
-.btn-dlg.ok-yt{background:var(--red);color:#fff}
+.res-card{background:linear-gradient(135deg,#1c1c30,#141422);border:1px solid var(--border);border-radius:20px;padding:24px;margin:20px 0}
+.res-row{display:flex;justify-content:center;gap:32px;align-items:center}
+.res-score-big{font-size:48px;font-weight:700;color:var(--red)}
+.res-score-big.p1{color:var(--p1)}.res-score-big.p2{color:var(--p2)}
 </style>
 </head>
 <body>
@@ -216,96 +96,52 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-seri
 <!-- SERVICE -->
 <div id="screen-service">
   <div class="svc-title">🎵 イントロクイズ</div>
-  <div class="svc-sub">サービスを選んでください</div>
   <div class="svc-cards">
-    <div class="svc-card sp" style="opacity:0.5; filter:grayscale(0.8); cursor:not-allowed;" onclick="showDlg('開発凍結','Spotify APIの制限強化に伴い、Spotify版の開発・提供は現在凍結されています。\n右側の「YouTube Music」版をご利用ください。',[{l:'閉じる',a:()=>{}}])">
-      <div class="svc-icon">🟢</div>
-      <div class="svc-name">Spotify</div>
-      <div class="svc-desc" style="color:var(--wrong); font-weight:700;">開発凍結</div>
-    </div>
     <div class="svc-card yt" onclick="chooseSvc('youtube')">
-      <div class="svc-icon">🔴</div>
-      <div class="svc-name">YouTube Music</div>
-      <div class="svc-desc">無料でOK</div>
+      <div class="svc-icon">🔴</div><div class="svc-name">YouTube Music</div>
     </div>
   </div>
 </div>
 
 <!-- YT SETUP -->
-<div id="screen-yt-setup" class="hidden">
-  <button class="back-btn" onclick="showOnly('service')">←</button>
-  <div class="setup-h">🔴 YouTube Music 設定</div>
-  <div class="setup-sub">初回のみ Google Cloud の設定が必要です。</div>
-  <div class="step"><div class="step-num">1</div><div class="step-body"><a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a> でプロジェクトを作成・選択</div></div>
-  <div class="step"><div class="step-num">2</div><div class="step-body">「APIとサービス」→「ライブラリ」→ <b>YouTube Data API v3</b> を有効化</div></div>
-  <div class="step"><div class="step-num">3</div><div class="step-body">「認証情報」→「OAuthクライアントID」→ アプリの種類: <b>ウェブアプリケーション</b><br>承認済みリダイレクトURIに追加:<br><code id="yt-redir"></code></div></div>
-  <div class="step"><div class="step-num">4</div><div class="step-body">
-    クライアントIDとシークレットを入力:
-    <input class="setup-inp" id="yt-cid" type="text" placeholder="クライアントID">
-    <input class="setup-inp" id="yt-cs" type="password" placeholder="クライアントシークレット" style="margin-top:6px">
-  </div></div>
-  <button class="btn-yt-go" onclick="startYtSetup()">Googleでログイン →</button>
-</div>
-
-<!-- LOGIN -->
-<div id="screen-login" class="hidden">
-  <div class="login-logo" id="login-logo">🟢</div>
-  <div class="login-title">イントロクイズ</div>
-  <div class="login-sub" id="login-sub"></div>
-  <button class="btn-login" id="btn-login-main" onclick="doLogin()">ログイン</button>
-  <div class="login-note" id="login-note"></div>
-  <button class="btn-svc-switch" onclick="showOnly('service')">← サービス選択に戻る</button>
+<div id="screen-yt-setup" class="hidden" style="padding:40px 24px">
+  <button class="btn-sm" onclick="showOnly('service')">← 戻る</button>
+  <h2 style="margin:20px 0">🔴 YouTube設定</h2>
+  <input class="setup-inp" id="yt-cid" type="text" placeholder="クライアントID" style="width:100%; padding:12px; background:var(--card); border:1.5px solid var(--border); border-radius:10px; color:#fff">
+  <input class="setup-inp" id="yt-cs" type="password" placeholder="シークレット" style="width:100%; padding:12px; background:var(--card); border:1.5px solid var(--border); border-radius:10px; color:#fff; margin-top:10px">
+  <div style="font-size:11px; margin:10px 0">URI: <code id="yt-redir"></code></div>
+  <button class="btn-start" style="width:100%" onclick="startYtSetup()">ログイン</button>
 </div>
 
 <!-- HOME -->
 <div id="screen-home" class="hidden">
   <div class="home-hdr">
-    <div class="home-icon" id="home-icon">🟢</div>
-    <div class="home-ttl">イントロクイズ</div>
-    <div class="home-acts">
-      <button class="btn-sm" onclick="showOnly('service')">切替</button>
-      <button class="btn-sm" onclick="doLogout()">ログアウト</button>
+    <div class="home-icon">🔴</div><div class="home-ttl">イントロクイズ</div>
+    <button class="btn-sm" onclick="doLogout()">ログアウト</button>
+  </div>
+  <div class="mode-grid">
+    <div class="mode-card" id="mode-10" onclick="selMode('10')"><div class="mode-name">10問</div><div class="mode-desc">1人プレイ</div></div>
+    <div class="mode-card" id="mode-25" onclick="selMode('25')"><div class="mode-name">25問</div><div class="mode-desc">1人プレイ</div></div>
+    <div class="mode-card" id="mode-endless" onclick="selMode('endless')"><div class="mode-name">エンドレス</div><div class="mode-desc">1人プレイ</div></div>
+    <div class="mode-card" id="mode-2p" onclick="selMode('2p')"><div class="mode-name">⚔️ 2人対戦</div><div class="mode-desc">キーボードバトル</div></div>
+  </div>
+  <div class="chips"><button class="chip" onclick="selIntro(3)">3s</button><button class="chip" onclick="selIntro(5)">5s</button><button class="chip sel" onclick="selIntro(10)">10s</button></div>
+  <div style="margin:20px 0">
+    <input type="text" id="custom-url" placeholder="YouTubeプレイリストURL" style="width:100%; padding:12px; background:var(--card); border:1px solid var(--border); border-radius:10px; color:#fff">
+    <div style="display:flex; gap:8px; margin-top:8px">
+      <button class="btn-sm" onclick="setCustomUrl('https://youtube.com/playlist?list=PLVbDD4bH3SU5KEVHCK2UvH_k2Fz9HlgBh')">アイマス</button>
+      <button class="btn-sm" onclick="setCustomUrl('https://youtube.com/playlist?list=PLggd500bJ4DhP4DfC_lYVDWPdq74xmJN9')">ミリオン</button>
+      <button class="btn-sm" onclick="setCustomUrl('https://youtube.com/playlist?list=PLggd500bJ4Dj-EmsNzgZfLsSAWVhiMDuI')">シャニ</button>
+      <button class="btn-sm" style="background:var(--red); color:#fff; border:none; margin-left:auto" onclick="loadCustomUrl()">開始</button>
     </div>
   </div>
-  <div class="sec-lbl" style="margin-bottom:10px">モード</div>
-  <div class="mode-card" id="mode-10" onclick="selMode('10')"><div class="mode-emoji">🎵</div><div class="mode-info"><div class="mode-name">10問</div><div class="mode-desc">10問でスコアを競う</div></div><div class="mode-chk">✓</div></div>
-  <div class="mode-card" id="mode-25" onclick="selMode('25')"><div class="mode-emoji">🎸</div><div class="mode-info"><div class="mode-name">25問</div><div class="mode-desc">25問でスコアを競う</div></div><div class="mode-chk">✓</div></div>
-  <div class="mode-card" id="mode-endless" onclick="selMode('endless')"><div class="mode-emoji">♾️</div><div class="mode-info"><div class="mode-name">エンドレス</div><div class="mode-desc">ハート3つ → ゲームオーバー</div></div><div class="mode-chk">✓</div></div>
-  <div class="sec-lbl" style="margin:20px 0 10px">イントロの長さ</div>
-  <div class="chips" id="chips">
-    <button class="chip" onclick="selIntro(3)">3秒</button>
-    <button class="chip" onclick="selIntro(5)">5秒</button>
-    <button class="chip sel" onclick="selIntro(10)">10秒</button>
-    <button class="chip" onclick="selIntro(15)">15秒</button>
-    <button class="chip" onclick="selIntro(30)">30秒</button>
-  </div>
-  
-  <div id="yt-url-section" class="hidden">
-    <div class="sec-lbl" style="margin:20px 0 10px">URLで遊ぶ (YouTube公開プレイリスト)</div>
-    <div style="display:flex;gap:8px;margin-bottom:8px">
-      <input type="text" id="custom-url" class="setup-inp" style="margin-top:0;flex:1" placeholder="https://youtube.com/playlist?list=...">
-      <button class="btn-sm" style="background:var(--red);color:#fff;border:none;padding:0 16px;font-weight:700" onclick="loadCustomUrl()">開始</button>
-    </div>
-    <div style="font-size:11px;color:var(--sub);margin-bottom:28px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
-      <span>ショートカット:</span>
-      <button class="btn-sm" onclick="setCustomUrl('https://youtube.com/playlist?list=PLVbDD4bH3SU5KEVHCK2UvH_k2Fz9HlgBh')">アイドルマスター全曲</button>
-      <button class="btn-sm" onclick="setCustomUrl('https://youtube.com/playlist?list=PLggd500bJ4DhP4DfC_lYVDWPdq74xmJN9')">ミリオンライブ全曲</button>
-      <button class="btn-sm" onclick="setCustomUrl('https://youtube.com/playlist?list=PLggd500bJ4Dj-EmsNzgZfLsSAWVhiMDuI')">シャニマス全曲</button>
-    </div>
-  </div>
-
-  <button class="btn-start" id="btn-start" onclick="goPlaylist()">プレイリストを選ぶ ▶</button>
+  <button class="btn-start" onclick="showOnly('playlist'); loadPl();">リストから選択 ▶</button>
 </div>
 
 <!-- PLAYLIST -->
 <div id="screen-playlist" class="hidden">
-  <div class="scr-hdr">
-    <button class="btn-back" onclick="showHome()">←</button>
-    <div><div class="scr-ttl">プレイリスト選択</div><div class="scr-meta" id="pl-meta"></div></div>
-    <button class="btn-relogin" id="btn-relogin" onclick="doLogout()">再ログイン</button>
-  </div>
-  <div class="banner" id="banner"><span>ℹ️</span><span>エラーが出たら「再ログイン」をお試しください</span></div>
-  <div id="pl-body" style="flex:1;display:flex;flex-direction:column;overflow:hidden"></div>
+  <div class="scr-hdr"><button class="btn-sm" onclick="showHome()">← 戻る</button></div>
+  <div id="pl-body" style="flex:1; overflow-y:auto"></div>
 </div>
 
 <!-- QUIZ -->
@@ -315,378 +151,226 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-seri
     <button class="btn-quit" onclick="confirmQuit()">✕</button>
     <div class="quiz-prog">
       <div class="q-lbl" id="q-lbl">1 / 10</div>
-      <div class="prog-wrap"><div class="prog-fill" id="q-bar" style="width:0%"></div></div>
+      <div class="prog-wrap"><div class="prog-fill" id="q-bar"></div></div>
+      <div class="vs-header" id="vs-header">
+        <div class="p-score-pill p1"><span>P1</span><span id="p1-score">0</span></div>
+        <div class="p-score-pill p2"><span>P2</span><span id="p2-score">0</span></div>
+      </div>
     </div>
-    <div id="q-combo" class="combo-badge hidden">0コンボ</div>
-    <div id="q-lives" class="lives hidden"></div>
-    <div id="q-score" class="score-badge">0</div>
+    <div class="q-score-solo" id="solo-score">0</div>
   </div>
   <div class="timer-wrap">
     <div class="timer-cont">
       <svg class="timer-svg" viewBox="0 0 200 200">
-        <circle cx="100" cy="100" r="88" fill="none" stroke="var(--border)" stroke-width="7"/>
-        <circle id="timer-ring" cx="100" cy="100" r="88" fill="none" stroke="var(--green)" stroke-width="7" stroke-linecap="round" stroke-dasharray="553" stroke-dashoffset="0" transform="rotate(-90 100 100)" style="transition:stroke-dashoffset 80ms linear,stroke .3s"/>
+        <circle cx="100" cy="100" r="88" fill="none" stroke="var(--border)" stroke-width="6"/>
+        <circle id="timer-ring" cx="100" cy="100" r="88" fill="none" stroke="var(--red)" stroke-width="6" stroke-linecap="round" stroke-dasharray="553" stroke-dashoffset="0" transform="rotate(-90 100 100)" style="transition:stroke-dashoffset 80ms linear"/>
       </svg>
-      <div class="timer-ctr" id="timer-ctr">
-        <div class="wave" id="wave-icon"><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div></div>
-        <img id="album-art" class="album-art hidden" src="" alt="">
-        <div id="album-ph" class="album-ph hidden">🎵</div>
+      <div class="central-area">
+        <div id="q-load-msg" style="font-size:12px; color:var(--sub)">読み込み中...</div>
+        <img id="q-album-art" class="q-album-art hidden" src="">
       </div>
     </div>
   </div>
   <div class="pts-lbl" id="pts-lbl">&nbsp;</div>
   <div class="trk-info" id="trk-info" style="opacity:0"><div class="trk-name" id="trk-name"></div><div class="trk-artist" id="trk-artist"></div></div>
   <div class="choices" id="choices"></div>
-  <div class="key-hint"><span class="key">↑↓</span>選択 <span class="key">Enter</span>回答 <span class="key">S</span>スキップ <span class="key">1234</span>直接回答</div>
+  <div style="text-align:center; font-size:11px; color:var(--sub); margin-top:12px" id="hint-text">1-4回答 / Sスキップ</div>
 </div>
 
 <!-- RESULT -->
 <div id="screen-result" class="hidden">
-  <div style="text-align:center">
-    <div id="res-nh" class="res-nh hidden">⭐ NEW HIGH SCORE!</div>
-    <div id="res-emoji" class="res-emoji"></div>
-    <div id="res-rank" class="res-rank"></div>
-    <div id="res-pl" class="res-pl"></div>
-  </div>
+  <div style="text-align:center"><div style="font-size:64px">🎉</div><div id="res-rank" style="font-size:24px; font-weight:700">RESULT</div></div>
   <div class="res-card">
-    <div id="res-score" class="res-score">0</div>
-    <div class="res-unit">pt</div>
-    <div class="res-div"></div>
-    <div class="res-stats">
-      <div class="res-stat"><div id="r-correct" class="res-val" style="color:var(--correct)">0/0</div><div class="res-lbl">正解数</div></div>
-      <div class="res-stat"><div id="r-avg" class="res-val" style="color:var(--accent)">0.0秒</div><div class="res-lbl">平均回答</div></div>
-      <div class="res-stat"><div id="r-combo" class="res-val" style="color:var(--gold)">0</div><div class="res-lbl">最大コンボ</div></div>
+    <div class="res-row">
+      <div style="text-align:center">
+        <div class="res-score-big" id="res-p1">0</div><div style="font-size:11px; color:var(--sub)">P1 SCORE</div>
+      </div>
+      <div style="text-align:center" id="res-p2-box">
+        <div class="res-score-big p2" id="res-p2">0</div><div style="font-size:11px; color:var(--sub)">P2 SCORE</div>
+      </div>
     </div>
-    <div style="text-align:center"><span id="r-mode" class="res-mode"></span></div>
   </div>
-  <div id="res-rev"></div>
-  <button class="btn-act" id="btn-again" onclick="playAgain()">▶ もう一度</button>
-  <button class="btn-act sec" onclick="showHome()">🏠 ホームへ</button>
-</div>
+  <button class="btn-start" style="width:100%" onclick="showHome()">🏠 ホームへ</button>
 </div>
 
-<!-- DIALOG -->
-<div id="dlg" class="dlg-overlay hidden">
-  <div class="dlg">
-    <div id="dlg-title" class="dlg-title"></div>
-    <div id="dlg-body" class="dlg-body"></div>
-    <div id="dlg-acts" class="dlg-acts"></div>
-  </div>
 </div>
+
+<div id="dlg" class="dlg-overlay hidden">
+  <div class="dlg"><div id="dlg-title" style="font-weight:700; margin-bottom:12px"></div><div id="dlg-body" style="font-size:13px; color:var(--sub); margin-bottom:20px"></div><div id="dlg-acts" style="text-align:right"><button class="btn-dlg" onclick="document.getElementById('dlg').classList.add('hidden')">OK</button></div></div>
+</div>
+
 <script src="https://www.youtube.com/iframe_api"></script>
 <script>
+const YT_TOK_URL='https://oauth2.googleapis.com/token',YT_API='https://www.googleapis.com/youtube/v3',REDIR=location.origin+location.pathname;
+let gameMode='10',introSec=10,allTracks=[],curPl=null;
+let qNum=0,score1=0,score2=0,correct=null,choices=[],answered=false,qStart=null,tick=null,nextTimer=null;
+let p1Sel=null,p2Sel=null,p1Time=0,p2Time=0,ytPlayer=null,ytReady=false,ytPlayingCb=null;
 
-// CONFIG
-const SP_CID='1f9e3f02aa1645d0a77c579a384edc3e',REDIR=location.origin+location.pathname,SP_VER='5';
-const SP_SCOPES='playlist-read-private playlist-read-collaborative user-read-private user-modify-playback-state user-read-playback-state user-library-read';
-const SP_AUTH='https://accounts.spotify.com/authorize',SP_TOK='https://accounts.spotify.com/api/token';
-const YT_AUTH='https://accounts.google.com/o/oauth2/v2/auth',YT_TOK='https://oauth2.googleapis.com/token',YT_API='https://www.googleapis.com/youtube/v3';
-const YT_SCOPE='https://www.googleapis.com/auth/youtube.readonly';
-
-// STATE
-let svc='spotify',gameMode='10',introSec=10,allTracks=[],usedIds=new Set(),curPl=null;
-let qNum=0,score=0,combo=0,lives=3,results=[],correct=null,choices=[],answered=false,focused=0;
-let tick=null,nextTimer=null,pauseT=null,qStart=null;
-let ytPlayer=null,ytReady=false,ytPlayingCb=null;
-
-// YT PLAYER
 function onYouTubeIframeAPIReady(){
-  ytPlayer=new YT.Player('yt-player',{
-    height:'200',width:'200',
-    playerVars:{autoplay:0,controls:0,origin:window.location.origin,playsinline:1},
-    events:{
-      onReady:()=>{ytReady=true;},
-      onStateChange:(e)=>{if(e.data===1&&ytPlayingCb){ytPlayingCb();ytPlayingCb=null;}},
-      onError:(e)=>{
-        if(document.getElementById('screen-quiz').classList.contains('hidden') || answered) return;
-        clearTimers();
-        pauseAll();
-        const lbl = document.getElementById('pts-lbl');
-        lbl.textContent = '🚫 制限された曲をスキップ...';
-        lbl.style.color = 'var(--wrong)';
-        lbl.style.fontSize = '14px';
-        setTimeout(()=>{
-          lbl.style.color = 'var(--gold)';
-          lbl.style.fontSize = '20px';
-          setupQ();
-        }, 1500);
-      }
-    }
-  });
+  ytPlayer=new YT.Player('yt-player',{height:'1',width:'1',playerVars:{autoplay:0,controls:0,origin:window.location.origin,playsinline:1},
+    events:{onReady:()=>{ytReady=true;},onStateChange:e=>{if(e.data===1&&ytPlayingCb){ytPlayingCb();ytPlayingCb=null;}},
+      onError:()=>{if(answered)return;clearTimers();setupQ();}}});
 }
-function ytPlay(vid){if(ytReady&&ytPlayer){ytPlayer.loadVideoById(vid,0);ytPlayer.playVideo();}}
-function ytPause(){try{if(ytPlayer&&ytReady)ytPlayer.pauseVideo();}catch(_){}}
+function ytPlay(id){if(ytReady&&ytPlayer){ytPlayer.loadVideoById(id,0);ytPlayer.playVideo();}}
+function ytPause(){try{if(ytPlayer)ytPlayer.pauseVideo();}catch(e){}}
 
-// HS
-function getHS(){try{return JSON.parse(localStorage.getItem('hs_v4')||'{}')}catch{return{}}}
-function saveHS(plId,mode,sv,sess){const hs=getHS(),k=`${sv}_${plId}_${mode}`,c=hs[k];if(!c||sess.score>c.score){hs[k]={score:sess.score,correct:sess.correct,total:sess.total,avgMs:sess.avgMs,bestCombo:sess.bestCombo,date:new Date().toISOString().slice(0,10)};localStorage.setItem('hs_v4',JSON.stringify(hs));return true;}return false;}
-
-// PKCE
 function b64u(buf){return btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');}
-async function pkce(){const v=b64u(crypto.getRandomValues(new Uint8Array(64)));const h=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(v));return{v,c:b64u(h)};}
-
-// SCREENS
-function showOnly(id){['service','yt-setup','login','home','playlist','quiz','result'].forEach(s=>document.getElementById('screen-'+s).classList.toggle('hidden',s!==id));}
-function showHome(){showOnly('home');applyTheme();selMode(gameMode);}
-
-// THEME
-function applyTheme(){
-  const y=svc==='youtube';
-  document.querySelectorAll('.mode-card').forEach(el=>{el.classList.toggle('sp-mode',!y);el.classList.toggle('yt-mode',y);});
-  document.querySelectorAll('.chip').forEach(el=>{el.classList.toggle('sp-chip',!y);el.classList.toggle('yt-chip',y);});
-  const hi=document.getElementById('home-icon');hi.className=`home-icon ${y?'yt':'sp'}`;hi.textContent=y?'🔴':'🟢';
-  document.getElementById('btn-start').className=`btn-start ${y?'yt':'sp'}`;
-  const bar=document.getElementById('q-bar');if(bar)bar.className=`prog-fill ${y?'yt':'sp'}`;
-  const sc=document.getElementById('q-score');if(sc)sc.className=`score-badge ${y?'yt':'sp'}`;
-  document.querySelectorAll('.wave-bar').forEach(el=>el.classList.toggle('yt',y));
-  const urlSec=document.getElementById('yt-url-section');if(urlSec)urlSec.classList.toggle('hidden',!y);
-}
-
-// SERVICE
-function chooseSvc(s){
-  svc=s;applyTheme();
-  if(s==='youtube'){
-    document.getElementById('yt-redir').textContent=REDIR;
-    const cid=localStorage.getItem('yt_cid'),cs=localStorage.getItem('yt_cs'),tok=localStorage.getItem('yt_tok'),exp=parseInt(localStorage.getItem('yt_exp')||'0');
-    if(cid)document.getElementById('yt-cid').value=cid;
-    if(cs)document.getElementById('yt-cs').value=cs;
-    if(tok&&Date.now()<exp){showHome();return;}
-    showOnly('yt-setup');
-  }else{
-    const ver=localStorage.getItem('sp_ver'),tok=localStorage.getItem('sp_tok'),exp=parseInt(localStorage.getItem('sp_exp')||'0');
-    if(tok&&ver===SP_VER&&Date.now()<exp){showHome();return;}
-    showLogin();
-  }
-}
-function showLogin(){
-  const y=svc==='youtube';
-  const logo=document.getElementById('login-logo');logo.className=`login-logo ${y?'yt':'sp'}`;logo.textContent=y?'🔴':'🟢';
-  document.getElementById('login-sub').textContent=y?'YouTube Music のプレイリストでイントロクイズ':'Spotify のプレイリストでイントロクイズ';
-  const btn=document.getElementById('btn-login-main');btn.className=`btn-login ${y?'yt':'sp'}`;btn.textContent=y?'Googleでログイン':'Spotifyでログイン';
-  document.getElementById('login-note').textContent=y?'※ YouTubeアカウントにアクセスします':'※ Spotifyアプリ + Premiumアカウントが必要です';
-  showOnly('login');
-}
-async function doLogin(){if(svc==='youtube')startYtSetup();else startSpLogin();}
-
-// SPOTIFY AUTH
-async function startSpLogin(){
-  try {
-    const{v,c}=await pkce();
-    localStorage.setItem('sp_v',v);
-    localStorage.setItem('pending','spotify');
-    const u=new URL(SP_AUTH);
-    u.searchParams.set('response_type','code');
-    u.searchParams.set('client_id',SP_CID);
-    u.searchParams.set('scope',SP_SCOPES);
-    u.searchParams.set('redirect_uri',REDIR);
-    u.searchParams.set('code_challenge_method','S256');
-    u.searchParams.set('code_challenge',c);
-    location.href=u.toString();
-  } catch (e) {
-    alert("ログイン開始エラー: " + e.message);
-  }
-}
-
-async function handleSpCb(code){const v=localStorage.getItem('sp_v');if(!v){alert('認証エラー: PKCEデータが見つかりません。');showLogin();return;}try{const r=await fetch(SP_TOK,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'authorization_code',code,redirect_uri:REDIR,client_id:SP_CID,code_verifier:v})});if(!r.ok){const e=await r.text();alert('Spotifyトークンエラー: '+r.status+'\n'+e);showLogin();return;}const d=await r.json();localStorage.setItem('sp_tok',d.access_token);localStorage.setItem('sp_ref',d.refresh_token||'');localStorage.setItem('sp_exp',Date.now()+(d.expires_in||3600)*1000);localStorage.setItem('sp_ver',SP_VER);localStorage.removeItem('sp_v');localStorage.removeItem('pending');svc='spotify';applyTheme();showHome();}catch(e){alert('ネットワークエラー: '+e.message);showLogin();}}
-async function getSpTok(){const ver=localStorage.getItem('sp_ver');if(ver!==SP_VER){doLogout();return null;}const exp=parseInt(localStorage.getItem('sp_exp')||'0');if(Date.now()>exp-300000){const ref=localStorage.getItem('sp_ref');if(!ref){doLogout();return null;}const r=await fetch(SP_TOK,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'refresh_token',refresh_token:ref,client_id:SP_CID})});if(!r.ok){doLogout();return null;}const d=await r.json();localStorage.setItem('sp_tok',d.access_token);localStorage.setItem('sp_exp',Date.now()+(d.expires_in||3600)*1000);if(d.refresh_token)localStorage.setItem('sp_ref',d.refresh_token);return d.access_token;}return localStorage.getItem('sp_tok');}
-
-// YOUTUBE AUTH
+async function pkce(){const v=b64u(crypto.getRandomValues(new Uint8Array(64))),h=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(v));return{v,c:b64u(h)};}
+function showOnly(id){['service','yt-setup','home','playlist','quiz','result'].forEach(s=>document.getElementById('screen-'+s).classList.toggle('hidden',s!==id));}
+function showHome(){showOnly('home');selMode(gameMode);}
+function chooseSvc(s){if(s!=='youtube')return;const t=localStorage.getItem('yt_tok'),e=parseInt(localStorage.getItem('yt_exp')||'0');if(t&&Date.now()<e)showHome();else showOnly('yt-setup');document.getElementById('yt-redir').textContent=REDIR;}
 async function startYtSetup(){
   const cid=document.getElementById('yt-cid').value.trim(),cs=document.getElementById('yt-cs').value.trim();
-  if(!cid||!cs){alert('クライアントIDとシークレットを入力してください');return;}
-  localStorage.setItem('yt_cid',cid);
-  localStorage.setItem('yt_cs',cs);
-  try {
-    const{v,c}=await pkce();
-    localStorage.setItem('yt_v',v);
-    localStorage.setItem('pending','youtube');
-    const u=new URL(YT_AUTH);
-    u.searchParams.set('response_type','code');
-    u.searchParams.set('client_id',cid);
-    u.searchParams.set('redirect_uri',REDIR);
-    u.searchParams.set('scope',YT_SCOPE);
-    u.searchParams.set('access_type','offline');
-    u.searchParams.set('prompt','consent');
-    u.searchParams.set('code_challenge_method','S256');
-    u.searchParams.set('code_challenge',c);
-    location.href=u.toString();
-  } catch(e) {
-    alert("ログイン開始エラー: " + e.message);
-  }
+  if(!cid||!cs){alert('IDとシークレットが必要です');return;}
+  localStorage.setItem('yt_cid',cid); localStorage.setItem('yt_cs',cs);
+  const{v,c}=await pkce(); localStorage.setItem('yt_v',v);
+  const u=`https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=${cid}&redirect_uri=${encodeURIComponent(REDIR)}&scope=https://www.googleapis.com/auth/youtube.readonly&access_type=offline&prompt=consent&code_challenge=${c}&code_challenge_method=S256`;
+  location.href=u;
 }
+async function getYtTok(){
+  const exp=parseInt(localStorage.getItem('yt_exp')||'0');
+  if(Date.now()>exp-300000){
+    const ref=localStorage.getItem('yt_ref'),cid=localStorage.getItem('yt_cid'),cs=localStorage.getItem('yt_cs');
+    const r=await fetch(YT_TOK_URL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'refresh_token',refresh_token:ref,client_id:cid,client_secret:cs})});
+    const d=await r.json(); localStorage.setItem('yt_tok',d.access_token); localStorage.setItem('yt_exp',Date.now()+(d.expires_in||3600)*1000); return d.access_token;
+  }
+  return localStorage.getItem('yt_tok');
+}
+function doLogout(){localStorage.removeItem('yt_tok');showOnly('service');}
 
-async function handleYtCb(code){const v=localStorage.getItem('yt_v'),cid=localStorage.getItem('yt_cid'),cs=localStorage.getItem('yt_cs');if(!v||!cid||!cs){showOnly('yt-setup');return;}const r=await fetch(YT_TOK,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'authorization_code',code,redirect_uri:REDIR,client_id:cid,client_secret:cs,code_verifier:v})});if(!r.ok){const e=await r.text();alert('YouTube認証エラー: '+e);showOnly('yt-setup');return;}const d=await r.json();localStorage.setItem('yt_tok',d.access_token);localStorage.setItem('yt_ref',d.refresh_token||'');localStorage.setItem('yt_exp',Date.now()+(d.expires_in||3600)*1000);localStorage.removeItem('yt_v');localStorage.removeItem('pending');history.replaceState({},'',location.pathname);svc='youtube';applyTheme();showHome();}
-async function getYtTok(){const exp=parseInt(localStorage.getItem('yt_exp')||'0');if(Date.now()>exp-300000){const ref=localStorage.getItem('yt_ref'),cid=localStorage.getItem('yt_cid'),cs=localStorage.getItem('yt_cs');if(!ref||!cid||!cs){doLogout();return null;}const r=await fetch(YT_TOK,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'refresh_token',refresh_token:ref,client_id:cid,client_secret:cs})});if(!r.ok){doLogout();return null;}const d=await r.json();localStorage.setItem('yt_tok',d.access_token);localStorage.setItem('yt_exp',Date.now()+(d.expires_in||3600)*1000);if(d.refresh_token)localStorage.setItem('yt_ref',d.refresh_token);return d.access_token;}return localStorage.getItem('yt_tok');}
-function doLogout(){const y=svc==='youtube';if(y)['yt_tok','yt_ref','yt_exp'].forEach(k=>localStorage.removeItem(k));else['sp_tok','sp_ref','sp_exp','sp_ver'].forEach(k=>localStorage.removeItem(k));showOnly('service');}
-
-// HOME
-function selMode(m){gameMode=m;const y=svc==='youtube';document.querySelectorAll('.mode-card').forEach(el=>{const id=el.id.replace('mode-','');el.classList.toggle('sel',id===m);el.classList.toggle('sp-mode',!y);el.classList.toggle('yt-mode',y);});}
-function selIntro(s){introSec=s;const y=svc==='youtube';document.querySelectorAll('.chip').forEach(el=>{const v=parseInt(el.textContent);el.classList.toggle('sel',v===s);el.classList.toggle('sp-chip',!y);el.classList.toggle('yt-chip',y);});}
-function goPlaylist(){const y=svc==='youtube';const m=document.getElementById('pl-meta');m.className=`scr-meta ${y?'yt':'sp'}`;m.textContent=`${gameMode==='endless'?'♾️ エンドレス':gameMode==='25'?'🎸 25問':'🎵 10問'}  ·  ${introSec}秒`;const b=document.getElementById('banner');b.className=`banner ${y?'yt':'sp'}`;const br=document.getElementById('btn-relogin');br.className=`btn-relogin ${y?'yt':'sp'}`;showOnly('playlist');loadPl();}
-
-// CUSTOM URL
+function selMode(m){gameMode=m;document.querySelectorAll('.mode-card').forEach(el=>el.classList.toggle('sel',el.id.replace('mode-','')===m));}
+function selIntro(s){introSec=s;document.querySelectorAll('.chip').forEach(el=>el.classList.toggle('sel',parseInt(el.textContent)===s));}
 function setCustomUrl(url){document.getElementById('custom-url').value=url;}
-async function loadCustomUrl() {
-  if (svc !== 'youtube') {
-    showDlg('YouTube Musicに切り替えてください', 'URL入力機能は現在YouTubeのプレイリストにのみ対応しています。', [{l:'閉じる', a:()=>{}}]);
-    return;
-  }
-  const urlStr = document.getElementById('custom-url').value.trim();
-  if (!urlStr) return;
-  let plId = null;
-  try {
-    const url = new URL(urlStr);
-    plId = url.searchParams.get('list');
-  } catch (e) {
-    const match = urlStr.match(/[?&]list=([^&]+)/);
-    if (match) plId = match[1];
-    else plId = urlStr;
-  }
-  if (!plId) {
-    showDlg('URLエラー', '正しいYouTubeプレイリストのURLを入力してください。', [{l:'閉じる', a:()=>{}}]);
-    return;
-  }
-  const tok = await getYtTok();
-  if(!tok){ doLogout(); return; }
-  const plObj = { id: plId, name: "URLから読み込んだプレイリスト", img: null };
-  await startQuiz(plObj);
+async function loadCustomUrl(){
+  const u=document.getElementById('custom-url').value.trim(); if(!u)return;
+  let id=u.match(/[?&]list=([^&]+)/)?.[1]||u; startQuiz({id,name:"カスタムURLプレイリスト"});
+}
+async function loadPl(){
+  const b=document.getElementById('pl-body'); b.innerHTML='<div style="padding:40px;text-align:center">読み込み中...</div>';
+  const tok=await getYtTok();
+  const r=await fetch(`${YT_API}/playlists?part=snippet&mine=true&maxResults=50`,{headers:{Authorization:`Bearer ${tok}`}});
+  const d=await r.json(); b.innerHTML=''; const g=document.createElement('div'); g.className='pl-grid';
+  (d.items||[]).forEach(i=>{
+    const c=document.createElement('div'); c.className='pl-card';
+    c.innerHTML=`<img class="pl-img" src="${i.snippet.thumbnails.medium.url}"><div class="pl-info"><div class="pl-name">${esc(i.snippet.title)}</div></div>`;
+    c.onclick=()=>startQuiz({id:i.id,name:i.snippet.title}); g.appendChild(c);
+  });
+  b.appendChild(g);
 }
 
-// PLAYLIST
-async function loadPl(){const body=document.getElementById('pl-body');const y=svc==='youtube';body.innerHTML=`<div class="loading-center"><div class="spinner ${y?'yt':''}"></div><div class="load-txt">読み込み中...</div></div>`;try{const pl=y?await fetchYtPl():await fetchSpPl();if(pl)renderPl(pl);}catch(e){body.innerHTML=`<div class="loading-center"><div class="load-txt">エラー: ${e.message}</div></div>`;}}
-async function fetchSpPl(){
-  const tok=await getSpTok();if(!tok)return null;
-  let userId='';
-  try{const ur=await fetch('https://api.spotify.com/v1/me',{headers:{Authorization:`Bearer ${tok}`}});if(ur.ok){const ud=await ur.json();userId=ud.id;}}catch(e){}
-  const pl=[];
-  let url='https://api.spotify.com/v1/me/playlists?limit=50';
-  while(url){
-    const r=await fetch(url,{headers:{Authorization:`Bearer ${tok}`}});
-    if(r.status===401||r.status===403){showDlg('再ログインが必要です',`エラー ${r.status}`,[{l:'キャンセル',a:()=>{}},{l:'再ログイン',a:doLogout,ok:true}]);return null;}
-    if(!r.ok)throw new Error(`${r.status}`);
-    const d=await r.json();
-    (d.items||[]).forEach(i=>{
-      if(i?.id){
-        if(userId && i.owner && i.owner.id !== userId) return;
-        pl.push({id:i.id,name:i.name||'',img:i.images?.[0]?.url||null,tracksUrl:i.tracks?.href});
-      }
-    });
-    url=d.next||null;
-  }
-  return pl;
-}
-async function fetchYtPl(){const tok=await getYtTok();if(!tok)return null;const pl=[];let pt='';while(true){const url=`${YT_API}/playlists?part=snippet&mine=true&maxResults=50${pt?'&pageToken='+pt:''}`;const r=await fetch(url,{headers:{Authorization:`Bearer ${tok}`}});if(r.status===401||r.status===403){showDlg('再ログインが必要です',`エラー ${r.status}`,[{l:'キャンセル',a:()=>{}},{l:'再ログイン',a:doLogout,ok:true}]);return null;}if(!r.ok)throw new Error(`${r.status}`);const d=await r.json();(d.items||[]).forEach(i=>{const s=i.snippet;pl.push({id:i.id,name:s?.title||'',img:s?.thumbnails?.medium?.url||s?.thumbnails?.default?.url||null});});pt=d.nextPageToken||'';if(!pt)break;}return pl;}
-function renderPl(pl){const body=document.getElementById('pl-body');if(!pl.length){body.innerHTML='<div class="loading-center"><div class="load-txt">プレイリストが見つかりません</div></div>';return;}const y=svc==='youtube';const g=document.createElement('div');g.className='pl-grid';pl.forEach(p=>{const c=document.createElement('div');c.className=`pl-card ${y?'yt':'sp'} fade-in`;c.innerHTML=(p.img?`<img class="pl-img" src="${p.img}" loading="lazy">`:'<div class="pl-ph">🎵</div>')+`<div class="pl-info"><div class="pl-name">${esc(p.name)}</div></div>`;c.onclick=()=>startQuiz(p);g.appendChild(c);});body.innerHTML='';body.appendChild(g);}
-
-// QUIZ
-async function startQuiz(pl){curPl=pl;showOnly('quiz');applyTheme();document.getElementById('timer-ctr').innerHTML=`<div class="loading-center" style="position:absolute"><div class="spinner ${svc==='youtube'?'yt':''}"></div><div class="load-txt" style="font-size:12px">読み込み中...</div></div>`;const tr=svc==='youtube'?await fetchYtTr(pl.id):await fetchSpTr(pl);if(!tr){showOnly('playlist');return;}if(tr.length<4){showDlg('曲が少なすぎます',`${tr?.length||0}曲しかありません。最低4曲必要です。`,[{l:'戻る',a:()=>showOnly('playlist')}]);return;}allTracks=tr;usedIds=new Set();qNum=0;score=0;combo=0;lives=3;results=[];const y=svc==='youtube';document.getElementById('timer-ctr').innerHTML=`<div class="wave" id="wave-icon">${'<div class="wave-bar'+(y?' yt':'')+'"></div>'.repeat(5)}</div><img id="album-art" class="album-art${y?' yt':''} hidden" src="" alt=""><div id="album-ph" class="album-ph hidden">🎵</div>`;setupQ();}
-async function fetchSpTr(plObj){
-  const tok=await getSpTok();if(!tok)return null;
-  const tr=[];
-  let url = plObj.tracksUrl || `https://api.spotify.com/v1/playlists/${plObj.id}/tracks?limit=100`;
-  try {
-    while(url){
-      const r=await fetch(url,{headers:{Authorization:`Bearer ${tok}`}});
-      if(r.status===403){ throw new Error("Spotify APIの制限により取得できません。"); }
-      if(!r.ok){ const err=await r.text(); throw new Error(`${r.status} ${err}`); }
-      const d=await r.json();
-      (d.items||[]).forEach(it=>{
-        const t=it?.track;
-        if(!t?.id || t.type!=='track' || t.is_local)return;
-        tr.push({id:t.id,name:t.name||'?',artist:(t.artists||[]).map(a=>a.name).join(', ')||'Unknown',img:t.album?.images?.[0]?.url||null,uri:`spotify:track:${t.id}`});
-      });
-      url=d.next||null;
-    }
-  } catch(e) {
-    alert("Spotify楽曲の取得エラー:\n" + e.message);
-    return null;
-  }
-  return tr;
-}
-async function fetchYtTr(id){
-  const tok=await getYtTok();if(!tok)return null;
-  const tr=[];let pt='';
-  try {
-    while(true){
-      const url=`${YT_API}/playlistItems?part=snippet&playlistId=${id}&maxResults=50${pt?'&pageToken='+pt:''}`;
-      const r=await fetch(url,{headers:{Authorization:`Bearer ${tok}`}});
-      if(!r.ok){ const err=await r.text(); throw new Error(`${r.status} ${err}`); }
-      const d=await r.json();
-      (d.items||[]).forEach(it=>{
-        const s=it?.snippet,vid=s?.resourceId?.videoId;
-        if(!vid||s?.title==='Deleted video'||s?.title==='Private video')return;
-        tr.push({id:vid,name:s.title||'?',artist:s.videoOwnerChannelTitle||'YouTube Music',img:s.thumbnails?.medium?.url||s.thumbnails?.default?.url||null,videoId:vid});
-      });
-      pt=d.nextPageToken||'';if(!pt)break;
-    }
-  } catch(e) {
-    alert("YouTube楽曲の取得エラー:\n" + e.message);
-    return null;
-  }
-  return tr;
+async function startQuiz(pl){
+  curPl=pl; showOnly('quiz'); qNum=0; score1=0; score2=0;
+  const isVs=gameMode==='2p';
+  document.getElementById('vs-header').classList.toggle('hidden',!isVs);
+  document.getElementById('solo-score').classList.toggle('hidden',isVs);
+  document.getElementById('hint-text').textContent = isVs ? "P1: 1-4キー / P2: 7-0キー" : "1-4キー回答 / Sスキップ";
+  
+  const tok=await getYtTok();
+  const r=await fetch(`${YT_API}/playlistItems?part=snippet&playlistId=${pl.id}&maxResults=100`,{headers:{Authorization:`Bearer ${tok}`}});
+  const d=await r.json();
+  allTracks=d.items.map(i=>({id:i.snippet.resourceId.videoId,name:i.snippet.title,artist:i.snippet.videoOwnerChannelTitle,img:i.snippet.thumbnails.medium.url}));
+  setupQ();
 }
 
-async function setupQ(){if(document.getElementById('screen-quiz').classList.contains('hidden'))return;const lim=gameMode==='endless'?null:parseInt(gameMode);if(lim&&qNum>=lim){endQuiz();return;}if(gameMode==='endless'&&lives<=0){endQuiz();return;}clearTimers();answered=false;focused=0;correct=pickNext();usedIds.add(correct.id);choices=buildChoices(correct);updateTop();showWave();document.getElementById('trk-info').style.opacity='0';document.getElementById('pts-lbl').innerHTML='&nbsp;';setRing(1);const el=document.getElementById('choices');el.innerHTML='';const y=svc==='youtube';choices.forEach((t,i)=>{const b=document.createElement('button');b.className='choice-btn';b.id=`c${i}`;b.innerHTML=`<div class="c-lbl ${y?'yt':'sp'}">${i+1}</div><div class="c-txt"><div class="c-track">${esc(t.name)}</div><div class="c-artist">${esc(t.artist)}</div></div><div class="c-icon"></div>`;b.onclick=()=>onAns(i);el.appendChild(b);});updFocus();
-let ok=false;if(svc==='youtube'){ok=true;ytPlay(correct.videoId);document.getElementById('pts-lbl').innerHTML='<span style="font-size:14px;color:var(--sub)">読み込み中...</span>';await new Promise(r=>{let to=setTimeout(()=>{ytPlayingCb=null;r();},8000);ytPlayingCb=()=>{clearTimeout(to);r();};});document.getElementById('pts-lbl').innerHTML='&nbsp;';}else{const tok=await getSpTok();if(tok){const r=await fetch('https://api.spotify.com/v1/me/player/play',{method:'PUT',headers:{Authorization:`Bearer ${tok}`,'Content-Type':'application/json'},body:JSON.stringify({uris:[correct.uri],position_ms:0})});if(r.status===403||r.status===401){showDlg('再ログインが必要です',`エラー ${r.status}`,[{l:'キャンセル',a:showHome},{l:'再ログイン',a:doLogout,ok:true}]);return;}if(r.status===404){showDlg('Spotifyアプリを起動してください','① スマホでSpotifyを起動\n② 曲を一度再生して停止\n③「再試行」をタップ',[{l:'戻る',a:showHome},{l:'再試行',a:()=>setupQ(),ok:true}]);return;}ok=true;}}
-if(!ok)return;if(svc!=='youtube')await sleep(300);qStart=Date.now();startTick();pauseT=setTimeout(()=>{if(!answered)pauseAll();},introSec*1000);}
+async function setupQ(){
+  const lim=(gameMode==='2p'?10:(gameMode==='endless'?999:parseInt(gameMode)));
+  if(qNum>=lim){endQuiz();return;}
+  clearTimers(); answered=false; qStart=null; p1Sel=null; p2Sel=null;
+  correct=allTracks[Math.floor(Math.random()*allTracks.length)];
+  choices=[correct,...allTracks.filter(t=>t.id!==correct.id).sort(()=>Math.random()-.5).slice(0,3)].sort(()=>Math.random()-.5);
+  
+  document.getElementById('q-lbl').textContent=`${qNum+1}問目`;
+  document.getElementById('pts-lbl').innerHTML='&nbsp;';
+  document.getElementById('trk-info').style.opacity='0';
+  document.getElementById('q-load-msg').classList.remove('hidden');
+  document.getElementById('q-album-art').classList.add('hidden');
+  document.getElementById('timer-ring').style.strokeDashoffset=0;
+  document.getElementById('q-bar').style.width = (qNum/lim*100) + '%';
+  
+  const el=document.getElementById('choices'); el.innerHTML='';
+  choices.forEach((t,i)=>{
+    const b=document.createElement('button'); b.className='choice-btn';
+    if(gameMode==='2p') b.classList.add('mode-2p-active');
+    b.innerHTML=`<div class="c-lbl">${i+1}</div><div class="c-txt"><div class="c-track">${esc(t.name)}</div><div class="c-artist">${esc(t.artist)}</div></div><div class="p-ind-wrap"><div class="p-ind" id="p1-i-${i}"></div><div class="p-ind" id="p2-i-${i}"></div></div>`;
+    if(gameMode!=='2p') b.onclick=()=>onAns(0,i);
+    el.appendChild(b);
+  });
 
-function pickNext(){const av=allTracks.filter(t=>!usedIds.has(t.id));if(!av.length){usedIds.clear();return allTracks[ri(allTracks.length)];}return av[ri(av.length)];}
-function buildChoices(c){const p=allTracks.filter(t=>t.id!==c.id);shuf(p);return[c,...p.slice(0,3)].sort(()=>Math.random()-.5);}
+  ytPlay(correct.id);
+  await new Promise(r=>{ytPlayingCb=r; setTimeout(r,8000);});
+  document.getElementById('q-load-msg').classList.add('hidden');
+  qStart=Date.now(); startTick();
+  pauseT=setTimeout(()=>{if(!answered)timeUp();},introSec*1000);
+}
 
-function startTick(){const tot=introSec*1000;tick=setInterval(()=>{const p=Math.max(0,1-(Date.now()-qStart)/tot);setRing(p);if(p<=0){clearInterval(tick);if(!answered)timeUp();}},80);}
-function setRing(p){const r=document.getElementById('timer-ring');if(!r)return;r.style.strokeDashoffset=553*(1-p);const y=svc==='youtube';r.style.stroke=p>.5?(y?'var(--red)':'var(--green)'):p>.25?'#ffb300':'var(--wrong)';}
-function timeUp(){pauseAll();recRes(null);reveal();schedNext();}
-function onAns(i){if(answered)return;clearTimers();pauseAll();answered=true;recRes(choices[i]);reveal(i);schedNext();}
-function onSkip(){if(answered)return;clearTimers();pauseAll();answered=true;recRes(null);reveal(-1);schedNext();}
-function recRes(sel){const el=qStart?Date.now()-qStart:introSec*1000,ok=sel?.id===correct.id;let pts=0;if(ok){combo++;const m=combo>=10?3:combo>=5?2:combo>=3?1.5:1;pts=Math.floor((100+Math.floor(50*(1-Math.min(1,el/(introSec*1000)))))*m);score+=pts;const ml=m>1?` ×${m}`:''  ;const pl=document.getElementById('pts-lbl');pl.textContent=`+${pts}${ml}`;pl.style.animation='none';pl.offsetHeight;pl.style.animation='scaleIn .2s ease';}else{if(gameMode==='endless'&&sel!==null)lives--;combo=0;}results.push({correct,sel,ok,el,pts,combo});qNum++;updateTop();}
-function reveal(si=-1){showAlbum(correct.img);const ti=document.getElementById('trk-info');document.getElementById('trk-name').textContent=correct.name;document.getElementById('trk-artist').textContent=correct.artist;ti.style.opacity='1';choices.forEach((t,i)=>{const b=document.getElementById(`c${i}`);if(!b)return;b.classList.add('ans');const ic=b.querySelector('.c-icon');if(t.id===correct.id){b.classList.add(si===i?'correct':'missed');ic.textContent=si===i?'✓':'⭐';}else if(i===si){b.classList.add('wrong');ic.textContent='✗';}});}
-function schedNext(){clearTimeout(nextTimer);nextTimer=setTimeout(setupQ,3000);}
-function pauseAll(){ytPause();if(svc==='spotify')getSpTok().then(t=>{if(t)fetch('https://api.spotify.com/v1/me/player/pause',{method:'PUT',headers:{Authorization:`Bearer ${t}`}}).catch(()=>{});});}
-function showWave(){const w=document.getElementById('wave-icon'),a=document.getElementById('album-art'),p=document.getElementById('album-ph');if(w)w.style.display='flex';if(a){a.classList.add('hidden');a.src='';}if(p)p.classList.add('hidden');}
-function showAlbum(url){const w=document.getElementById('wave-icon'),a=document.getElementById('album-art'),p=document.getElementById('album-ph');if(w)w.style.display='none';if(url&&a){a.src=url;a.classList.remove('hidden');if(p)p.classList.add('hidden');}else if(p){p.classList.remove('hidden');if(a)a.classList.add('hidden');}}
-function updateTop(){const lim=gameMode==='endless'?null:parseInt(gameMode);document.getElementById('q-lbl').textContent=lim?`${Math.min(qNum+1,lim)} / ${lim}`:`${qNum+1}問目`;document.getElementById('q-bar').style.width=lim?`${Math.min(100,(qNum/lim)*100)}%`:'100%';document.getElementById('q-score').textContent=score;const cb=document.getElementById('q-combo');if(combo>=2){cb.textContent=`${combo}コンボ`;cb.classList.remove('hidden');}else cb.classList.add('hidden');const lv=document.getElementById('q-lives');if(gameMode==='endless'){lv.classList.remove('hidden');lv.innerHTML=[0,1,2].map(i=>i<lives?'❤️':'🖤').join('');}else lv.classList.add('hidden');}
-function updFocus(){const y=svc==='youtube';choices.forEach((_,i)=>{const b=document.getElementById(`c${i}`);if(!b)return;b.classList.remove('fsp','fyt');if(i===focused)b.classList.add(y?'fyt':'fsp');});}
+function startTick(){tick=setInterval(()=>{const p=Math.max(0,1-(Date.now()-qStart)/(introSec*1000));document.getElementById('timer-ring').style.strokeDashoffset=553*(1-p);},80);}
 
-// RESULT
-function endQuiz(){clearTimers();pauseAll();const ok=results.filter(r=>r.ok).length,tot=results.length,avgMs=tot?results.reduce((s,r)=>s+r.el,0)/tot:0,bc=results.reduce((m,r)=>Math.max(m,r.combo),0),acc=tot?ok/tot:0;const rank=acc===1?'🏆':acc>=.8?'🎸':acc>=.6?'🎵':acc>=.4?'🎤':'🎶',msg=acc===1?'パーフェクト!!':acc>=.8?'すごい！':acc>=.6?'なかなか！':acc>=.4?'もう少し！':'練習あるのみ！';const sess={score,correct:ok,total:tot,avgMs,bestCombo:bc},isNew=saveHS(curPl.id,gameMode,svc,sess),y=svc==='youtube';const nh=document.getElementById('res-nh');nh.className=`res-nh ${y?'yt':'sp'} ${isNew?'':'hidden'}`;document.getElementById('res-emoji').textContent=rank;document.getElementById('res-rank').textContent=msg;document.getElementById('res-pl').textContent=curPl.name;const rs=document.getElementById('res-score');rs.textContent=score;rs.className=`res-score ${y?'yt':'sp'}`;document.getElementById('r-correct').textContent=`${ok}/${tot}`;document.getElementById('r-avg').textContent=`${(avgMs/1000).toFixed(1)}秒`;document.getElementById('r-combo').textContent=bc;document.getElementById('r-mode').textContent=`${gameMode==='endless'?'♾️':gameMode==='25'?'🎸':'🎵'} ${gameMode==='endless'?'エンドレス':gameMode+'問'}  ·  ${introSec}秒`;document.getElementById('btn-again').className=`btn-act ${y?'yt':'sp'}`;const wr=results.filter(r=>!r.ok);document.getElementById('res-rev').innerHTML=wr.length?`<div style="font-size:14px;font-weight:700;color:var(--accent);margin-bottom:8px">不正解を復習（${wr.length}曲）</div><div class="rev-list">${wr.map((r,i)=>`<div class="rev-card fade-in" style="animation-delay:${i*50}ms">${r.correct.img?`<img class="rev-art" src="${r.correct.img}" loading="lazy">`:'<div class="rev-art" style="display:flex;align-items:center;justify-content:center;font-size:28px">🎵</div>'}<div class="rev-info"><div class="rev-ok">✓ ${esc(r.correct.name)}</div><div class="rev-artist">${esc(r.correct.artist)}</div><div class="rev-ng">${r.sel?`✗ ${esc(r.sel.name)}`:'⏱ 時間切れ'}</div></div><div class="rev-time">${(r.el/1000).toFixed(1)}秒</div></div>`).join('')}</div>`:'';showOnly('result');}
-function playAgain(){startQuiz(curPl);}
+function onAns(pIdx, cIdx){
+  if(answered||!qStart)return;
+  const time=Date.now()-qStart;
+  if(pIdx===0 && p1Sel===null){p1Sel=choices[cIdx]; p1Time=time; const i=document.getElementById(`p1-i-${cIdx}`); if(i)i.classList.add('p1-on');}
+  if(pIdx===1 && p2Sel===null){p2Sel=choices[cIdx]; p2Time=time; const i=document.getElementById(`p2-i-${cIdx}`); if(i)i.classList.add('p2-on');}
+  if(gameMode!=='2p' || (p1Sel!==null && p2Sel!==null)){clearTimers(); answered=true; reveal();}
+}
 
-// DIALOG
-function showDlg(title,body,btns){const y=svc==='youtube';document.getElementById('dlg-title').textContent=title;document.getElementById('dlg-body').textContent=body;const acts=document.getElementById('dlg-acts');acts.innerHTML='';btns.forEach(b=>{const btn=document.createElement('button');btn.className=`btn-dlg ${b.ok?(y?'ok-yt':'ok-sp'):'cancel'}`;btn.textContent=b.l;btn.onclick=()=>{document.getElementById('dlg').classList.add('hidden');b.a();};acts.appendChild(btn);});document.getElementById('dlg').classList.remove('hidden');}
-function confirmQuit(){clearTimers();pauseAll();showDlg('クイズを中断','中断するとスコアはリセットされます。',[{l:'続ける',a:()=>{if(!answered)startTick();}},{l:'中断',a:showHome}]);}
+function timeUp(){clearTimers(); answered=true; reveal();}
 
-// KEYBOARD
-document.addEventListener('keydown',e=>{if(document.getElementById('screen-quiz').classList.contains('hidden'))return;if(answered)return;if(e.key==='ArrowUp'||e.key==='ArrowLeft'){e.preventDefault();focused=(focused+3)%4;updFocus();}else if(e.key==='ArrowDown'||e.key==='ArrowRight'){e.preventDefault();focused=(focused+1)%4;updFocus();}else if(e.key==='Enter'||e.key===' '){e.preventDefault();onAns(focused);}else if(e.key.toLowerCase()==='s')onSkip();else if(e.key==='1')onAns(0);else if(e.key==='2')onAns(1);else if(e.key==='3')onAns(2);else if(e.key==='4')onAns(3);});
+function reveal(){
+  ytPause();
+  const ok1=(p1Sel?.id===correct.id), ok2=(p2Sel?.id===correct.id);
+  if(ok1) score1+=Math.floor(100*(1-p1Time/(introSec*1000))+50);
+  if(gameMode==='2p'&&ok2) score2+=Math.floor(100*(1-p2Time/(introSec*1000))+50);
+  
+  document.getElementById('solo-score').textContent=score1;
+  document.getElementById('p1-score').textContent=score1;
+  document.getElementById('p2-score').textContent=score2;
+  document.getElementById('trk-name').textContent=correct.name;
+  document.getElementById('trk-artist').textContent=correct.artist;
+  document.getElementById('trk-info').style.opacity='1';
+  document.getElementById('q-album-art').src=correct.img;
+  document.getElementById('q-album-art').classList.remove('hidden');
+  
+  Array.from(document.getElementById('choices').children).forEach((b,i)=>{
+    b.classList.add('ans');
+    if(choices[i].id===correct.id) b.classList.add('correct');
+    else if(p1Sel?.id===choices[i].id || p2Sel?.id===choices[i].id) b.classList.add('wrong');
+    if(choices[i].id===correct.id && !ok1 && (gameMode!=='2p'||!ok2)) b.classList.add('missed');
+  });
+  qNum++; nextTimer=setTimeout(setupQ,3000);
+}
 
-// UTILS
+function endQuiz(){
+  showOnly('result');
+  document.getElementById('res-p1').textContent=score1;
+  document.getElementById('res-p2-box').classList.toggle('hidden',gameMode!=='2p');
+  if(gameMode==='2p'){
+    document.getElementById('res-p2').textContent=score2;
+    document.getElementById('res-rank').textContent=score1>score2?"P1 WIN!":(score2>score1?"P2 WIN!":"DRAW");
+  } else document.getElementById('res-rank').textContent="FINISH!";
+}
+
 function clearTimers(){clearInterval(tick);clearTimeout(nextTimer);clearTimeout(pauseT);}
-function ri(n){return Math.floor(Math.random()*n);}
-function shuf(a){for(let i=a.length-1;i>0;i--){const j=ri(i+1);[a[i],a[j]]=[a[j],a[i]];}}
-function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function confirmQuit(){clearTimers();ytPause();showHome();}
+function showDlg(t,b){document.getElementById('dlg-title').textContent=t;document.getElementById('dlg-body').textContent=b;document.getElementById('dlg').classList.remove('hidden');}
 
-// INIT
+document.addEventListener('keydown',e=>{
+  if(document.getElementById('screen-quiz').classList.contains('hidden')||answered)return;
+  if(['1','2','3','4'].includes(e.key)) onAns(0,parseInt(e.key)-1);
+  if(['7','8','9','0'].includes(e.key)){const idx=e.key==='0'?3:parseInt(e.key)-7; if(idx>=0&&idx<=3)onAns(1,idx);}
+  if(e.key.toLowerCase()==='s')timeUp();
+});
+
 (async()=>{
-  const p=new URLSearchParams(location.search),code=p.get('code'),err=p.get('error');
-  if(err){
+  const p=new URLSearchParams(location.search),c=p.get('code');
+  if(c){
+    const v=localStorage.getItem('yt_v'),cid=localStorage.getItem('yt_cid'),cs=localStorage.getItem('yt_cs');
+    const r=await fetch(YT_TOK_URL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'authorization_code',code:c,redirect_uri:REDIR,client_id:cid,client_secret:cs,code_verifier:v})});
+    const d=await r.json(); localStorage.setItem('yt_tok',d.access_token); localStorage.setItem('yt_ref',d.refresh_token||''); localStorage.setItem('yt_exp',Date.now()+(d.expires_in||3600)*1000);
     history.replaceState({},'',location.pathname);
-    alert('認証エラー: ' + err);
-    showOnly('service');
-    return;
   }
-  if(code){
-    history.replaceState({},'',location.pathname);
-    const pend=localStorage.getItem('pending');
-    if(pend==='youtube'){svc='youtube';await handleYtCb(code);}
-    else{
-      alert('Spotify版は現在凍結されています。');
-      showOnly('service');
-    }
-    return;
-  }
-  const ytt=localStorage.getItem('yt_tok'),yte=parseInt(localStorage.getItem('yt_exp')||'0');
-  if(ytt&&Date.now()<yte){svc='youtube';applyTheme();showHome();return;}
-  showOnly('service');
+  const tok=localStorage.getItem('yt_tok'),exp=parseInt(localStorage.getItem('yt_exp')||'0');
+  if(tok&&Date.now()<exp){chooseSvc('youtube');}else showOnly('service');
 })();
 </script>
 </body>

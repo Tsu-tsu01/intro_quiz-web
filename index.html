@@ -157,7 +157,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-seri
 .choice-btn:hover:not(.ans):not(.fsp):not(.fyt){border-color:var(--sub);background:rgba(255,255,255,.04)}
 .choice-btn.correct{background:rgba(46,204,113,.2);border-color:var(--correct)}
 .choice-btn.wrong{background:rgba(231,76,60,.18);border-color:var(--wrong)}
-.choice-btn.missed{background:rgba(29,185,84,.08);border-color:var(--green)}
+.choice-btn.missed{background:rgba(255,215,0,.15);border-color:var(--gold)}
 .c-lbl{width:30px;height:30px;border-radius:8px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0}
 .c-lbl.sp{color:var(--green)}.c-lbl.yt{color:var(--red)}
 .c-txt{flex:1;min-width:0}
@@ -225,7 +225,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-seri
     </div>
     <div class="svc-card yt" onclick="chooseSvc('youtube')">
       <div class="svc-icon">🔴</div>
-      <div class="svc-name">YouTube<br>Music</div>
+      <div class="svc-name">YouTube Music</div>
       <div class="svc-desc">無料でOK</div>
     </div>
   </div>
@@ -294,7 +294,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-seri
     </div>
   </div>
 
-  <button class="btn-start" id="btn-start" onclick="goPlaylist()">自分のプレイリストを選ぶ ▶</button>
+  <button class="btn-start" id="btn-start" onclick="goPlaylist()">プレイリストを選ぶ ▶</button>
 </div>
 
 <!-- PLAYLIST -->
@@ -408,7 +408,7 @@ function onYouTubeIframeAPIReady(){
         setTimeout(()=>{
           lbl.style.color = 'var(--gold)';
           lbl.style.fontSize = '20px';
-          setupQ(); // ノーペナルティで次の曲を再抽選
+          setupQ();
         }, 1500);
       }
     }
@@ -483,11 +483,11 @@ async function startSpLogin(){
     u.searchParams.set('code_challenge',c);
     location.href=u.toString();
   } catch (e) {
-    alert("ログイン開始エラー: " + e.message + "\nHTTPS環境で実行しているか確認してください。");
+    alert("ログイン開始エラー: " + e.message);
   }
 }
 
-async function handleSpCb(code){const v=localStorage.getItem('sp_v');if(!v){alert('認証エラー: PKCEデータが見つかりません。もう一度ログインしてください。');showLogin();return;}try{const r=await fetch(SP_TOK,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'authorization_code',code,redirect_uri:REDIR,client_id:SP_CID,code_verifier:v})});if(!r.ok){const e=await r.text();alert('Spotifyトークンエラー: '+r.status+'\n'+e);showLogin();return;}const d=await r.json();localStorage.setItem('sp_tok',d.access_token);localStorage.setItem('sp_ref',d.refresh_token||'');localStorage.setItem('sp_exp',Date.now()+(d.expires_in||3600)*1000);localStorage.setItem('sp_ver',SP_VER);localStorage.removeItem('sp_v');localStorage.removeItem('pending');svc='spotify';applyTheme();showHome();}catch(e){alert('ネットワークエラー: '+e.message);showLogin();}}
+async function handleSpCb(code){const v=localStorage.getItem('sp_v');if(!v){alert('認証エラー: PKCEデータが見つかりません。');showLogin();return;}try{const r=await fetch(SP_TOK,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'authorization_code',code,redirect_uri:REDIR,client_id:SP_CID,code_verifier:v})});if(!r.ok){const e=await r.text();alert('Spotifyトークンエラー: '+r.status+'\n'+e);showLogin();return;}const d=await r.json();localStorage.setItem('sp_tok',d.access_token);localStorage.setItem('sp_ref',d.refresh_token||'');localStorage.setItem('sp_exp',Date.now()+(d.expires_in||3600)*1000);localStorage.setItem('sp_ver',SP_VER);localStorage.removeItem('sp_v');localStorage.removeItem('pending');svc='spotify';applyTheme();showHome();}catch(e){alert('ネットワークエラー: '+e.message);showLogin();}}
 async function getSpTok(){const ver=localStorage.getItem('sp_ver');if(ver!==SP_VER){doLogout();return null;}const exp=parseInt(localStorage.getItem('sp_exp')||'0');if(Date.now()>exp-300000){const ref=localStorage.getItem('sp_ref');if(!ref){doLogout();return null;}const r=await fetch(SP_TOK,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'refresh_token',refresh_token:ref,client_id:SP_CID})});if(!r.ok){doLogout();return null;}const d=await r.json();localStorage.setItem('sp_tok',d.access_token);localStorage.setItem('sp_exp',Date.now()+(d.expires_in||3600)*1000);if(d.refresh_token)localStorage.setItem('sp_ref',d.refresh_token);return d.access_token;}return localStorage.getItem('sp_tok');}
 
 // YOUTUBE AUTH
@@ -511,7 +511,7 @@ async function startYtSetup(){
     u.searchParams.set('code_challenge',c);
     location.href=u.toString();
   } catch(e) {
-    alert("ログイン開始エラー: " + e.message + "\nHTTPS環境で実行しているか確認してください。");
+    alert("ログイン開始エラー: " + e.message);
   }
 }
 
@@ -526,15 +526,13 @@ function goPlaylist(){const y=svc==='youtube';const m=document.getElementById('p
 
 // CUSTOM URL
 function setCustomUrl(url){document.getElementById('custom-url').value=url;}
-
 async function loadCustomUrl() {
   if (svc !== 'youtube') {
-    showDlg('YouTube Musicに切り替えてください', 'URL入力機能は現在YouTubeのプレイリストにのみ対応しています。画面上部の「切替」ボタンからYouTube Musicを選択してください。', [{l:'閉じる', a:()=>{}}]);
+    showDlg('YouTube Musicに切り替えてください', 'URL入力機能は現在YouTubeのプレイリストにのみ対応しています。', [{l:'閉じる', a:()=>{}}]);
     return;
   }
   const urlStr = document.getElementById('custom-url').value.trim();
   if (!urlStr) return;
-  
   let plId = null;
   try {
     const url = new URL(urlStr);
@@ -542,18 +540,14 @@ async function loadCustomUrl() {
   } catch (e) {
     const match = urlStr.match(/[?&]list=([^&]+)/);
     if (match) plId = match[1];
-    else plId = urlStr; // URLではなくID直打ちの場合
+    else plId = urlStr;
   }
-
   if (!plId) {
-    showDlg('URLエラー', '正しいYouTubeプレイリストのURLを入力してください。\n(例: https://www.youtube.com/playlist?list=XXX)', [{l:'閉じる', a:()=>{}}]);
+    showDlg('URLエラー', '正しいYouTubeプレイリストのURLを入力してください。', [{l:'閉じる', a:()=>{}}]);
     return;
   }
-
   const tok = await getYtTok();
   if(!tok){ doLogout(); return; }
-
-  // カスタムURLから開始
   const plObj = { id: plId, name: "URLから読み込んだプレイリスト", img: null };
   await startQuiz(plObj);
 }
@@ -593,7 +587,7 @@ async function fetchSpTr(plObj){
   try {
     while(url){
       const r=await fetch(url,{headers:{Authorization:`Bearer ${tok}`}});
-      if(r.status===403){ throw new Error("Spotify APIの制限によりこのプレイリストは取得できません。（403 Forbidden）\n別のプレイリストでお試しください。"); }
+      if(r.status===403){ throw new Error("Spotify APIの制限により取得できません。"); }
       if(!r.ok){ const err=await r.text(); throw new Error(`${r.status} ${err}`); }
       const d=await r.json();
       (d.items||[]).forEach(it=>{
@@ -632,7 +626,7 @@ async function fetchYtTr(id){
   return tr;
 }
 
-async function setupQ(){if(document.getElementById('screen-quiz').classList.contains('hidden'))return;const lim=gameMode==='endless'?null:parseInt(gameMode);if(lim&&qNum>=lim){endQuiz();return;}if(gameMode==='endless'&&lives<=0){endQuiz();return;}clearTimers();answered=false;focused=0;correct=pickNext();usedIds.add(correct.id);choices=buildChoices(correct);updateTop();showWave();document.getElementById('trk-info').style.opacity='0';document.getElementById('pts-lbl').innerHTML='&nbsp;';setRing(1);const el=document.getElementById('choices');el.innerHTML='';const y=svc==='youtube';choices.forEach((t,i)=>{const b=document.createElement('button');b.className='choice-btn';b.id=`c${i}`;b.innerHTML=`<div class="c-lbl ${y?'yt':'sp'}">${['A','B','C','D'][i]}</div><div class="c-txt"><div class="c-track">${esc(t.name)}</div><div class="c-artist">${esc(t.artist)}</div></div><div class="c-icon"></div>`;b.onclick=()=>onAns(i);el.appendChild(b);});updFocus();
+async function setupQ(){if(document.getElementById('screen-quiz').classList.contains('hidden'))return;const lim=gameMode==='endless'?null:parseInt(gameMode);if(lim&&qNum>=lim){endQuiz();return;}if(gameMode==='endless'&&lives<=0){endQuiz();return;}clearTimers();answered=false;focused=0;correct=pickNext();usedIds.add(correct.id);choices=buildChoices(correct);updateTop();showWave();document.getElementById('trk-info').style.opacity='0';document.getElementById('pts-lbl').innerHTML='&nbsp;';setRing(1);const el=document.getElementById('choices');el.innerHTML='';const y=svc==='youtube';choices.forEach((t,i)=>{const b=document.createElement('button');b.className='choice-btn';b.id=`c${i}`;b.innerHTML=`<div class="c-lbl ${y?'yt':'sp'}">${i+1}</div><div class="c-txt"><div class="c-track">${esc(t.name)}</div><div class="c-artist">${esc(t.artist)}</div></div><div class="c-icon"></div>`;b.onclick=()=>onAns(i);el.appendChild(b);});updFocus();
 let ok=false;if(svc==='youtube'){ok=true;ytPlay(correct.videoId);document.getElementById('pts-lbl').innerHTML='<span style="font-size:14px;color:var(--sub)">読み込み中...</span>';await new Promise(r=>{let to=setTimeout(()=>{ytPlayingCb=null;r();},8000);ytPlayingCb=()=>{clearTimeout(to);r();};});document.getElementById('pts-lbl').innerHTML='&nbsp;';}else{const tok=await getSpTok();if(tok){const r=await fetch('https://api.spotify.com/v1/me/player/play',{method:'PUT',headers:{Authorization:`Bearer ${tok}`,'Content-Type':'application/json'},body:JSON.stringify({uris:[correct.uri],position_ms:0})});if(r.status===403||r.status===401){showDlg('再ログインが必要です',`エラー ${r.status}`,[{l:'キャンセル',a:showHome},{l:'再ログイン',a:doLogout,ok:true}]);return;}if(r.status===404){showDlg('Spotifyアプリを起動してください','① スマホでSpotifyを起動\n② 曲を一度再生して停止\n③「再試行」をタップ',[{l:'戻る',a:showHome},{l:'再試行',a:()=>setupQ(),ok:true}]);return;}ok=true;}}
 if(!ok)return;if(svc!=='youtube')await sleep(300);qStart=Date.now();startTick();pauseT=setTimeout(()=>{if(!answered)pauseAll();},introSec*1000);}
 
@@ -676,7 +670,7 @@ function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').repl
   const p=new URLSearchParams(location.search),code=p.get('code'),err=p.get('error');
   if(err){
     history.replaceState({},'',location.pathname);
-    alert('認証エラー: ' + err + '\n\n【重要】Spotify Developer Dashboardの「Redirect URIs」に以下のURLが正確に登録されているか確認してください:\n' + REDIR);
+    alert('認証エラー: ' + err);
     showOnly('service');
     return;
   }
@@ -685,19 +679,11 @@ function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').repl
     const pend=localStorage.getItem('pending');
     if(pend==='youtube'){svc='youtube';await handleYtCb(code);}
     else{
-      // svc='spotify';await handleSpCb(code); // 開発凍結
       alert('Spotify版は現在凍結されています。');
       showOnly('service');
     }
     return;
   }
-  
-  // Spotify自動ログインを無効化（開発の軌跡としてソースは維持）
-  /*
-  const spv=localStorage.getItem('sp_ver'),spt=localStorage.getItem('sp_tok'),spe=parseInt(localStorage.getItem('sp_exp')||'0');
-  if(spt&&spv===SP_VER&&Date.now()<spe){svc='spotify';applyTheme();showHome();return;}
-  */
-  
   const ytt=localStorage.getItem('yt_tok'),yte=parseInt(localStorage.getItem('yt_exp')||'0');
   if(ytt&&Date.now()<yte){svc='youtube';applyTheme();showHome();return;}
   showOnly('service');

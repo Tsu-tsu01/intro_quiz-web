@@ -218,10 +218,10 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-seri
   <div class="svc-title">🎵 イントロクイズ</div>
   <div class="svc-sub">サービスを選んでください</div>
   <div class="svc-cards">
-    <div class="svc-card sp" onclick="chooseSvc('spotify')">
+    <div class="svc-card sp" style="opacity:0.5; filter:grayscale(0.8); cursor:not-allowed;" onclick="showDlg('開発凍結','Spotify APIの制限強化に伴い、Spotify版の開発・提供は現在凍結されています。\n右側の「YouTube Music」版をご利用ください。',[{l:'閉じる',a:()=>{}}])">
       <div class="svc-icon">🟢</div>
       <div class="svc-name">Spotify</div>
-      <div class="svc-desc">Premium必須</div>
+      <div class="svc-desc" style="color:var(--wrong); font-weight:700;">開発凍結</div>
     </div>
     <div class="svc-card yt" onclick="chooseSvc('youtube')">
       <div class="svc-icon">🔴</div>
@@ -684,11 +684,20 @@ function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').repl
     history.replaceState({},'',location.pathname);
     const pend=localStorage.getItem('pending');
     if(pend==='youtube'){svc='youtube';await handleYtCb(code);}
-    else{svc='spotify';await handleSpCb(code);}
+    else{
+      // svc='spotify';await handleSpCb(code); // 開発凍結
+      alert('Spotify版は現在凍結されています。');
+      showOnly('service');
+    }
     return;
   }
+  
+  // Spotify自動ログインを無効化（開発の軌跡としてソースは維持）
+  /*
   const spv=localStorage.getItem('sp_ver'),spt=localStorage.getItem('sp_tok'),spe=parseInt(localStorage.getItem('sp_exp')||'0');
   if(spt&&spv===SP_VER&&Date.now()<spe){svc='spotify';applyTheme();showHome();return;}
+  */
+  
   const ytt=localStorage.getItem('yt_tok'),yte=parseInt(localStorage.getItem('yt_exp')||'0');
   if(ytt&&Date.now()<yte){svc='youtube';applyTheme();showHome();return;}
   showOnly('service');

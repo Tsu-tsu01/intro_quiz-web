@@ -282,9 +282,15 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-seri
   
   <div id="yt-url-section" class="hidden">
     <div class="sec-lbl" style="margin:20px 0 10px">URLで遊ぶ (YouTube公開プレイリスト)</div>
-    <div style="display:flex;gap:8px;margin-bottom:28px">
+    <div style="display:flex;gap:8px;margin-bottom:8px">
       <input type="text" id="custom-url" class="setup-inp" style="margin-top:0;flex:1" placeholder="https://youtube.com/playlist?list=...">
       <button class="btn-sm" style="background:var(--red);color:#fff;border:none;padding:0 16px;font-weight:700" onclick="loadCustomUrl()">開始</button>
+    </div>
+    <div style="font-size:11px;color:var(--sub);margin-bottom:28px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+      <span>ショートカット:</span>
+      <button class="btn-sm" onclick="setCustomUrl('https://youtube.com/playlist?list=PLVbDD4bH3SU5KEVHCK2UvH_k2Fz9HlgBh')">アイドルマスター全曲</button>
+      <button class="btn-sm" onclick="setCustomUrl('https://youtube.com/playlist?list=PLggd500bJ4DhP4DfC_lYVDWPdq74xmJN9')">ミリオンライブ全曲</button>
+      <button class="btn-sm" onclick="setCustomUrl('https://youtube.com/playlist?list=PLggd500bJ4Dj-EmsNzgZfLsSAWVhiMDuI')">シャニマス全曲</button>
     </div>
   </div>
 
@@ -519,6 +525,8 @@ function selIntro(s){introSec=s;const y=svc==='youtube';document.querySelectorAl
 function goPlaylist(){const y=svc==='youtube';const m=document.getElementById('pl-meta');m.className=`scr-meta ${y?'yt':'sp'}`;m.textContent=`${gameMode==='endless'?'♾️ エンドレス':gameMode==='25'?'🎸 25問':'🎵 10問'}  ·  ${introSec}秒`;const b=document.getElementById('banner');b.className=`banner ${y?'yt':'sp'}`;const br=document.getElementById('btn-relogin');br.className=`btn-relogin ${y?'yt':'sp'}`;showOnly('playlist');loadPl();}
 
 // CUSTOM URL
+function setCustomUrl(url){document.getElementById('custom-url').value=url;}
+
 async function loadCustomUrl() {
   if (svc !== 'youtube') {
     showDlg('YouTube Musicに切り替えてください', 'URL入力機能は現在YouTubeのプレイリストにのみ対応しています。画面上部の「切替」ボタンからYouTube Musicを選択してください。', [{l:'閉じる', a:()=>{}}]);

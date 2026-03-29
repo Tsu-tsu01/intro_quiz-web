@@ -430,12 +430,52 @@ function showLogin(){
 async function doLogin(){if(svc==='youtube')startYtSetup();else startSpLogin();}
 
 // SPOTIFY AUTH
-async function startSpLogin(){const{v,c}=await pkce();localStorage.setItem('sp_v',v);localStorage.setItem('pending','spotify');const u=new URL(SP_AUTH);u.searchParams.set('response_type','code');u.searchParams.set('client_id',SP_CID);u.searchParams.set('scope',SP_SCOPES);u.searchParams.set('redirect_uri',REDIR);u.searchParams.set('code_challenge_method','S256');u.searchParams.set('code_challenge',c);location.href=u;}
+async function startSpLogin(){
+  try {
+    const{v,c}=await pkce();
+    localStorage.setItem('sp_v',v);
+    localStorage.setItem('pending','spotify');
+    const u=new URL(SP_AUTH);
+    u.searchParams.set('response_type','code');
+    u.searchParams.set('client_id',SP_CID);
+    u.searchParams.set('scope',SP_SCOPES);
+    u.searchParams.set('redirect_uri',REDIR);
+    u.searchParams.set('code_challenge_method','S256');
+    u.searchParams.set('code_challenge',c);
+    location.href=u.toString();
+  } catch (e) {
+    alert("ログイン開始エラー: " + e.message + "\nHTTPS環境で実行しているか確認してください。");
+  }
+}
+
 async function handleSpCb(code){const v=localStorage.getItem('sp_v');if(!v){alert('認証エラー: PKCEデータが見つかりません。もう一度ログインしてください。');showLogin();return;}try{const r=await fetch(SP_TOK,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'authorization_code',code,redirect_uri:REDIR,client_id:SP_CID,code_verifier:v})});if(!r.ok){const e=await r.text();alert('Spotifyトークンエラー: '+r.status+'\n'+e);showLogin();return;}const d=await r.json();localStorage.setItem('sp_tok',d.access_token);localStorage.setItem('sp_ref',d.refresh_token||'');localStorage.setItem('sp_exp',Date.now()+(d.expires_in||3600)*1000);localStorage.setItem('sp_ver',SP_VER);localStorage.removeItem('sp_v');localStorage.removeItem('pending');svc='spotify';applyTheme();showHome();}catch(e){alert('ネットワークエラー: '+e.message);showLogin();}}
 async function getSpTok(){const ver=localStorage.getItem('sp_ver');if(ver!==SP_VER){doLogout();return null;}const exp=parseInt(localStorage.getItem('sp_exp')||'0');if(Date.now()>exp-300000){const ref=localStorage.getItem('sp_ref');if(!ref){doLogout();return null;}const r=await fetch(SP_TOK,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'refresh_token',refresh_token:ref,client_id:SP_CID})});if(!r.ok){doLogout();return null;}const d=await r.json();localStorage.setItem('sp_tok',d.access_token);localStorage.setItem('sp_exp',Date.now()+(d.expires_in||3600)*1000);if(d.refresh_token)localStorage.setItem('sp_ref',d.refresh_token);return d.access_token;}return localStorage.getItem('sp_tok');}
 
 // YOUTUBE AUTH
-async function startYtSetup(){const cid=document.getElementById('yt-cid').value.trim(),cs=document.getElementById('yt-cs').value.trim();if(!cid||!cs){alert('クライアントIDとシークレットを入力してください');return;}localStorage.setItem('yt_cid',cid);localStorage.setItem('yt_cs',cs);const{v,c}=await pkce();localStorage.setItem('yt_v',v);localStorage.setItem('pending','youtube');const u=new URL(YT_AUTH);u.searchParams.set('response_type','code');u.searchParams.set('client_id',cid);u.searchParams.set('redirect_uri',REDIR);u.searchParams.set('scope',YT_SCOPE);u.searchParams.set('access_type','offline');u.searchParams.set('prompt','consent');u.searchParams.set('code_challenge_method','S256');u.searchParams.set('code_challenge',c);location.href=u;}
+async function startYtSetup(){
+  const cid=document.getElementById('yt-cid').value.trim(),cs=document.getElementById('yt-cs').value.trim();
+  if(!cid||!cs){alert('クライアントIDとシークレットを入力してください');return;}
+  localStorage.setItem('yt_cid',cid);
+  localStorage.setItem('yt_cs',cs);
+  try {
+    const{v,c}=await pkce();
+    localStorage.setItem('yt_v',v);
+    localStorage.setItem('pending','youtube');
+    const u=new URL(YT_AUTH);
+    u.searchParams.set('response_type','code');
+    u.searchParams.set('client_id',cid);
+    u.searchParams.set('redirect_uri',REDIR);
+    u.searchParams.set('scope',YT_SCOPE);
+    u.searchParams.set('access_type','offline');
+    u.searchParams.set('prompt','consent');
+    u.searchParams.set('code_challenge_method','S256');
+    u.searchParams.set('code_challenge',c);
+    location.href=u.toString();
+  } catch(e) {
+    alert("ログイン開始エラー: " + e.message + "\nHTTPS環境で実行しているか確認してください。");
+  }
+}
+
 async function handleYtCb(code){const v=localStorage.getItem('yt_v'),cid=localStorage.getItem('yt_cid'),cs=localStorage.getItem('yt_cs');if(!v||!cid||!cs){showOnly('yt-setup');return;}const r=await fetch(YT_TOK,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'authorization_code',code,redirect_uri:REDIR,client_id:cid,client_secret:cs,code_verifier:v})});if(!r.ok){const e=await r.text();alert('YouTube認証エラー: '+e);showOnly('yt-setup');return;}const d=await r.json();localStorage.setItem('yt_tok',d.access_token);localStorage.setItem('yt_ref',d.refresh_token||'');localStorage.setItem('yt_exp',Date.now()+(d.expires_in||3600)*1000);localStorage.removeItem('yt_v');localStorage.removeItem('pending');history.replaceState({},'',location.pathname);svc='youtube';applyTheme();showHome();}
 async function getYtTok(){const exp=parseInt(localStorage.getItem('yt_exp')||'0');if(Date.now()>exp-300000){const ref=localStorage.getItem('yt_ref'),cid=localStorage.getItem('yt_cid'),cs=localStorage.getItem('yt_cs');if(!ref||!cid||!cs){doLogout();return null;}const r=await fetch(YT_TOK,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'refresh_token',refresh_token:ref,client_id:cid,client_secret:cs})});if(!r.ok){doLogout();return null;}const d=await r.json();localStorage.setItem('yt_tok',d.access_token);localStorage.setItem('yt_exp',Date.now()+(d.expires_in||3600)*1000);if(d.refresh_token)localStorage.setItem('yt_ref',d.refresh_token);return d.access_token;}return localStorage.getItem('yt_tok');}
 function doLogout(){const y=svc==='youtube';if(y)['yt_tok','yt_ref','yt_exp'].forEach(k=>localStorage.removeItem(k));else['sp_tok','sp_ref','sp_exp','sp_ver'].forEach(k=>localStorage.removeItem(k));showOnly('service');}
@@ -496,7 +536,27 @@ function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 // INIT
-(async()=>{const p=new URLSearchParams(location.search),code=p.get('code');if(code){history.replaceState({},'',location.pathname);const pend=localStorage.getItem('pending');if(pend==='youtube'){svc='youtube';await handleYtCb(code);}else{svc='spotify';await handleSpCb(code);}return;}const spv=localStorage.getItem('sp_ver'),spt=localStorage.getItem('sp_tok'),spe=parseInt(localStorage.getItem('sp_exp')||'0');if(spt&&spv===SP_VER&&Date.now()<spe){svc='spotify';applyTheme();showHome();return;}const ytt=localStorage.getItem('yt_tok'),yte=parseInt(localStorage.getItem('yt_exp')||'0');if(ytt&&Date.now()<yte){svc='youtube';applyTheme();showHome();return;}showOnly('service');})();
+(async()=>{
+  const p=new URLSearchParams(location.search),code=p.get('code'),err=p.get('error');
+  if(err){
+    history.replaceState({},'',location.pathname);
+    alert('認証エラー: ' + err + '\n\n【重要】Spotify Developer Dashboardの「Redirect URIs」に以下のURLが正確に登録されているか確認してください:\n' + REDIR);
+    showOnly('service');
+    return;
+  }
+  if(code){
+    history.replaceState({},'',location.pathname);
+    const pend=localStorage.getItem('pending');
+    if(pend==='youtube'){svc='youtube';await handleYtCb(code);}
+    else{svc='spotify';await handleSpCb(code);}
+    return;
+  }
+  const spv=localStorage.getItem('sp_ver'),spt=localStorage.getItem('sp_tok'),spe=parseInt(localStorage.getItem('sp_exp')||'0');
+  if(spt&&spv===SP_VER&&Date.now()<spe){svc='spotify';applyTheme();showHome();return;}
+  const ytt=localStorage.getItem('yt_tok'),yte=parseInt(localStorage.getItem('yt_exp')||'0');
+  if(ytt&&Date.now()<yte){svc='youtube';applyTheme();showHome();return;}
+  showOnly('service');
+})();
 </script>
 </body>
 </html>

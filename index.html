@@ -493,8 +493,48 @@ function renderPl(pl){const body=document.getElementById('pl-body');if(!pl.lengt
 
 // QUIZ
 async function startQuiz(pl){curPl=pl;showOnly('quiz');applyTheme();document.getElementById('timer-ctr').innerHTML=`<div class="loading-center" style="position:absolute"><div class="spinner ${svc==='youtube'?'yt':''}"></div><div class="load-txt" style="font-size:12px">読み込み中...</div></div>`;const tr=svc==='youtube'?await fetchYtTr(pl.id):await fetchSpTr(pl.id);if(!tr||tr.length<4){showDlg('曲が少なすぎます',`${tr?.length||0}曲しかありません。最低4曲必要です。`,[{l:'戻る',a:()=>showOnly('playlist')}]);return;}allTracks=tr;usedIds=new Set();qNum=0;score=0;combo=0;lives=3;results=[];const y=svc==='youtube';document.getElementById('timer-ctr').innerHTML=`<div class="wave" id="wave-icon">${'<div class="wave-bar'+(y?' yt':'')+'"></div>'.repeat(5)}</div><img id="album-art" class="album-art${y?' yt':''} hidden" src="" alt=""><div id="album-ph" class="album-ph hidden">🎵</div>`;setupQ();}
-async function fetchSpTr(id){const tok=await getSpTok();if(!tok)return null;const tr=[];let url=`https://api.spotify.com/v1/playlists/${id}/tracks?limit=100`;while(url){const r=await fetch(url,{headers:{Authorization:`Bearer ${tok}`}});if(!r.ok)break;const d=await r.json();(d.items||[]).forEach(it=>{const t=it?.track;if(!t?.id)return;tr.push({id:t.id,name:t.name||'?',artist:(t.artists||[]).map(a=>a.name).join(', ')||'Unknown',img:t.album?.images?.[0]?.url||null,uri:`spotify:track:${t.id}`});});url=d.next||null;}return tr;}
-async function fetchYtTr(id){const tok=await getYtTok();if(!tok)return null;const tr=[];let pt='';while(true){const url=`${YT_API}/playlistItems?part=snippet&playlistId=${id}&maxResults=50${pt?'&pageToken='+pt:''}`;const r=await fetch(url,{headers:{Authorization:`Bearer ${tok}`}});if(!r.ok)break;const d=await r.json();(d.items||[]).forEach(it=>{const s=it?.snippet,vid=s?.resourceId?.videoId;if(!vid||s?.title==='Deleted video'||s?.title==='Private video')return;tr.push({id:vid,name:s.title||'?',artist:s.videoOwnerChannelTitle||'YouTube Music',img:s.thumbnails?.medium?.url||s.thumbnails?.default?.url||null,videoId:vid});});pt=d.nextPageToken||'';if(!pt)break;}return tr;}
+async function fetchSpTr(id){
+  const tok=await getSpTok();if(!tok)return null;
+  const tr=[];let url=`https://api.spotify.com/v1/playlists/${id}/tracks?limit=100`;
+  try {
+    while(url){
+      const r=await fetch(url,{headers:{Authorization:`Bearer ${tok}`}});
+      if(!r.ok){ const err=await r.text(); throw new Error(`${r.status} ${err}`); }
+      const d=await r.json();
+      (d.items||[]).forEach(it=>{
+        const t=it?.track;
+        // ポッドキャストやローカルファイルは再生できないため除外
+        if(!t?.id || t.type!=='track' || t.is_local)return;
+        tr.push({id:t.id,name:t.name||'?',artist:(t.artists||[]).map(a=>a.name).join(', ')||'Unknown',img:t.album?.images?.[0]?.url||null,uri:`spotify:track:${t.id}`});
+      });
+      url=d.next||null;
+    }
+  } catch(e) {
+    alert("Spotify楽曲の取得エラー:\n" + e.message);
+  }
+  return tr;
+}
+async function fetchYtTr(id){
+  const tok=await getYtTok();if(!tok)return null;
+  const tr=[];let pt='';
+  try {
+    while(true){
+      const url=`${YT_API}/playlistItems?part=snippet&playlistId=${id}&maxResults=50${pt?'&pageToken='+pt:''}`;
+      const r=await fetch(url,{headers:{Authorization:`Bearer ${tok}`}});
+      if(!r.ok){ const err=await r.text(); throw new Error(`${r.status} ${err}`); }
+      const d=await r.json();
+      (d.items||[]).forEach(it=>{
+        const s=it?.snippet,vid=s?.resourceId?.videoId;
+        if(!vid||s?.title==='Deleted video'||s?.title==='Private video')return;
+        tr.push({id:vid,name:s.title||'?',artist:s.videoOwnerChannelTitle||'YouTube Music',img:s.thumbnails?.medium?.url||s.thumbnails?.default?.url||null,videoId:vid});
+      });
+      pt=d.nextPageToken||'';if(!pt)break;
+    }
+  } catch(e) {
+    alert("YouTube楽曲の取得エラー:\n" + e.message);
+  }
+  return tr;
+}
 
 async function setupQ(){if(document.getElementById('screen-quiz').classList.contains('hidden'))return;const lim=gameMode==='endless'?null:parseInt(gameMode);if(lim&&qNum>=lim){endQuiz();return;}if(gameMode==='endless'&&lives<=0){endQuiz();return;}clearTimers();answered=false;focused=0;correct=pickNext();usedIds.add(correct.id);choices=buildChoices(correct);updateTop();showWave();document.getElementById('trk-info').style.opacity='0';document.getElementById('pts-lbl').innerHTML='&nbsp;';setRing(1);const el=document.getElementById('choices');el.innerHTML='';const y=svc==='youtube';choices.forEach((t,i)=>{const b=document.createElement('button');b.className='choice-btn';b.id=`c${i}`;b.innerHTML=`<div class="c-lbl ${y?'yt':'sp'}">${['A','B','C','D'][i]}</div><div class="c-txt"><div class="c-track">${esc(t.name)}</div><div class="c-artist">${esc(t.artist)}</div></div><div class="c-icon"></div>`;b.onclick=()=>onAns(i);el.appendChild(b);});updFocus();
 let ok=false;if(svc==='youtube'){ytPlay(correct.videoId);ok=true;}else{const tok=await getSpTok();if(tok){const r=await fetch('https://api.spotify.com/v1/me/player/play',{method:'PUT',headers:{Authorization:`Bearer ${tok}`,'Content-Type':'application/json'},body:JSON.stringify({uris:[correct.uri],position_ms:0})});if(r.status===403||r.status===401){showDlg('再ログインが必要です',`エラー ${r.status}`,[{l:'キャンセル',a:showHome},{l:'再ログイン',a:doLogout,ok:true}]);return;}if(r.status===404){showDlg('Spotifyアプリを起動してください','① スマホでSpotifyを起動\n② 曲を一度再生して停止\n③「再試行」をタップ',[{l:'戻る',a:showHome},{l:'再試行',a:()=>setupQ(),ok:true}]);return;}ok=true;}}

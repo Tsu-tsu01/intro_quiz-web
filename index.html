@@ -362,8 +362,8 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-seri
 <script>
 
 // CONFIG
-const SP_CID='1f9e3f02aa1645d0a77c579a384edc3e',REDIR=location.origin+location.pathname,SP_VER='4';
-const SP_SCOPES='playlist-read-private playlist-read-collaborative user-read-private user-modify-playback-state user-read-playback-state';
+const SP_CID='1f9e3f02aa1645d0a77c579a384edc3e',REDIR=location.origin+location.pathname,SP_VER='5';
+const SP_SCOPES='playlist-read-private playlist-read-collaborative user-read-private user-modify-playback-state user-read-playback-state user-library-read';
 const SP_AUTH='https://accounts.spotify.com/authorize',SP_TOK='https://accounts.spotify.com/api/token';
 const YT_AUTH='https://accounts.google.com/o/oauth2/v2/auth',YT_TOK='https://oauth2.googleapis.com/token',YT_API='https://www.googleapis.com/youtube/v3';
 const YT_SCOPE='https://www.googleapis.com/auth/youtube.readonly';
@@ -487,30 +487,55 @@ function goPlaylist(){const y=svc==='youtube';const m=document.getElementById('p
 
 // PLAYLIST
 async function loadPl(){const body=document.getElementById('pl-body');const y=svc==='youtube';body.innerHTML=`<div class="loading-center"><div class="spinner ${y?'yt':''}"></div><div class="load-txt">読み込み中...</div></div>`;try{const pl=y?await fetchYtPl():await fetchSpPl();if(pl)renderPl(pl);}catch(e){body.innerHTML=`<div class="loading-center"><div class="load-txt">エラー: ${e.message}</div></div>`;}}
-async function fetchSpPl(){const tok=await getSpTok();if(!tok)return null;const pl=[];let url='https://api.spotify.com/v1/me/playlists?limit=50';while(url){const r=await fetch(url,{headers:{Authorization:`Bearer ${tok}`}});if(r.status===401||r.status===403){showDlg('再ログインが必要です',`エラー ${r.status}`,[{l:'キャンセル',a:()=>{}},{l:'再ログイン',a:doLogout,ok:true}]);return null;}if(!r.ok)throw new Error(`${r.status}`);const d=await r.json();(d.items||[]).forEach(i=>{if(i?.id)pl.push({id:i.id,name:i.name||'',img:i.images?.[0]?.url||null});});url=d.next||null;}return pl;}
+async function fetchSpPl(){
+  const tok=await getSpTok();if(!tok)return null;
+  let userId='';
+  try{const ur=await fetch('https://api.spotify.com/v1/me',{headers:{Authorization:`Bearer ${tok}`}});if(ur.ok){const ud=await ur.json();userId=ud.id;}}catch(e){}
+  const pl=[{id:'saved_tracks',name:'❤️ お気に入り楽曲 (Saved Tracks)',img:null}];
+  let url='https://api.spotify.com/v1/me/playlists?limit=50';
+  while(url){
+    const r=await fetch(url,{headers:{Authorization:`Bearer ${tok}`}});
+    if(r.status===401||r.status===403){showDlg('再ログインが必要です',`エラー ${r.status}`,[{l:'キャンセル',a:()=>{}},{l:'再ログイン',a:doLogout,ok:true}]);return null;}
+    if(!r.ok)throw new Error(`${r.status}`);
+    const d=await r.json();
+    (d.items||[]).forEach(i=>{
+      if(i?.id){
+        if(userId && i.owner && i.owner.id !== userId) return;
+        pl.push({id:i.id,name:i.name||'',img:i.images?.[0]?.url||null});
+      }
+    });
+    url=d.next||null;
+  }
+  return pl;
+}
 async function fetchYtPl(){const tok=await getYtTok();if(!tok)return null;const pl=[];let pt='';while(true){const url=`${YT_API}/playlists?part=snippet&mine=true&maxResults=50${pt?'&pageToken='+pt:''}`;const r=await fetch(url,{headers:{Authorization:`Bearer ${tok}`}});if(r.status===401||r.status===403){showDlg('再ログインが必要です',`エラー ${r.status}`,[{l:'キャンセル',a:()=>{}},{l:'再ログイン',a:doLogout,ok:true}]);return null;}if(!r.ok)throw new Error(`${r.status}`);const d=await r.json();(d.items||[]).forEach(i=>{const s=i.snippet;pl.push({id:i.id,name:s?.title||'',img:s?.thumbnails?.medium?.url||s?.thumbnails?.default?.url||null});});pt=d.nextPageToken||'';if(!pt)break;}return pl;}
 function renderPl(pl){const body=document.getElementById('pl-body');if(!pl.length){body.innerHTML='<div class="loading-center"><div class="load-txt">プレイリストが見つかりません</div></div>';return;}const y=svc==='youtube';const g=document.createElement('div');g.className='pl-grid';pl.forEach(p=>{const c=document.createElement('div');c.className=`pl-card ${y?'yt':'sp'} fade-in`;c.innerHTML=(p.img?`<img class="pl-img" src="${p.img}" loading="lazy">`:'<div class="pl-ph">🎵</div>')+`<div class="pl-info"><div class="pl-name">${esc(p.name)}</div></div>`;c.onclick=()=>startQuiz(p);g.appendChild(c);});body.innerHTML='';body.appendChild(g);}
 
 // QUIZ
-async function startQuiz(pl){curPl=pl;showOnly('quiz');applyTheme();document.getElementById('timer-ctr').innerHTML=`<div class="loading-center" style="position:absolute"><div class="spinner ${svc==='youtube'?'yt':''}"></div><div class="load-txt" style="font-size:12px">読み込み中...</div></div>`;const tr=svc==='youtube'?await fetchYtTr(pl.id):await fetchSpTr(pl.id);if(!tr||tr.length<4){showDlg('曲が少なすぎます',`${tr?.length||0}曲しかありません。最低4曲必要です。`,[{l:'戻る',a:()=>showOnly('playlist')}]);return;}allTracks=tr;usedIds=new Set();qNum=0;score=0;combo=0;lives=3;results=[];const y=svc==='youtube';document.getElementById('timer-ctr').innerHTML=`<div class="wave" id="wave-icon">${'<div class="wave-bar'+(y?' yt':'')+'"></div>'.repeat(5)}</div><img id="album-art" class="album-art${y?' yt':''} hidden" src="" alt=""><div id="album-ph" class="album-ph hidden">🎵</div>`;setupQ();}
+async function startQuiz(pl){curPl=pl;showOnly('quiz');applyTheme();document.getElementById('timer-ctr').innerHTML=`<div class="loading-center" style="position:absolute"><div class="spinner ${svc==='youtube'?'yt':''}"></div><div class="load-txt" style="font-size:12px">読み込み中...</div></div>`;const tr=svc==='youtube'?await fetchYtTr(pl.id):await fetchSpTr(pl.id);if(!tr){showOnly('playlist');return;}if(tr.length<4){showDlg('曲が少なすぎます',`${tr?.length||0}曲しかありません。最低4曲必要です。`,[{l:'戻る',a:()=>showOnly('playlist')}]);return;}allTracks=tr;usedIds=new Set();qNum=0;score=0;combo=0;lives=3;results=[];const y=svc==='youtube';document.getElementById('timer-ctr').innerHTML=`<div class="wave" id="wave-icon">${'<div class="wave-bar'+(y?' yt':'')+'"></div>'.repeat(5)}</div><img id="album-art" class="album-art${y?' yt':''} hidden" src="" alt=""><div id="album-ph" class="album-ph hidden">🎵</div>`;setupQ();}
 async function fetchSpTr(id){
   const tok=await getSpTok();if(!tok)return null;
-  const tr=[];let url=`https://api.spotify.com/v1/playlists/${id}/tracks?limit=100`;
+  const tr=[];
+  let url = id === 'saved_tracks'
+    ? 'https://api.spotify.com/v1/me/tracks?limit=50'
+    : `https://api.spotify.com/v1/playlists/${id}/tracks?limit=100&market=from_token`;
   try {
     while(url){
       const r=await fetch(url,{headers:{Authorization:`Bearer ${tok}`}});
+      if(r.status===403){ throw new Error("Spotify APIの制限によりこのプレイリストは取得できません。別のプレイリストか「❤️ お気に入り楽曲」をお試しください。"); }
       if(!r.ok){ const err=await r.text(); throw new Error(`${r.status} ${err}`); }
       const d=await r.json();
       (d.items||[]).forEach(it=>{
         const t=it?.track;
-        // ポッドキャストやローカルファイルは再生できないため除外
         if(!t?.id || t.type!=='track' || t.is_local)return;
         tr.push({id:t.id,name:t.name||'?',artist:(t.artists||[]).map(a=>a.name).join(', ')||'Unknown',img:t.album?.images?.[0]?.url||null,uri:`spotify:track:${t.id}`});
       });
       url=d.next||null;
+      if(id === 'saved_tracks' && tr.length >= 150) break;
     }
   } catch(e) {
     alert("Spotify楽曲の取得エラー:\n" + e.message);
+    return null;
   }
   return tr;
 }
@@ -532,6 +557,7 @@ async function fetchYtTr(id){
     }
   } catch(e) {
     alert("YouTube楽曲の取得エラー:\n" + e.message);
+    return null;
   }
   return tr;
 }

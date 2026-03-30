@@ -9,7 +9,8 @@
 :root{--bg:#0a0a0f;--surface:#141420;--card:#1c1c2e;--green:#1db954;--green2:#17a347;--red:#ff0000;--red2:#cc0000;--accent:#9b59b6;--gold:#ffd700;--wrong:#e74c3c;--correct:#2ecc71;--text:#eeeeee;--sub:#888899;--border:#2a2a3e;--p1:#3498db;--p2:#e74c3c}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:'Noto Sans JP',sans-serif;min-height:100vh;background-image:radial-gradient(ellipse at 20% 50%,rgba(29,185,84,.07) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(155,89,182,.05) 0%,transparent 50%);overflow-x:hidden}
-#app{max-width:560px;margin:0 auto;height:100vh;display:flex;flex-direction:column}
+#app{max-width:560px;margin:0 auto;height:100vh;display:flex;flex-direction:column;transition:max-width .3s}
+#app.app-vs-pc{max-width:860px}
 .hidden{display:none!important}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @keyframes scaleIn{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
@@ -166,27 +167,52 @@ input:checked ~ .opt-toggle::after{transform:translateX(20px);}
 .score-badge.sp{background:linear-gradient(135deg,var(--green),var(--green2));color:#000}
 .score-badge.yt{background:linear-gradient(135deg,#ff0000,#cc0000);color:#fff}
 
-/* VS QUIZ SPECIFIC */
-.vs-mode{justify-content:space-between;padding:8px 12px}
-.vs-area{display:flex;flex-direction:column;gap:6px;flex:1;justify-content:center}
-.vs-area.p2{transform:rotate(180deg)}
-.vs-header{display:flex;justify-content:space-between;align-items:flex-end;padding:0 4px;margin-bottom:4px}
-.vs-score{font-size:24px;font-weight:700;line-height:1}
-.vs-score.p1{color:var(--p1)}
-.vs-score.p2{color:var(--p2)}
-.vs-combo{font-size:11px;font-weight:700;padding:2px 8px;border-radius:8px;background:var(--surface);color:var(--accent)}
-.vs-mode .choice-btn{padding:8px 12px;gap:8px;margin-bottom:2px}
-.vs-mode .c-lbl{width:24px;height:24px;font-size:11px}
-.c-lbl.p1{color:var(--p1)}.c-lbl.p2{color:var(--p2)}
-.vs-mode .c-track{font-size:12px}
-.vs-mode .c-artist{font-size:10px}
-.vs-mode .timer-wrap{margin:4px 0}
-.vs-mode .timer-svg{width:min(26vw,100px);height:min(26vw,100px)}
-.vs-mode .album-art, .vs-mode .album-ph{width:min(26vw,100px);height:min(26vw,100px);font-size:32px}
-.vs-mode .wave{height:28px}
-.vs-mode .pts-lbl{height:16px;font-size:14px;margin:0}
-.vs-ready-msg{flex:1;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--correct);background:rgba(46,204,113,.1);border:2px dashed var(--correct);border-radius:14px;animation:pulse .6s infinite alternate;min-height:100px}
-.vs-quit-wrap{position:absolute;top:50%;left:8px;transform:translateY(-50%);z-index:10}
+/* VS QUIZ SHARED */
+.vs-sp-mode, .vs-pc-mode { justify-content:space-between; }
+.vs-area { display:flex; flex-direction:column; gap:6px; flex:1; justify-content:center; }
+.vs-header { display:flex; justify-content:space-between; align-items:flex-end; padding:0 4px; margin-bottom:4px; }
+.vs-score { font-size:24px; font-weight:700; line-height:1; }
+.vs-score.p1 { color:var(--p1); }
+.vs-score.p2 { color:var(--p2); }
+.vs-combo { font-size:11px; font-weight:700; padding:2px 8px; border-radius:8px; background:var(--surface); color:var(--accent); }
+.vs-btn { padding:8px 12px; gap:8px; margin-bottom:2px; }
+.vs-btn .c-lbl { width:24px; height:24px; font-size:11px; }
+.c-lbl.p1 { color:var(--p1); }
+.c-lbl.p2 { color:var(--p2); }
+.vs-btn .c-track { font-size:12px; }
+.vs-btn .c-artist { font-size:10px; }
+.vs-ready-msg { flex:1; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; color:var(--correct); background:rgba(46,204,113,.1); border:2px dashed var(--correct); border-radius:14px; animation:pulse .6s infinite alternate; min-height:100px; }
+.pc-key-hint { text-align:center; font-size:13px; font-weight:700; color:var(--sub); margin-top:12px; padding:8px; background:var(--surface); border-radius:8px; border:1px dashed var(--border); }
+.pc-key-hint.p1 { color:var(--p1); }
+.pc-key-hint.p2 { color:var(--p2); }
+
+/* VS SP MODE (スマホ向け上下レイアウト) */
+.vs-sp-mode { flex-direction:column; padding:12px 16px; }
+.vs-sp-mode #vs-p2-area { transform:rotate(180deg); order:1; }
+.vs-sp-mode #quiz-center { order:2; margin:16px 0; }
+.vs-sp-mode #vs-p1-area { order:3; }
+.vs-sp-mode #vs-p1-header { order:2; margin-top:4px; margin-bottom:0; }
+.vs-sp-mode #vs-p1-choices { order:1; }
+.vs-sp-mode .timer-svg { width:min(26vw,100px); height:min(26vw,100px); }
+.vs-sp-mode .album-art, .vs-sp-mode .album-ph { width:min(26vw,100px); height:min(26vw,100px); font-size:32px; }
+.vs-sp-mode .wave { height:28px; }
+.vs-sp-mode .pts-lbl { height:16px; font-size:14px; margin:0; }
+.vs-sp-mode #vs-quit-wrap { position:absolute; top:50%; left:8px; transform:translateY(-50%); z-index:10; }
+
+/* VS PC MODE (PC向け左右レイアウト) */
+.vs-pc-mode { flex-direction:row; padding:24px; align-items:stretch; gap:24px; }
+.vs-pc-mode #vs-p1-area { order:1; flex:1; pointer-events:none; }
+.vs-pc-mode #quiz-center { order:2; flex:0 0 200px; display:flex; flex-direction:column; justify-content:center; position:relative; }
+.vs-pc-mode #vs-p2-area { order:3; flex:1; transform:none; pointer-events:none; }
+.vs-pc-mode .vs-header { align-items:center; margin-bottom:12px; }
+.vs-pc-mode #vs-p1-header, .vs-pc-mode #vs-p2-header { order:1; }
+.vs-pc-mode #vs-p1-choices, .vs-pc-mode #vs-p2-choices { order:2; }
+.vs-pc-mode .pc-key-hint { order:3; }
+.vs-pc-mode .timer-svg { width:140px; height:140px; }
+.vs-pc-mode .album-art, .vs-pc-mode .album-ph { width:140px; height:140px; font-size:48px; }
+.vs-pc-mode .wave { height:36px; }
+.vs-pc-mode .pts-lbl { height:24px; font-size:16px; margin-top:8px; }
+.vs-pc-mode #vs-quit-wrap { position:absolute; top:-20px; left:50%; transform:translateX(-50%); }
 
 /* RESULT */
 #screen-result{flex:1;display:flex;flex-direction:column;padding:24px;overflow-y:auto}
@@ -292,7 +318,8 @@ input:checked ~ .opt-toggle::after{transform:translateX(20px);}
   <div class="mode-card" id="mode-10" onclick="selMode('10')"><div class="mode-emoji">🎵</div><div class="mode-info"><div class="mode-name">10問</div><div class="mode-desc">10問でスコアを競う</div></div><div class="mode-chk">✓</div></div>
   <div class="mode-card" id="mode-25" onclick="selMode('25')"><div class="mode-emoji">🎸</div><div class="mode-info"><div class="mode-name">25問</div><div class="mode-desc">25問でスコアを競う</div></div><div class="mode-chk">✓</div></div>
   <div class="mode-card" id="mode-endless" onclick="selMode('endless')"><div class="mode-emoji">♾️</div><div class="mode-info"><div class="mode-name">エンドレス</div><div class="mode-desc">ハート3つ → ゲームオーバー</div></div><div class="mode-chk">✓</div></div>
-  <div class="mode-card" id="mode-vs10" onclick="selMode('vs10')"><div class="mode-emoji">⚔️</div><div class="mode-info"><div class="mode-name">2人対戦 (10問)</div><div class="mode-desc">1台の端末で向かい合ってプレイ</div></div><div class="mode-chk">✓</div></div>
+  <div class="mode-card" id="mode-vs-sp" onclick="selMode('vs-sp')"><div class="mode-emoji">📱</div><div class="mode-info"><div class="mode-name">2人対戦 (スマホ)</div><div class="mode-desc">向かい合ってタップで対戦</div></div><div class="mode-chk">✓</div></div>
+  <div class="mode-card" id="mode-vs-pc" onclick="selMode('vs-pc')"><div class="mode-emoji">💻</div><div class="mode-info"><div class="mode-name">2人対戦 (PC)</div><div class="mode-desc">左右に分かれてキーボードで対戦</div></div><div class="mode-chk">✓</div></div>
   
   <div class="sec-lbl" style="margin:20px 0 10px">イントロの長さ</div>
   <div class="chips" id="chips">
@@ -342,13 +369,14 @@ input:checked ~ .opt-toggle::after{transform:translateX(20px);}
 <div id="screen-quiz" class="hidden">
   <div id="yt-player"></div>
   
-  <!-- VS MODE: P2 AREA (TOP, ROTATED) -->
+  <!-- VS MODE: P2 AREA (TOP / RIGHT) -->
   <div id="vs-p2-area" class="vs-area hidden">
-    <div class="vs-header">
+    <div class="vs-header" id="vs-p2-header">
       <div class="vs-score p2" id="vs-p2-score">0</div>
       <div class="vs-combo hidden" id="vs-p2-combo"></div>
     </div>
     <div class="choices vs-choices" id="vs-p2-choices"></div>
+    <div class="pc-key-hint p2 hidden" id="vs-p2-hint">キーボード: 7 8 9 0</div>
   </div>
 
   <!-- SINGLE MODE: TOP HEADER -->
@@ -386,13 +414,14 @@ input:checked ~ .opt-toggle::after{transform:translateX(20px);}
   <!-- SINGLE MODE: CHOICES -->
   <div class="choices" id="choices"></div>
 
-  <!-- VS MODE: P1 AREA (BOTTOM) -->
+  <!-- VS MODE: P1 AREA (BOTTOM / LEFT) -->
   <div id="vs-p1-area" class="vs-area hidden">
-    <div class="choices vs-choices" id="vs-p1-choices"></div>
-    <div class="vs-header" style="margin-top:4px;margin-bottom:0">
+    <div class="vs-header" id="vs-p1-header">
       <div class="vs-score p1" id="vs-p1-score">0</div>
       <div class="vs-combo hidden" id="vs-p1-combo"></div>
     </div>
+    <div class="choices vs-choices" id="vs-p1-choices"></div>
+    <div class="pc-key-hint p1 hidden" id="vs-p1-hint">キーボード: 1 2 3 4</div>
   </div>
 
   <div class="key-hint" id="key-hint-text"></div>
@@ -471,6 +500,7 @@ const YT_SCOPE='https://www.googleapis.com/auth/youtube.readonly';
 let svc='spotify',gameMode='10',introSec=10,allTracks=[],usedIds=new Set(),curPl=null,hideArtist=false;
 let qNum=0,score=0,combo=0,lives=3,results=[],correct=null,choices=[],answered=false,focused=0;
 let p1Score=0,p2Score=0,p1Combo=0,p2Combo=0,p1Ans=null,p2Ans=null;
+let p1AnsTime=null, p2AnsTime=null;
 let tick=null,nextTimer=null,pauseT=null,qStart=null;
 let ytPlayer=null,ytReady=false,ytPlayingCb=null;
 
@@ -483,7 +513,9 @@ function onYouTubeIframeAPIReady(){
       onReady:()=>{ytReady=true;},
       onStateChange:(e)=>{if(e.data===1&&ytPlayingCb){ytPlayingCb();ytPlayingCb=null;}},
       onError:(e)=>{
-        if(document.getElementById('screen-quiz').classList.contains('hidden') || answered || (p1Ans!==null&&p2Ans!==null)) return;
+        if(document.getElementById('screen-quiz').classList.contains('hidden') || answered) return;
+        const isVs = gameMode === 'vs-sp' || gameMode === 'vs-pc';
+        if(isVs && (p1Ans!==null && p2Ans!==null)) return;
         clearTimers(); pauseAll();
         const lbl = document.getElementById('pts-lbl');
         lbl.textContent = '🚫 制限された曲をスキップ...';
@@ -589,7 +621,21 @@ function doLogout(){const y=svc==='youtube';if(y)['yt_tok','yt_ref','yt_exp'].fo
 function selMode(m){gameMode=m;const y=svc==='youtube';document.querySelectorAll('.mode-card').forEach(el=>{const id=el.id.replace('mode-','');el.classList.toggle('sel',id===m);el.classList.toggle('sp-mode',!y);el.classList.toggle('yt-mode',y);});}
 function selIntro(s){introSec=s;const y=svc==='youtube';document.querySelectorAll('.chip').forEach(el=>{const v=parseInt(el.textContent);el.classList.toggle('sel',v===s);el.classList.toggle('sp-chip',!y);el.classList.toggle('yt-chip',y);});}
 function toggleHideArtist(val){hideArtist=val;}
-function goPlaylist(){const y=svc==='youtube';const m=document.getElementById('pl-meta');m.className=`scr-meta ${y?'yt':'sp'}`;m.textContent=`${gameMode==='endless'?'♾️ エンドレス':gameMode==='vs10'?'⚔️ 2人対戦':gameMode==='25'?'🎸 25問':'🎵 10問'}  ·  ${introSec}秒`;const b=document.getElementById('banner');b.className=`banner ${y?'yt':'sp'}`;const br=document.getElementById('btn-relogin');br.className=`btn-relogin ${y?'yt':'sp'}`;showOnly('playlist');loadPl();}
+function goPlaylist(){
+  const y=svc==='youtube';
+  const m=document.getElementById('pl-meta');
+  let modeStr = '';
+  if(gameMode === 'endless') modeStr = '♾️ エンドレス';
+  else if(gameMode === 'vs-sp') modeStr = '📱 2人対戦(スマホ)';
+  else if(gameMode === 'vs-pc') modeStr = '💻 2人対戦(PC)';
+  else if(gameMode === '25') modeStr = '🎸 25問';
+  else modeStr = '🎵 10問';
+  m.className=`scr-meta ${y?'yt':'sp'}`;
+  m.textContent=`${modeStr}  ·  ${introSec}秒`;
+  const b=document.getElementById('banner');b.className=`banner ${y?'yt':'sp'}`;
+  const br=document.getElementById('btn-relogin');br.className=`btn-relogin ${y?'yt':'sp'}`;
+  showOnly('playlist');loadPl();
+}
 
 // CUSTOM URL
 function setCustomUrl(url){document.getElementById('custom-url').value=url;}
@@ -630,17 +676,34 @@ function renderPl(pl){const body=document.getElementById('pl-body');if(!pl.lengt
 // QUIZ
 async function startQuiz(pl){
   curPl=pl; showOnly('quiz'); applyTheme();
-  const isVs = gameMode === 'vs10';
-  document.getElementById('screen-quiz').classList.toggle('vs-mode', isVs);
+  
+  const isVsSp = gameMode === 'vs-sp';
+  const isVsPc = gameMode === 'vs-pc';
+  const isVs = isVsSp || isVsPc;
+  
+  const qScr = document.getElementById('screen-quiz');
+  qScr.classList.remove('vs-sp-mode', 'vs-pc-mode');
+  if(isVsSp) qScr.classList.add('vs-sp-mode');
+  if(isVsPc) qScr.classList.add('vs-pc-mode');
+  
+  document.getElementById('app').classList.toggle('app-vs-pc', isVsPc);
+  
   document.getElementById('single-header').classList.toggle('hidden', isVs);
   document.getElementById('choices').classList.toggle('hidden', isVs);
   document.getElementById('vs-p2-area').classList.toggle('hidden', !isVs);
   document.getElementById('vs-p1-area').classList.toggle('hidden', !isVs);
   document.getElementById('vs-quit-wrap').classList.toggle('hidden', !isVs);
   
+  document.getElementById('vs-p1-hint').classList.toggle('hidden', !isVsPc);
+  document.getElementById('vs-p2-hint').classList.toggle('hidden', !isVsPc);
+  
   const kh = document.getElementById('key-hint-text');
-  if(isVs) kh.innerHTML = `<span class="key">P1 (下): 1234</span> <span class="key">P2 (上): 7890</span>`;
-  else kh.innerHTML = `<span class="key">↑↓</span>選択 <span class="key">Enter</span>回答 <span class="key">S</span>スキップ <span class="key">1234</span>直接回答`;
+  if(isVs) {
+    kh.style.display = 'none';
+  } else {
+    kh.innerHTML = `<span class="key">↑↓</span>選択 <span class="key">Enter</span>回答 <span class="key">S</span>スキップ <span class="key">1234</span>直接回答`;
+    kh.style.display = 'flex';
+  }
 
   document.getElementById('timer-ctr').innerHTML=`<div class="loading-center" style="position:absolute"><div class="spinner ${svc==='youtube'?'yt':''}"></div><div class="load-txt" style="font-size:12px">読み込み中...</div></div>`;
   const tr=svc==='youtube'?await fetchYtTr(pl.id):await fetchSpTr(pl);
@@ -692,12 +755,12 @@ async function fetchYtTr(id){
 
 async function setupQ(){
   if(document.getElementById('screen-quiz').classList.contains('hidden'))return;
-  const isVs = gameMode === 'vs10';
+  const isVs = gameMode === 'vs-sp' || gameMode === 'vs-pc';
   const lim=gameMode==='endless'?null: (isVs ? 10 : parseInt(gameMode));
   if(lim&&qNum>=lim){endQuiz();return;}
   if(gameMode==='endless'&&lives<=0){endQuiz();return;}
   
-  clearTimers(); answered=false; p1Ans=null; p2Ans=null; focused=0;
+  clearTimers(); answered=false; p1Ans=null; p2Ans=null; p1AnsTime=null; p2AnsTime=null; focused=0;
   correct=pickNext(); usedIds.add(correct.id); choices=buildChoices(correct);
   
   if(isVs) { updateTopVs(); } else { updateTop(); }
@@ -740,7 +803,7 @@ async function setupQ(){
   qStart=Date.now();
   startTick();
   pauseT=setTimeout(()=>{
-    if(gameMode === 'vs10'){ if(p1Ans === null || p2Ans === null) pauseAll(); }
+    if(isVs){ if(p1Ans === null || p2Ans === null) pauseAll(); }
     else { if(!answered) pauseAll(); }
   }, introSec*1000);
 }
@@ -753,7 +816,7 @@ function renderVsChoices(pStr) {
     const b = document.createElement('button'); b.className = 'choice-btn vs-btn'; b.id = `vs-${pStr}-c${i}`;
     const artHTML = hideArtist ? '' : `<div class="c-artist">${esc(t.artist)}</div>`;
     b.innerHTML = `<div class="c-lbl ${pStr}">${i + 1}</div><div class="c-txt"><div class="c-track">${esc(t.name)}</div>${artHTML}</div><div class="c-icon"></div>`;
-    b.onclick = () => onAnsVs(pStr === 'p1' ? 1 : 2, i);
+    b.onclick = () => { if(gameMode === 'vs-sp') onAnsVs(pStr === 'p1' ? 1 : 2, i); };
     el.appendChild(b);
   });
 }
@@ -767,7 +830,7 @@ function startTick(){
     setRing(p);
     if(p<=0){
       clearInterval(tick);
-      if(gameMode === 'vs10'){ if(p1Ans === null || p2Ans === null) timeUp(); }
+      if(gameMode === 'vs-sp' || gameMode === 'vs-pc'){ if(p1Ans === null || p2Ans === null) timeUp(); }
       else { if(!answered) timeUp(); }
     }
   }, 80);
@@ -776,7 +839,7 @@ function setRing(p){const r=document.getElementById('timer-ring');if(!r)return;r
 
 function timeUp(){
   pauseAll();
-  if(gameMode === 'vs10'){ recResVs(); revealVs(); }
+  if(gameMode === 'vs-sp' || gameMode === 'vs-pc'){ answered = true; recResVs(); revealVs(); }
   else { recRes(null); reveal(-1); }
   schedNext();
 }
@@ -789,24 +852,39 @@ function reveal(si=-1){showAlbum(correct.img);const ti=document.getElementById('
 
 // VS MODE ANS
 function onAnsVs(pNum, i){
+  if(answered) return;
+  const now = qStart ? Date.now() - qStart : 0;
   if(pNum === 1 && p1Ans === null){
-    p1Ans = i;
+    p1Ans = i; p1AnsTime = now;
     document.getElementById('vs-p1-choices').innerHTML = '<div class="vs-ready-msg">✓ 回答完了</div>';
   }
   if(pNum === 2 && p2Ans === null){
-    p2Ans = i;
+    p2Ans = i; p2AnsTime = now;
     document.getElementById('vs-p2-choices').innerHTML = '<div class="vs-ready-msg">✓ 回答完了</div>';
   }
   if(p1Ans !== null && p2Ans !== null){
+    answered = true;
     clearTimers(); pauseAll(); recResVs(); revealVs(); schedNext();
   }
 }
 function recResVs(){
-  const el=qStart?Date.now()-qStart:introSec*1000;
+  const limitSec = introSec <= 5 ? 10 : introSec;
+  const maxTime = limitSec * 1000;
+  
   const p1Ok = p1Ans !== null && choices[p1Ans].id === correct.id;
   const p2Ok = p2Ans !== null && choices[p2Ans].id === correct.id;
-  if(p1Ok){ p1Combo++; let m = p1Combo>=10?3:p1Combo>=5?2:p1Combo>=3?1.5:1; p1Score += Math.floor(100*m); } else { p1Combo = 0; }
-  if(p2Ok){ p2Combo++; let m = p2Combo>=10?3:p2Combo>=5?2:p2Combo>=3?1.5:1; p2Score += Math.floor(100*m); } else { p2Combo = 0; }
+  
+  if(p1Ok){
+    p1Combo++; let m = p1Combo>=10?3:p1Combo>=5?2:p1Combo>=3?1.5:1;
+    p1Score += Math.floor((100 + Math.floor(50 * (1 - Math.min(1, p1AnsTime / maxTime)))) * m);
+  } else { p1Combo = 0; }
+  
+  if(p2Ok){
+    p2Combo++; let m = p2Combo>=10?3:p2Combo>=5?2:p2Combo>=3?1.5:1;
+    p2Score += Math.floor((100 + Math.floor(50 * (1 - Math.min(1, p2AnsTime / maxTime)))) * m);
+  } else { p2Combo = 0; }
+  
+  const el = qStart ? Date.now() - qStart : maxTime;
   results.push({ correct, p1Ans, p2Ans, p1Ok, p2Ok, el });
   qNum++; updateTopVs();
 }
@@ -830,8 +908,8 @@ function showWave(){const w=document.getElementById('wave-icon'),a=document.getE
 function showAlbum(url){const w=document.getElementById('wave-icon'),a=document.getElementById('album-art'),p=document.getElementById('album-ph');if(w)w.style.display='none';if(url&&a){a.src=url;a.classList.remove('hidden');if(p)p.classList.add('hidden');}else if(p){p.classList.remove('hidden');if(a)a.classList.add('hidden');}}
 function updateTop(){const lim=gameMode==='endless'?null:parseInt(gameMode);document.getElementById('q-lbl').textContent=lim?`${Math.min(qNum+1,lim)} / ${lim}`:`${qNum+1}問目`;document.getElementById('q-bar').style.width=lim?`${Math.min(100,(qNum/lim)*100)}%`:'100%';document.getElementById('q-score').textContent=score;const cb=document.getElementById('q-combo');if(combo>=2){cb.textContent=`${combo}コンボ`;cb.classList.remove('hidden');}else cb.classList.add('hidden');const lv=document.getElementById('q-lives');if(gameMode==='endless'){lv.classList.remove('hidden');lv.innerHTML=[0,1,2].map(i=>i<lives?'❤️':'🖤').join('');}else lv.classList.add('hidden');}
 function updateTopVs(){
-  document.getElementById('vs-p1-score').textContent = p1Score;
-  document.getElementById('vs-p2-score').textContent = p2Score;
+  const s1 = document.getElementById('vs-p1-score'); s1.textContent = p1Score; s1.style.animation = 'none'; s1.offsetHeight; s1.style.animation = 'pulse .3s ease';
+  const s2 = document.getElementById('vs-p2-score'); s2.textContent = p2Score; s2.style.animation = 'none'; s2.offsetHeight; s2.style.animation = 'pulse .3s ease';
   const c1 = document.getElementById('vs-p1-combo'); if(p1Combo>=2){c1.textContent=`${p1Combo} COMBO`;c1.classList.remove('hidden');}else{c1.classList.add('hidden');}
   const c2 = document.getElementById('vs-p2-combo'); if(p2Combo>=2){c2.textContent=`${p2Combo} COMBO`;c2.classList.remove('hidden');}else{c2.classList.add('hidden');}
 }
@@ -839,7 +917,7 @@ function updFocus(){const y=svc==='youtube';choices.forEach((_,i)=>{const b=docu
 
 // RESULT
 function endQuiz(){
-  clearTimers(); pauseAll(); const y=svc==='youtube'; const isVs = gameMode === 'vs10';
+  clearTimers(); pauseAll(); const y=svc==='youtube'; const isVs = gameMode === 'vs-sp' || gameMode === 'vs-pc';
   document.getElementById('btn-again').className=`btn-act ${y?'yt':'sp'}`;
   
   if (isVs) {
@@ -883,15 +961,15 @@ function playAgain(){startQuiz(curPl);}
 
 // DIALOG
 function showDlg(title,body,btns){const y=svc==='youtube';document.getElementById('dlg-title').textContent=title;document.getElementById('dlg-body').textContent=body;const acts=document.getElementById('dlg-acts');acts.innerHTML='';btns.forEach(b=>{const btn=document.createElement('button');btn.className=`btn-dlg ${b.ok?(y?'ok-yt':'ok-sp'):'cancel'}`;btn.textContent=b.l;btn.onclick=()=>{document.getElementById('dlg').classList.add('hidden');b.a();};acts.appendChild(btn);});document.getElementById('dlg').classList.remove('hidden');}
-function confirmQuit(){clearTimers();pauseAll();showDlg('クイズを中断','中断するとスコアはリセットされます。',[{l:'続ける',a:()=>{if(gameMode==='vs10'){if(p1Ans===null||p2Ans===null)startTick();}else{if(!answered)startTick();}}},{l:'中断',a:showHome}]);}
+function confirmQuit(){clearTimers();pauseAll();showDlg('クイズを中断','中断するとスコアはリセットされます。',[{l:'続ける',a:()=>{if(gameMode==='vs-sp'||gameMode==='vs-pc'){if(p1Ans===null||p2Ans===null)startTick();}else{if(!answered)startTick();}}},{l:'中断',a:showHome}]);}
 
 // KEYBOARD
 document.addEventListener('keydown',e=>{
   if(document.getElementById('screen-quiz').classList.contains('hidden'))return;
-  if(gameMode === 'vs10'){
+  if(gameMode === 'vs-pc'){
     if(['1','2','3','4'].includes(e.key)) onAnsVs(1, parseInt(e.key)-1);
     if(['7','8','9','0'].includes(e.key)) onAnsVs(2, e.key==='0' ? 3 : parseInt(e.key)-7);
-  } else {
+  } else if (gameMode !== 'vs-sp') {
     if(answered)return;
     if(e.key==='ArrowUp'||e.key==='ArrowLeft'){e.preventDefault();focused=(focused+3)%4;updFocus();}
     else if(e.key==='ArrowDown'||e.key==='ArrowRight'){e.preventDefault();focused=(focused+1)%4;updFocus();}

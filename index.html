@@ -815,7 +815,11 @@ function renderVsChoices(pStr) {
   choices.forEach((t, i) => {
     const b = document.createElement('button'); b.className = 'choice-btn vs-btn'; b.id = `vs-${pStr}-c${i}`;
     const artHTML = hideArtist ? '' : `<div class="c-artist">${esc(t.artist)}</div>`;
-    b.innerHTML = `<div class="c-lbl ${pStr}">${i + 1}</div><div class="c-txt"><div class="c-track">${esc(t.name)}</div>${artHTML}</div><div class="c-icon"></div>`;
+    let lblText = i + 1;
+    if (gameMode === 'vs-pc' && pStr === 'p2') {
+      lblText = i === 3 ? '0' : (i + 7);
+    }
+    b.innerHTML = `<div class="c-lbl ${pStr}">${lblText}</div><div class="c-txt"><div class="c-track">${esc(t.name)}</div>${artHTML}</div><div class="c-icon"></div>`;
     b.onclick = () => { if(gameMode === 'vs-sp') onAnsVs(pStr === 'p1' ? 1 : 2, i); };
     el.appendChild(b);
   });

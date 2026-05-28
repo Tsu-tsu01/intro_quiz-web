@@ -207,6 +207,30 @@ body{background:var(--bg);color:var(--text);
 .rv-chip.replay{border-color:var(--p);color:var(--p);background:rgba(124,77,255,.12)}
 .rv-chip.exit{border-color:var(--sub);color:var(--sub);background:rgba(136,153,170,.1)}
 .rv-chip.wait{border-color:var(--border);color:var(--sub);background:var(--card)}
+
+/* ── モバイル最適化 ─────────────── */
+/* 正確なビューポート高さ (iOS Safari対策) */
+:root { --vh: 1vh; }
+#screen-player-game{
+  height:calc(var(--vh,1vh)*100)!important;
+  touch-action:none;
+}
+/* ボタン: ダブルタップズーム防止 */
+button,.pc,.top-card,.chip{touch-action:manipulation}
+/* 入力フォームのズーム防止 */
+input,select,textarea{font-size:16px!important}
+.code-inp-big{font-size:clamp(24px,8vw,36px)!important}
+/* player-waiting フルスクリーン促進 */
+.fs-prompt{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 16px;border-radius:12px;
+  background:rgba(124,77,255,.12);border:1px solid rgba(124,77,255,.3);
+  font-size:13px;color:var(--p);cursor:pointer;
+  transition:all .15s;user-select:none;
+}
+.fs-prompt:hover{background:rgba(124,77,255,.2)}
+/* スキップボックスを少し引き締め */
+.p-skip{margin-top:4px;padding:8px 10px}
 </style>
 </head>
 <body>
@@ -341,7 +365,7 @@ body{background:var(--bg);color:var(--text);
     <div id="qr-section" class="qr-box hidden">
       <img id="qr-img" src="" alt="QR" style="width:200px;height:200px;border-radius:8px;display:block">
     </div>
-    <div class="sec">&#21442;&#21152;&#32773; <span id="p-count">0</span>/4</div>
+    <div class="sec">&#21442;&#21152;&#32773; <span id="p-count">0</span>/25</div>
     <div class="w-grid" id="w-grid"></div>
     <div style="margin-top:auto;padding-top:12px">
       <button class="btn btn-p" id="btn-start-game" disabled>&#12466;&#12540;&#12512;&#24320;&#22987;&#65288;&#21442;&#21152;&#32773;&#12364;&#24517;&#35201;&#65289;</button>
@@ -435,6 +459,7 @@ body{background:var(--bg);color:var(--text);
     <div style="font-size:16px;font-weight:700;text-align:center">&#12507;&#12473;&#12488;&#12398;&#12473;&#12479;&#12540;&#12488;&#12434;&#24453;&#12387;&#12390;&#12356;&#12414;&#12377;...</div>
     <div style="font-size:13px;color:var(--sub);text-align:center">&#28310;&#20633;&#12364;&#12391;&#12365;&#12383;&#12425;&#12466;&#12540;&#12512;&#12364;&#22987;&#12414;&#12426;&#12414;&#12377;</div>
     <div id="pw-players" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:6px"></div>
+    <div class="fs-prompt" id="btn-fullscreen" style="margin-top:8px">&#9974;&#65039; &#12479;&#12483;&#12503;&#12375;&#12390;&#12501;&#12523;&#12473;&#12463;&#12522;&#12540;&#12531;&#12395;</div>
   </div>
 </div>
 
@@ -1101,7 +1126,13 @@ function listenPlayer(){
       $('pw-players').innerHTML=pArr.map(function(p){ return '<div style="padding:6px 14px;border-radius:16px;font-size:13px;font-weight:700;border:2px solid '+p.color+';color:'+p.color+';background:var(--card)">'+esc(p.name)+'</div>'; }).join('');
     }
   });
-  roomRef.child('meta/status').on('value',function(snap){ var st=snap.val(); if(st==='playing'||st==='starting'){ showOnly('player-game'); listenPlayerQ(); } else if(st==='finished'){ showPlayerFinal(); } else if(st==='replay_vote'){ showReplayVote(); } });
+  roomRef.child('meta/status').on('value',function(snap){ var st=snap.val(); if(st==='playing'||st==='starting'){
+    showOnly('player-game');
+    window.scrollTo(0,0);
+    document.documentElement.scrollTop=0;
+    setVh();
+    listenPlayerQ();
+  } else if(st==='finished'){ showPlayerFinal(); } else if(st==='replay_vote'){ showReplayVote(); } });
 }
 
 var _qL=null;
@@ -1113,6 +1144,7 @@ function listenPlayerQ(){
 
 function playerShowQ(q){
   myAns=null; clearInterval(window._pAT); roomRef.child('skipVotes').off();
+  document.body.style.overflow='hidden';
   var total=q.total||parseInt(cfg.mode); $('pg-lbl').textContent=(q.idx+1)+' / '+total;
   for(var i=0;i<4;i++){
     var b=$('pc-'+i),cc=ABCD[i]; b.className='pc';
@@ -1230,6 +1262,7 @@ async function playerVoteExit(){
   location.href=location.origin+location.pathname;
 }
 async function showPlayerFinal(){
+  document.body.style.overflow='';
   stopAll(); clearInterval(window._pAT); roomRef.child('skipVotes').off();
   var snap=await roomRef.child('players').get(); players=snap.val()||{};
   var ss=await roomRef.child('settings').get(); var s=ss.val()||{}; $('pf-sub').textContent=s.playlistName||'';
@@ -1239,6 +1272,13 @@ async function showPlayerFinal(){
 // ══ INIT ══════════════════════════════
 (async function INIT(){
   console.log('MULTI '+VERSION);
+  // --vh を動的設定 (iOS Safari アドレスバー対策)
+  function setVh(){
+    document.documentElement.style.setProperty('--vh', window.innerHeight*0.01+'px');
+  }
+  setVh();
+  window.addEventListener('resize', setVh);
+  window.addEventListener('orientationchange', function(){ setTimeout(setVh,200); });
   initChips();
   var params=new URLSearchParams(location.search);
   var oauthCode=params.get('code'), roomParam=params.get('room'), errParam=params.get('error');
@@ -1292,6 +1332,12 @@ function setupFixedButtons(){
   $('btn-pf-home').addEventListener('click',function(){ location.href=location.origin+location.pathname; });
   $('btn-vote-replay').addEventListener('click',playerVoteReplay);
   $('btn-vote-exit').addEventListener('click',playerVoteExit);
+  var fsBtn=$('btn-fullscreen');
+  if(fsBtn) fsBtn.addEventListener('click',function(){
+    var el=document.documentElement;
+    var fn=el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen;
+    if(fn) fn.call(el);
+  });
 }
 
 function setupYtSetupEvents(){

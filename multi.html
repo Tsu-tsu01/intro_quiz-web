@@ -299,10 +299,10 @@ body{background:var(--bg);color:var(--text);
   font-size:13px;font-family:inherit;transition:border-color .15s}
 .cred-inp:focus{outline:none;border-color:var(--p)}
 
-#yt-wrap{border-radius:8px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.6)}
-#yt-wrap.yt-visible{opacity:1!important;pointer-events:auto!important}
-#yt-wrap.yt-minimized #yt-player{display:none!important;height:0!important}
-#yt-wrap.yt-minimized{height:auto!important}
+
+
+
+
 
 /* title-only mode */
 .title-only-mode .hc-art{display:none}
@@ -464,36 +464,9 @@ body{background:var(--bg);color:var(--text);
 
 <!-- HOST GAME -->
 <div id="screen-host-game" class="page hidden">
-  <div id="yt-wrap" style="
-      position:fixed;bottom:16px;right:16px;
-      width:256px;height:auto;
-      z-index:200;
-      opacity:0;transition:opacity .4s;pointer-events:none;
-      display:flex;flex-direction:column;gap:0;
-    ">
-  <div style="
-    background:#111;color:#aaa;font-size:11px;
-    padding:4px 10px;border-radius:8px 8px 0 0;
-    border:1px solid #333;border-bottom:none;
-    display:flex;align-items:center;gap:6px;
-  ">
-    <span id="yt-ad-icon" style="font-size:13px">🎵</span>
-    <span id="yt-ad-label">再生中 — 広告が出たらここをクリック</span>
-    <button id="btn-yt-minimize" style="
-      margin-left:auto;background:none;border:none;color:#888;
-      font-size:14px;cursor:pointer;padding:0 2px;line-height:1
-    " title="最小化">_</button>
-  </div>
-  <div id="yt-player" style="width:256px;height:144px;display:block"></div>
-</div>
-  <div class="topbar">
-    <div class="q-prog">
-      <div class="q-lbl" id="hg-lbl">1 / 10</div>
-      <div class="prog-track"><div class="prog-bar" id="hg-prog" style="width:0%"></div></div>
-    </div>
+  <div id="yt-player" style="position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;pointer-events:none"></div>
     <div class="ps-row" id="hg-ps" style="margin:0 10px"></div>
     <div class="score-tag" id="hg-score">0pt</div>
-    <button id="btn-yt-toggle" title="YouTube表示切替" style="padding:5px 10px;border:1.5px solid var(--border);border-radius:8px;background:var(--card);color:var(--sub);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .15s">📺 広告</button>
   </div>
   <div class="hg-body">
     <div class="hg-left">
@@ -1179,7 +1152,7 @@ function updateSkipUI(pArr,votes){
 
 function doAdvance(){
   stopAll();
-  hideYtPlayer();
+  
   if(ytPlayer&&ytOk) ytPlayer.pauseVideo();
   $('hg-audio-bar').classList.add('hidden');
   $('hg-skip').classList.add('hidden');
@@ -1189,7 +1162,7 @@ function doAdvance(){
 }
 
 async function hostFinish(){
-  stopAll(); hideYtPlayer(); if(ytPlayer&&ytOk) ytPlayer.pauseVideo();
+  stopAll();  if(ytPlayer&&ytOk) ytPlayer.pauseVideo();
   await roomRef.child('meta/status').set('finished');
   $('hf-sub').textContent=cfg.playlistName;
   renderRank('hf-list');
@@ -1237,7 +1210,7 @@ function fadeOutAndPause(){
 function onYouTubeIframeAPIReady(){}
 function initYT(){
   if(ytPlayer) return;
-  ytPlayer=new YT.Player('yt-player',{height:'144',width:'256',
+  ytPlayer=new YT.Player('yt-player',{height:'1',width:'1',
     playerVars:{
       autoplay:1,controls:1,
       disablekb:0,fs:0,
@@ -1284,8 +1257,8 @@ function initYT(){
   });
 }
 
-function showYtPlayer(){ var w=$('yt-wrap'); if(w){ w.classList.add('yt-visible'); w.classList.remove('yt-minimized'); } }
-function hideYtPlayer(){ var w=$('yt-wrap'); if(w) w.classList.remove('yt-visible'); }
+ }
+
 
 
 // ── PLAYER: 参加 ──
@@ -1641,14 +1614,6 @@ document.addEventListener('DOMContentLoaded', function(){
   $('btn-force-next').onclick=function(){
     roomRef.child('skipVotes').off(); doAdvance();
   };
-  var ytToggle=$('btn-yt-toggle');
-  if(ytToggle) ytToggle.addEventListener('click',function(){
-    var w=$('yt-wrap');
-    if(!w) return;
-    var visible=w.classList.contains('yt-visible');
-    if(visible){ hideYtPlayer(); ytToggle.style.color='var(--sub)'; ytToggle.style.borderColor='var(--border)'; }
-    else{ showYtPlayer(); ytToggle.style.color='var(--cyan)'; ytToggle.style.borderColor='var(--cyan)'; }
-  });
 
   // ホスト結果
   $('btn-play-again').onclick=hostPlayAgain;

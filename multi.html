@@ -443,6 +443,11 @@ body{background:var(--bg);color:var(--text);
     <div class="pc" id="pc-2">C</div>
     <div class="pc" id="pc-3">D</div>
   </div>
+  <!-- 正解後に曲名表示 -->
+  <div id="pg-track-info" class="hidden" style="text-align:center;padding:6px 4px 2px;flex-shrink:0">
+    <div id="pg-track-name" style="font-size:15px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+    <div id="pg-track-art" style="font-size:12px;color:var(--sub);margin-top:1px"></div>
+  </div>
   <div id="pg-skip-box" class="p-skip hidden">
     <div class="audio-bar" style="margin-bottom:9px">
       <span>&#127925;</span>
@@ -746,7 +751,7 @@ async function hostNextQ(){
   var pool=shuf(tracks.filter(function(t){ return t.id!==correct.id; }));
   var ch=shuf([correct].concat(pool.slice(0,3))); var ci=ch.indexOf(correct);
   var qData={idx:qIdx,total:total,startAt:firebase.database.ServerValue.TIMESTAMP,durationMs:cfg.introSec*1000,videoId:correct.videoId,correctIdx:-1,choices:ch.map(function(t){ return{label:t.name,artist:t.artist||'',img:t.img||''}; })};
-  await roomRef.child('question').set(qData); await roomRef.child('answers').remove(); await roomRef.child('skipVotes').remove(); await roomRef.child('meta/status').set('playing');
+  await roomRef.child('question').set(qData); await roomRef.child('answers').remove(); await roomRef.child('skipVotes').remove(); await roomRef.child('meta/skipReady').remove(); await roomRef.child('meta/status').set('playing');
   curQ={idx:qIdx,total:total,correct:correct,choices:ch,ci:ci,durationMs:cfg.introSec*1000,_revealed:false};
 
   $('hg-lbl').textContent=(qIdx+1)+' / '+total; $('hg-prog').style.width=((qIdx/total)*100)+'%';
@@ -825,24 +830,32 @@ async function hostReveal(startAt){
 
   var pNH=Object.entries(players).filter(function(e){ return !e[1].isHost; });
   updateSkipUI(pNH,{});
-  var _adv=false; // 二重進行防止フラグ
-  function skipHandler(snap){
-    if(_adv) return;
+  var _adv=false;
+
+  // skipVotes の変化でUI更新（表示目的）
+  roomRef.child('skipVotes').on('value',function(snap){
     var votes=snap.val()||{};
     updateSkipUI(pNH,votes);
-    if(pNH.length>0 && Object.keys(votes).length>=pNH.length){
+  });
+
+  // skipReady フラグでホストが進行を検知（信頼性が高い）
+  roomRef.child('meta/skipReady').on('value',function(snap){
+    if(snap.val()&&!_adv){
       _adv=true;
-      roomRef.child('skipVotes').off('value',skipHandler);
+      roomRef.child('meta/skipReady').off();
+      roomRef.child('skipVotes').off();
       doAdvance();
     }
-  }
-  roomRef.child('skipVotes').on('value',skipHandler);
+  });
+
+  // バックアップタイマー（postMs + 余裕5秒）
   nextT=setTimeout(function(){
     if(_adv) return;
     _adv=true;
-    roomRef.child('skipVotes').off('value',skipHandler);
+    roomRef.child('meta/skipReady').off();
+    roomRef.child('skipVotes').off();
     doAdvance();
-  },postMs+3000);
+  },postMs+5000);
 }
 
 
@@ -890,9 +903,14 @@ function fadeAndPause(){
 }
 
 function doAdvance(){
-  stopAll(); if(ytPlayer&&ytOk) ytPlayer.pauseVideo();
+  stopAll();
+  roomRef.child('meta/skipReady').off();
+  roomRef.child('skipVotes').off();
+  if(ytPlayer&&ytOk) ytPlayer.pauseVideo();
   $('hg-audio-bar').classList.add('hidden'); $('hg-skip').classList.add('hidden');
-  roomRef.child('skipVotes').remove(); qIdx++; hostNextQ();
+  roomRef.child('meta/skipReady').remove();
+  roomRef.child('skipVotes').remove();
+  qIdx++; hostNextQ();
 }
 
 async function hostFinish(){
@@ -985,7 +1003,7 @@ function playerShowQ(q){
     b.style.background=cc.bg; b.style.borderColor=cc.bd; b.style.color=cc.lb;
     (function(idx){ b.onclick=function(){ playerAns(idx); }; })(i);
   }
-  $('pg-skip-box').classList.add('hidden'); $('pg-status').textContent='🎵 イントロを聴いて回答！';
+  $('pg-skip-box').classList.add('hidden'); $('pg-track-info').classList.add('hidden'); $('pg-status').textContent='🎵 イントロを聴いて回答！';
   $('pg-pts').classList.add('hidden'); setRing('pg-ring',1); $('pg-sec').textContent='--'; $('pg-hint').textContent='秒';
   clearInterval(tickT);
   tickT=setInterval(function(){ var elapsed=now()-q.startAt,p=Math.max(0,1-elapsed/q.durationMs); setRing('pg-ring',p); var sec=Math.ceil(Math.max(0,(q.durationMs-elapsed)/1000)); $('pg-sec').textContent=sec; $('pg-hint').textContent='秒'; if(p<=0){ clearInterval(tickT); $('pg-status').textContent='⏱ 時間切れ！'; $('pg-sec').textContent='⏱'; $('pg-hint').textContent=''; } },80);
@@ -1013,6 +1031,13 @@ function playerReveal(q){
     var cb=$('pg-combo'); if(myCombo>=2){ cb.textContent=myCombo+'コンボ'; cb.classList.remove('hidden'); } else cb.classList.add('hidden');
   },800);
   $('pg-status').textContent=(myAns===ci)?'🎉 正解！':(myAns===null)?'⏱ 時間切れ':'❌ 不正解';
+  // 曲名を表示（ラグなし: 既に受信済みのcurQから読む）
+  if(curQ&&curQ.choices&&curQ.choices[ci]){
+    var trk=curQ.choices[ci];
+    $('pg-track-name').textContent=trk.label||'';
+    $('pg-track-art').textContent=trk.artist||'';
+    $('pg-track-info').classList.remove('hidden');
+  }
   $('pg-skip-box').classList.remove('hidden'); $('btn-pg-skip').disabled=false; $('btn-pg-skip').textContent='次の問題へ ▶';
   var postMs=Math.max(0,MAX_SEC*1000-(curQ.durationMs||10000)); var audSec=Math.ceil(postMs/1000),totSec=audSec;
   $('pg-afill').style.width='100%'; $('pg-atime').textContent=fmt(audSec);
@@ -1030,7 +1055,20 @@ function playerReveal(q){
 
 async function playerVoteSkip(){
   $('btn-pg-skip').disabled=true; $('btn-pg-skip').textContent='投票済み ✓';
-  clearInterval(window._pAT); await roomRef.child('skipVotes/'+myId).set(true);
+  clearInterval(window._pAT);
+  // 自分の票を書く
+  await roomRef.child('skipVotes/'+myId).set(true);
+  // 全員投票済みか確認
+  try{
+    var vSnap=await roomRef.child('skipVotes').get();
+    var pSnap=await roomRef.child('players').get();
+    var vCnt=Object.keys(vSnap.val()||{}).length;
+    var total=Object.values(pSnap.val()||{}).filter(function(p){ return !p.isHost; }).length;
+    if(total>0 && vCnt>=total){
+      // 全員揃った → ホストへ通知
+      await roomRef.child('meta/skipReady').set(true);
+    }
+  }catch(e){}
 }
 
 async function showPlayerFinal(){

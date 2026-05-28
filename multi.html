@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>イントロクイズ マルチプレイ</title>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
+<script src="https://www.youtube.com/iframe_api"></script>
+<style>
+:root{--bg:#0a0a0f;--surface:#141420;--card:#1c1c2e;--green:#1db954;--green2:#17a347;--red:#e74c3c;--accent:#9b59b6;--gold:#ffd700;--text:#eee;--sub:#888899;--border:#2a2a3e;--blue:#3498db}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;min-height:100vh}
+.hidden{display:none!important}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes scaleIn{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes waveAnim{0%,100%{height:10px;opacity:.5}50%{height:40px;opacity:1}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+@keyframes bounceIn{0%{transform:scale(0.3);opacity:0}50%{transform:scale(1.05)}70%{transform:scale(0.9)}100%{transform:scale(1);opacity:1}}
+.page{max-width:640px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;padding:0 0 24px}
+.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite}
+
+/* TOP */
+#screen-top{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;gap:24px}
+.top-logo{width:88px;height:88px;border-radius:24px;background:linear-gradient(135deg,var(--green),var(--green2));display:flex;align-items:center;justify-content:center;font-size:44px;box-shadow:0 0 40px rgba(29,185,84,.4);animation:scaleIn .5s cubic-bezier(.34,1.56,.64,1)}
+.top-title{font-size:26px;font-weight:700;letter-spacing:2px;animation:slideUp .4s .15s both}
+.top-sub{color:var(--sub);font-size:13px;animation:slideUp .4s .25s both}
+.top-cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%;max-width:400px;animation:slideUp .4s .3s both}
+.top-card{padding:24px 16px;border-radius:18px;border:2px solid var(--border);background:var(--card);cursor:pointer;text-align:center;transition:all .2s;user-select:none}
+.top-card:hover{transform:translateY(-4px);border-color:var(--green);box-shadow:0 8px 24px rgba(29,185,84,.25)}
+.top-card-icon{font-size:36px;margin-bottom:10px}
+.top-card-name{font-size:15px;font-weight:700}
+.top-card-desc{font-size:11px;color:var(--sub);margin-top:4px}
+
+/* HOST SETUP */
+#screen-host-setup{flex:1;display:flex;flex-direction:column;padding:20px}
+.hdr{display:flex;align-items:center;gap:10px;margin-bottom:24px}
+.btn-back{background:none;border:none;color:var(--sub);font-size:22px;cursor:pointer;padding:4px 8px;border-radius:8px}
+.hdr-title{font-size:19px;font-weight:700}
+.setup-sec{margin-bottom:20px}
+.sec-label{font-size:12px;font-weight:700;color:var(--sub);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px}
+.inp{width:100%;padding:12px 14px;background:var(--card);border:1.5px solid var(--border);border-radius:12px;color:var(--text);font-size:14px;font-family:inherit}
+.inp:focus{outline:none;border-color:var(--green)}
+.chip-row{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:8px 16px;border-radius:20px;border:1.5px solid var(--border);background:var(--card);color:var(--text);font-size:14px;font-weight:700;cursor:pointer;transition:all .18s;font-family:inherit}
+.chip.sel{background:var(--green);border-color:var(--green);color:#000}
+.pl-list{display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto}
+.pl-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;border:1.5px solid var(--border);background:var(--card);cursor:pointer;transition:all .15s}
+.pl-item:hover,.pl-item.sel{border-color:var(--green);background:rgba(29,185,84,.08)}
+.pl-item.sel{border-width:2px}
+.pl-thumb{width:48px;height:48px;border-radius:8px;object-fit:cover;background:var(--surface)}
+.pl-thumb-ph{width:48px;height:48px;border-radius:8px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--border)}
+.pl-name{font-size:14px;font-weight:700;flex:1}
+.btn-primary{width:100%;padding:16px;border:none;border-radius:30px;background:var(--green);color:#000;font-size:16px;font-weight:700;cursor:pointer;transition:opacity .2s;font-family:inherit;margin-top:auto}
+.btn-primary:hover{opacity:.85}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.loading-row{display:flex;align-items:center;gap:12px;padding:16px;color:var(--sub);font-size:14px}
+.yt-login-wrap{padding:20px;background:var(--surface);border-radius:16px;border:1px solid var(--border);text-align:center}
+.yt-login-wrap p{color:var(--sub);font-size:13px;margin-bottom:16px;line-height:1.7}
+.btn-yt{padding:13px 28px;border:none;border-radius:24px;background:linear-gradient(135deg,#ff0000,#cc0000);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
+
+/* HOST WAITING */
+#screen-host-waiting{flex:1;display:flex;flex-direction:column;padding:20px}
+.room-code-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:20px;background:linear-gradient(135deg,var(--green),var(--green2));color:#000;font-size:22px;font-weight:700;letter-spacing:4px;cursor:pointer;transition:opacity .15s;user-select:all}
+.room-code-badge:hover{opacity:.85}
+.share-row{display:flex;gap:10px;margin-top:12px}
+.btn-share{flex:1;padding:11px;border:1.5px solid var(--border);border-radius:12px;background:var(--card);color:var(--text);font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-share:hover{border-color:var(--green);background:rgba(29,185,84,.08)}
+.qr-wrap{display:flex;justify-content:center;margin:12px 0;padding:16px;background:var(--card);border-radius:16px;border:1px solid var(--border)}
+.qr-wrap img{border-radius:8px;display:block}
+.players-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:8px}
+.player-slot{padding:12px 14px;border-radius:14px;border:1.5px solid var(--border);background:var(--card);display:flex;align-items:center;gap:10px;min-height:58px}
+.player-slot.empty{border-style:dashed;opacity:.5}
+.avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0}
+.player-name{font-size:14px;font-weight:700}
+.player-join-label{font-size:11px;color:var(--sub)}
+.player-slot.empty .player-name{color:var(--sub);font-weight:400}
+.btn-start-game{width:100%;padding:18px;border:none;border-radius:32px;background:var(--green);color:#000;font-size:18px;font-weight:700;cursor:pointer;margin-top:auto;font-family:inherit;transition:all .2s}
+.btn-start-game:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn-start-game:not(:disabled):hover{opacity:.85;transform:translateY(-2px)}
+
+/* HOST GAME */
+#screen-host-game{flex:1;display:flex;flex-direction:column;padding:12px 16px}
+#yt-player{position:fixed;top:-9999px;left:-9999px;width:1px;height:1px}
+.game-top{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.q-progress{flex:1}
+.q-lbl{font-size:14px;font-weight:700;margin-bottom:3px}
+.prog-wrap{height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;background:var(--green);border-radius:2px;transition:width .3s}
+.score-pill{padding:4px 12px;border-radius:12px;background:linear-gradient(135deg,var(--green),var(--green2));color:#000;font-weight:700;font-size:14px}
+.timer-section{display:flex;justify-content:center;margin:8px 0}
+.timer-cont{position:relative;display:inline-flex;align-items:center;justify-content:center}
+.timer-svg{width:min(38vw,180px);height:min(38vw,180px)}
+.timer-ctr{position:absolute;display:flex;align-items:center;justify-content:center;flex-direction:column}
+.wave{display:flex;align-items:center;gap:4px;height:48px}
+.wave-bar{width:6px;border-radius:3px;background:var(--green);animation:waveAnim 1s ease-in-out infinite}
+.wave-bar:nth-child(1){animation-delay:0s}.wave-bar:nth-child(2){animation-delay:.12s}
+.wave-bar:nth-child(3){animation-delay:.25s}.wave-bar:nth-child(4){animation-delay:.12s}.wave-bar:nth-child(5){animation-delay:0s}
+.album-art{width:min(38vw,180px);height:min(38vw,180px);border-radius:50%;object-fit:cover;animation:scaleIn .4s cubic-bezier(.34,1.56,.64,1);box-shadow:0 0 28px rgba(29,185,84,.3)}
+.album-ph{width:min(38vw,180px);height:min(38vw,180px);border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:56px}
+.track-reveal{text-align:center;margin:4px 0;min-height:40px;animation:fadeIn .3s ease}
+.track-reveal-name{font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.track-reveal-artist{font-size:13px;color:var(--sub)}
+.host-choices{display:flex;flex-direction:column;gap:7px;flex:1;justify-content:center}
+.host-choice{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;border:1.5px solid var(--border);background:var(--card);font-size:13px;transition:all .25s}
+.host-choice.correct{background:rgba(46,204,113,.2);border-color:#2ecc71}
+.host-choice.wrong-sel{background:rgba(231,76,60,.15);border-color:var(--red)}
+.hc-label{width:28px;height:28px;border-radius:7px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--green);flex-shrink:0}
+.host-choice.correct .hc-label{background:rgba(0,0,0,.15);color:#000}
+.hc-info{flex:1;min-width:0}
+.hc-name{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hc-artist{font-size:11px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hc-icon{font-size:16px;flex-shrink:0}
+/* player status bar */
+.players-status{display:flex;gap:8px;justify-content:center;margin:6px 0;flex-wrap:wrap}
+.ps-dot{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;border:2px solid var(--border);background:var(--surface);transition:all .3s;position:relative}
+.ps-dot.answered{border-color:var(--green)}
+.ps-dot.correct{border-color:#2ecc71;background:rgba(46,204,113,.2)}
+.ps-dot.wrong{border-color:var(--red);background:rgba(231,76,60,.15)}
+.ps-dot-badge{position:absolute;top:-4px;right:-4px;width:16px;height:16px;border-radius:50%;font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:700}
+.ps-dot-badge.ok{background:#2ecc71;color:#000}
+.ps-dot-badge.ng{background:var(--red);color:#fff}
+
+/* HOST FINAL */
+#screen-host-final{flex:1;display:flex;flex-direction:column;padding:20px;overflow-y:auto}
+.final-title{text-align:center;font-size:24px;font-weight:700;margin:16px 0 8px;animation:slideUp .4s .1s both}
+.final-sub{text-align:center;color:var(--sub);font-size:13px;margin-bottom:20px;animation:slideUp .4s .2s both}
+.ranking-list{display:flex;flex-direction:column;gap:10px}
+.rank-card{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:16px;border:1.5px solid var(--border);background:var(--card);animation:slideUp .4s both}
+.rank-card:nth-child(1){border-color:var(--gold);background:rgba(255,215,0,.08)}
+.rank-card:nth-child(2){border-color:#c0c0c0;background:rgba(192,192,192,.06)}
+.rank-card:nth-child(3){border-color:#cd7f32;background:rgba(205,127,50,.06)}
+.rank-num{font-size:22px;font-weight:700;width:32px;text-align:center}
+.rank-num.gold{color:var(--gold)}
+.rank-num.silver{color:#c0c0c0}
+.rank-num.bronze{color:#cd7f32}
+.rank-name{flex:1;font-size:16px;font-weight:700}
+.rank-score{font-size:20px;font-weight:700;color:var(--green)}
+.rank-me{font-size:10px;color:var(--green);margin-left:4px}
+.btn-play-again{width:100%;padding:16px;border:none;border-radius:30px;background:var(--green);color:#000;font-size:16px;font-weight:700;cursor:pointer;margin-top:20px;font-family:inherit;transition:opacity .2s}
+.btn-play-again:hover{opacity:.85}
+.btn-home{width:100%;padding:14px;border:1.5px solid var(--border);border-radius:30px;background:var(--card);color:var(--text);font-size:15px;font-weight:700;cursor:pointer;margin-top:10px;font-family:inherit;transition:all .15s}
+.btn-home:hover{border-color:var(--sub)}
+
+/* PLAYER JOIN */
+#screen-player-join{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px}
+.join-room-badge{font-size:28px;font-weight:700;letter-spacing:4px;color:var(--green);margin-bottom:24px;animation:scaleIn .4s cubic-bezier(.34,1.56,.64,1)}
+.join-inp{width:100%;max-width:320px;padding:14px 18px;background:var(--card);border:2px solid var(--border);border-radius:14px;color:var(--text);font-size:18px;font-weight:700;text-align:center;font-family:inherit;margin-bottom:16px}
+.join-inp:focus{outline:none;border-color:var(--green)}
+.btn-join{width:100%;max-width:320px;padding:16px;border:none;border-radius:30px;background:var(--green);color:#000;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity .2s}
+.btn-join:hover{opacity:.85}
+.color-picker{display:flex;gap:10px;justify-content:center;margin-bottom:16px;flex-wrap:wrap}
+.color-swatch{width:38px;height:38px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:all .15s}
+.color-swatch.sel{border-color:var(--text);transform:scale(1.15)}
+
+/* PLAYER WAITING */
+#screen-player-waiting{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;gap:16px}
+.waiting-icon{font-size:52px;animation:pulse 2s ease-in-out infinite}
+.waiting-msg{font-size:16px;font-weight:700;text-align:center}
+.waiting-sub{font-size:13px;color:var(--sub);text-align:center}
+.waiting-players{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:8px}
+.wp-chip{padding:6px 14px;border-radius:16px;font-size:13px;font-weight:700;border:2px solid var(--border);background:var(--card)}
+
+/* PLAYER GAME */
+#screen-player-game{flex:1;display:flex;flex-direction:column;padding:16px}
+.player-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.player-q-lbl{flex:1;font-size:14px;font-weight:700}
+.player-score{padding:4px 12px;border-radius:12px;background:linear-gradient(135deg,var(--green),var(--green2));color:#000;font-weight:700;font-size:14px}
+.player-timer-wrap{display:flex;justify-content:center;margin:8px 0}
+.player-timer-svg{width:min(50vw,200px);height:min(50vw,200px)}
+.player-status-label{text-align:center;font-size:14px;color:var(--sub);height:20px;margin-bottom:4px}
+.player-choices{display:flex;flex-direction:column;gap:12px;flex:1;justify-content:center}
+.player-choice{padding:18px 24px;border-radius:16px;border:2px solid var(--border);background:var(--card);cursor:pointer;font-size:28px;font-weight:700;text-align:center;transition:all .2s;user-select:none;letter-spacing:2px}
+.player-choice:hover:not(.ans){background:rgba(29,185,84,.1);border-color:var(--green);transform:scale(1.02)}
+.player-choice.selected{border-color:var(--blue);background:rgba(52,152,219,.15)}
+.player-choice.correct{border-color:#2ecc71;background:rgba(46,204,113,.2)}
+.player-choice.wrong{border-color:var(--red);background:rgba(231,76,60,.15)}
+.player-choice.missed{border-color:var(--green);background:rgba(29,185,84,.08)}
+.pts-pop{text-align:center;font-size:22px;font-weight:700;color:var(--gold);height:30px;animation:bounceIn .3s ease}
+
+/* PLAYER FINAL */
+#screen-player-final{flex:1;display:flex;flex-direction:column;align-items:center;padding:24px;overflow-y:auto}
+
+/* DIALOG */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:center;justify-content:center;z-index:999;padding:24px;backdrop-filter:blur(4px)}
+.dlg{background:var(--card);border-radius:20px;padding:24px;max-width:380px;width:100%;border:1px solid var(--border);animation:scaleIn .25s ease}
+.dlg-title{font-size:17px;font-weight:700;margin-bottom:10px}
+.dlg-body{font-size:13px;color:var(--sub);line-height:1.8;margin-bottom:18px;white-space:pre-wrap}
+.dlg-acts{display:flex;gap:10px;justify-content:flex-end}
+.btn-dlg-cancel{padding:8px 16px;border-radius:10px;border:none;background:var(--surface);color:var(--sub);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+.btn-dlg-ok{padding:8px 16px;border-radius:10px;border:none;background:var(--green);color:#000;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+</style>
+</head>
+<body>
+
+<!-- TOP -->
+<div id="screen-top" class="page">
+  <div class="top-logo">🎵</div>
+  <div class="top-title">イントロクイズ</div>
+  <div class="top-sub">マルチプレイ対戦モード</div>
+  <div class="top-cards">
+    <div class="top-card" onclick="startHost()">
+      <div class="top-card-icon">🎮</div>
+      <div class="top-card-name">部屋を作る</div>
+      <div class="top-card-desc">ホストとして<br>ゲームを主催</div>
+    </div>
+    <div class="top-card" onclick="startJoin()">
+      <div class="top-card-icon">🎯</div>
+      <div class="top-card-name">部屋に参加</div>
+      <div class="top-card-desc">ルームコードで<br>参加する</div>
+    </div>
+  </div>
+</div>
+
+<!-- HOST SETUP -->
+<div id="screen-host-setup" class="page hidden">
+  <div class="hdr">
+    <button class="btn-back" onclick="showOnly('top')">←</button>
+    <div class="hdr-title">🎮 部屋の設定</div>
+  </div>
+
+  <div class="setup-sec">
+    <div class="sec-label">問題数</div>
+    <div class="chip-row" id="mode-chips">
+      <button class="chip sel" onclick="selChip(this,'mode','10')">10問</button>
+      <button class="chip" onclick="selChip(this,'mode','25')">25問</button>
+    </div>
+  </div>
+
+  <div class="setup-sec">
+    <div class="sec-label">イントロの長さ</div>
+    <div class="chip-row" id="intro-chips">
+      <button class="chip" onclick="selChip(this,'intro','5')">5秒</button>
+      <button class="chip sel" onclick="selChip(this,'intro','10')">10秒</button>
+      <button class="chip" onclick="selChip(this,'intro','15')">15秒</button>
+      <button class="chip" onclick="selChip(this,'intro','30')">30秒</button>
+    </div>
+  </div>
+
+  <div class="setup-sec" style="flex:1">
+    <div class="sec-label">YouTube Musicプレイリスト</div>
+    <div id="yt-auth-section" class="yt-login-wrap">
+      <p>YouTube Musicのプレイリストを使うにはGoogleログインが必要です。</p>
+      <button class="btn-yt" onclick="startYtAuth()">Googleでログイン</button>
+    </div>
+    <div id="yt-playlist-section" class="hidden">
+      <div id="pl-loading" class="loading-row hidden"><div class="spinner"></div>読み込み中...</div>
+      <div id="pl-list" class="pl-list"></div>
+    </div>
+  </div>
+
+  <button class="btn-primary" id="btn-create-room" disabled onclick="createRoom()">
+    部屋を作る →
+  </button>
+</div>
+
+<!-- HOST WAITING -->
+<div id="screen-host-waiting" class="page hidden">
+  <div class="hdr">
+    <button class="btn-back" onclick="hostLeaveRoom()">←</button>
+    <div class="hdr-title">⏳ 参加者を待っています</div>
+  </div>
+
+  <div style="text-align:center;margin-bottom:12px">
+    <div style="font-size:13px;color:var(--sub);margin-bottom:8px">ルームコード（タップでコピー）</div>
+    <div class="room-code-badge" id="room-code-badge" onclick="copyCode()">
+      <span id="room-code-text">------</span>
+      <span style="font-size:14px">📋</span>
+    </div>
+  </div>
+
+  <div class="share-row">
+    <button class="btn-share" onclick="copyLink()">🔗 リンクをコピー</button>
+    <button class="btn-share" onclick="toggleQR()">📱 QRコード</button>
+  </div>
+
+  <div id="qr-section" class="qr-wrap hidden">
+    <img id="qr-img" src="" alt="QR" style="width:180px;height:180px">
+  </div>
+
+  <div style="margin-top:16px">
+    <div class="sec-label">参加者 <span id="player-count-label">0</span>/4</div>
+    <div class="players-grid" id="waiting-players-grid">
+      <div class="player-slot empty"><div class="player-name">空き</div></div>
+      <div class="player-slot empty"><div class="player-name">空き</div></div>
+      <div class="player-slot empty"><div class="player-name">空き</div></div>
+      <div class="player-slot empty"><div class="player-name">空き</div></div>
+    </div>
+  </div>
+
+  <button class="btn-start-game" id="btn-start-game" disabled onclick="hostStartGame()">
+    ゲーム開始（参加者が必要）
+  </button>
+</div>
+
+<!-- HOST GAME -->
+<div id="screen-host-game" class="page hidden">
+  <div id="yt-player"></div>
+  <div class="game-top">
+    <div class="q-progress">
+      <div class="q-lbl" id="host-q-lbl">1 / 10</div>
+      <div class="prog-wrap"><div class="prog-fill" id="host-prog" style="width:0%"></div></div>
+    </div>
+    <div class="players-status" id="host-ps" style="margin:0 8px"></div>
+    <div class="score-pill" id="host-own-score">0pt</div>
+  </div>
+
+  <div class="timer-section">
+    <div class="timer-cont">
+      <svg class="timer-svg" viewBox="0 0 200 200">
+        <circle cx="100" cy="100" r="86" fill="none" stroke="var(--border)" stroke-width="7"/>
+        <circle id="host-timer-ring" cx="100" cy="100" r="86" fill="none" stroke="var(--green)"
+          stroke-width="7" stroke-linecap="round" stroke-dasharray="540"
+          stroke-dashoffset="0" transform="rotate(-90 100 100)"
+          style="transition:stroke-dashoffset 80ms linear,stroke .3s"/>
+      </svg>
+      <div class="timer-ctr" id="host-timer-ctr">
+        <div class="wave" id="host-wave">
+          <div class="wave-bar"></div><div class="wave-bar"></div>
+          <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+        </div>
+        <img id="host-album" class="album-art hidden" src="" alt="">
+        <div id="host-album-ph" class="album-ph hidden">🎵</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="track-reveal" id="host-track-reveal" style="opacity:0">
+    <div class="track-reveal-name" id="host-track-name"></div>
+    <div class="track-reveal-artist" id="host-track-artist"></div>
+  </div>
+
+  <div class="host-choices" id="host-choices"></div>
+</div>
+
+<!-- HOST FINAL -->
+<div id="screen-host-final" class="page hidden">
+  <div class="final-title">🏆 最終結果</div>
+  <div class="final-sub" id="final-pl-name"></div>
+  <div class="ranking-list" id="ranking-list"></div>
+  <button class="btn-play-again" onclick="hostPlayAgain()">もう一度プレイ</button>
+  <button class="btn-home" onclick="showOnly('top')">🏠 ホームへ</button>
+</div>
+
+<!-- PLAYER JOIN -->
+<div id="screen-player-join" class="page hidden">
+  <div class="join-room-badge" id="join-room-display">----</div>
+  <div style="font-size:14px;color:var(--sub);margin-bottom:20px">アバターカラーを選択</div>
+  <div class="color-picker" id="color-picker"></div>
+  <input class="join-inp" id="player-name-inp" placeholder="あなたの名前" maxlength="10" autocomplete="off">
+  <button class="btn-join" onclick="playerJoin()">参加する</button>
+</div>
+
+<!-- PLAYER WAITING -->
+<div id="screen-player-waiting" class="page hidden">
+  <div class="waiting-icon">🎵</div>
+  <div class="waiting-msg" id="pw-msg">ホストのスタートを待っています...</div>
+  <div class="waiting-sub" id="pw-sub">準備ができたらゲームが始まります</div>
+  <div class="waiting-players" id="pw-players"></div>
+</div>
+
+<!-- PLAYER GAME -->
+<div id="screen-player-game" class="page hidden">
+  <div class="player-top">
+    <div class="player-q-lbl" id="player-q-lbl">1 / 10</div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <div id="player-combo" class="hidden" style="padding:3px 10px;border-radius:10px;border:1px solid var(--accent);color:var(--accent);font-size:12px;font-weight:700;background:rgba(155,89,182,.15)">0コンボ</div>
+      <div class="player-score" id="player-score">0pt</div>
+    </div>
+  </div>
+  <div class="player-timer-wrap">
+    <div class="timer-cont">
+      <svg class="player-timer-svg" viewBox="0 0 200 200">
+        <circle cx="100" cy="100" r="86" fill="none" stroke="var(--border)" stroke-width="8"/>
+        <circle id="player-timer-ring" cx="100" cy="100" r="86" fill="none" stroke="var(--green)"
+          stroke-width="8" stroke-linecap="round" stroke-dasharray="540"
+          stroke-dashoffset="0" transform="rotate(-90 100 100)"
+          style="transition:stroke-dashoffset 80ms linear,stroke .3s"/>
+      </svg>
+      <div class="timer-ctr">
+        <span style="font-size:32px" id="player-timer-sec">--</span>
+        <span style="font-size:11px;color:var(--sub);margin-top:2px" id="player-timer-hint">秒</span>
+      </div>
+    </div>
+  </div>
+  <div class="player-status-label" id="player-status-label">🎵 イントロを聴いて回答！</div>
+  <div class="pts-pop hidden" id="pts-pop">&nbsp;</div>
+  <div class="player-choices" id="player-choices">
+    <div class="player-choice" id="pc-0" onclick="playerAnswer(0)">A</div>
+    <div class="player-choice" id="pc-1" onclick="playerAnswer(1)">B</div>
+    <div class="player-choice" id="pc-2" onclick="playerAnswer(2)">C</div>
+    <div class="player-choice" id="pc-3" onclick="playerAnswer(3)">D</div>
+  </div>
+</div>
+
+<!-- PLAYER FINAL -->
+<div id="screen-player-final" class="page hidden">
+  <div class="final-title">🏆 最終結果</div>
+  <div class="final-sub" id="pfinal-sub"></div>
+  <div class="ranking-list" id="player-ranking-list"></div>
+  <button class="btn-home" style="margin-top:20px" onclick="location.href=location.origin+location.pathname">🏠 ホームへ</button>
+</div>
+
+<!-- DIALOG -->
+<div id="dlg" class="overlay hidden">
+  <div class="dlg">
+    <div id="dlg-title" class="dlg-title"></div>
+    <div id="dlg-body" class="dlg-body"></div>
+    <div id="dlg-acts" class="dlg-acts"></div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────
+//  FIREBASE CONFIG
+// ─────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyCwL5vhb0P70gVZ-NUeGeK_cLtsLVPa0so",
+  authDomain: "intro-quiz-6fde1.firebaseapp.com",
+  databaseURL: "https://intro-quiz-6fde1-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "intro-quiz-6fde1",
+  storageBucket: "intro-quiz-6fde1.firebasestorage.app",
+  messagingSenderId: "335609053329",
+  appId: "1:335609053329:web:dc795b10d1b887a70b3f30"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// サーバー時刻オフセット
+let serverOffset = 0;
+db.ref('.info/serverTimeOffset').on('value', s => { serverOffset = s.val() || 0; });
+const now = () => Date.now() + serverOffset;
+
+// ─────────────────────────────────────────
+//  CONSTANTS
+// ─────────────────────────────────────────
+const AVATAR_COLORS = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#1abc9c','#3498db','#9b59b6','#e91e63'];
+const REDIR = location.origin + location.pathname;
+const YT_API = 'https://www.googleapis.com/youtube/v3';
+
+// ─────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────
+let myId   = localStorage.getItem('multi_pid') || (localStorage.setItem('multi_pid', uid()), localStorage.getItem('multi_pid'));
+let role   = null; // 'host' | 'player'
+let roomCode = null;
+let roomRef  = null;
+let hostListeners = [];
+
+let settings = { mode:'10', introSec:10, playlistId:null, playlistName:'' };
+let tracks   = [];
+let qIdx     = 0;
+let myScore  = 0;
+let myCombo  = 0;
+let players  = {};
+let myAnswer = null; // 0-3 or null
+let tickTimer = null;
+let nextTimer = null;
+let revealTimer = null;
+let currentQ  = null;
+
+// YouTube
+let ytPlayer = null, ytReady = false;
+let ytTok = null;
+
+// ─────────────────────────────────────────
+//  UTILS
+// ─────────────────────────────────────────
+function uid(){ return Math.random().toString(36).slice(2,10); }
+function genCode(){ const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; return Array.from({length:6},()=>c[Math.floor(Math.random()*c.length)]).join(''); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function ri(n){ return Math.floor(Math.random()*n); }
+function shuf(a){ for(let i=a.length-1;i>0;i--){const j=ri(i+1);[a[i],a[j]]=[a[j],a[i]];} return a; }
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+function stopTimers(){ clearInterval(tickTimer); clearTimeout(nextTimer); clearTimeout(revealTimer); }
+
+function showOnly(id){
+  document.querySelectorAll('.page').forEach(p => p.classList.toggle('hidden', p.id !== 'screen-'+id));
+}
+
+function showDlg(title, body, btns){
+  document.getElementById('dlg-title').textContent = title;
+  document.getElementById('dlg-body').textContent  = body;
+  const acts = document.getElementById('dlg-acts');
+  acts.innerHTML = '';
+  btns.forEach(b => {
+    const btn = document.createElement('button');
+    btn.className = b.ok ? 'btn-dlg-ok' : 'btn-dlg-cancel';
+    btn.textContent = b.l;
+    btn.onclick = () => { document.getElementById('dlg').classList.add('hidden'); b.a(); };
+    acts.appendChild(btn);
+  });
+  document.getElementById('dlg').classList.remove('hidden');
+}
+function hideDlg(){ document.getElementById('dlg').classList.add('hidden'); }
+
+function selChip(el, group, val){
+  document.querySelectorAll(`#${group}-chips .chip`).forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+  if(group==='mode') settings.mode = val;
+  if(group==='intro') settings.introSec = parseInt(val);
+}
+
+function setRing(ringId, p){
+  const r = document.getElementById(ringId);
+  if(!r) return;
+  r.style.strokeDashoffset = 540 * (1 - p);
+  r.style.stroke = p > 0.5 ? 'var(--green)' : p > 0.25 ? '#ffb300' : 'var(--red)';
+}
+
+// ─────────────────────────────────────────
+//  YOUTUBE AUTH
+// ─────────────────────────────────────────
+function b64u(buf){ return btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,''); }
+async function pkce(){ const v=b64u(crypto.getRandomValues(new Uint8Array(64)));const h=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(v));return{v,c:b64u(h)}; }
+
+async function startYtAuth(){
+  const{v,c}=await pkce();
+  localStorage.setItem('yt_v',v); localStorage.setItem('yt_pending','multi');
+  const cid=localStorage.getItem('yt_cid')||'';
+  const cs=localStorage.getItem('yt_cs')||'';
+  if(!cid||!cs){
+    showDlg('YouTube設定が必要です',
+      'index.htmlでYouTube Musicにログインするか、\nmulti.htmlのソースにクライアントIDを設定してください。\n\nindex.htmlで先にログインするとトークンが共有されます。',
+      [{l:'OK',a:hideDlg,ok:true}]);
+    return;
+  }
+  const url=new URL('https://accounts.google.com/o/oauth2/v2/auth');
+  url.searchParams.set('response_type','code');
+  url.searchParams.set('client_id',cid);
+  url.searchParams.set('redirect_uri',REDIR);
+  url.searchParams.set('scope','https://www.googleapis.com/auth/youtube.readonly');
+  url.searchParams.set('access_type','offline');
+  url.searchParams.set('prompt','consent');
+  url.searchParams.set('code_challenge_method','S256');
+  url.searchParams.set('code_challenge',c);
+  location.href=url.toString();
+}
+
+async function handleYtCallback(code){
+  const v=localStorage.getItem('yt_v'),cid=localStorage.getItem('yt_cid'),cs=localStorage.getItem('yt_cs');
+  if(!v||!cid||!cs) return;
+  const r=await fetch('https://oauth2.googleapis.com/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'authorization_code',code,redirect_uri:REDIR,client_id:cid,client_secret:cs,code_verifier:v})});
+  if(!r.ok){alert('YouTube認証エラー: '+(await r.text()));return;}
+  const d=await r.json();
+  localStorage.setItem('yt_tok',d.access_token);
+  localStorage.setItem('yt_ref',d.refresh_token||'');
+  localStorage.setItem('yt_exp',Date.now()+(d.expires_in||3600)*1000);
+  localStorage.removeItem('yt_v'); localStorage.removeItem('yt_pending');
+  history.replaceState({},'',location.pathname);
+}
+
+async function getYtTok(){
+  const exp=parseInt(localStorage.getItem('yt_exp')||'0');
+  if(Date.now()>exp-300000){
+    const ref=localStorage.getItem('yt_ref'),cid=localStorage.getItem('yt_cid'),cs=localStorage.getItem('yt_cs');
+    if(!ref||!cid||!cs) return null;
+    const r=await fetch('https://oauth2.googleapis.com/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({grant_type:'refresh_token',refresh_token:ref,client_id:cid,client_secret:cs})});
+    if(!r.ok) return null;
+    const d=await r.json();
+    localStorage.setItem('yt_tok',d.access_token);
+    localStorage.setItem('yt_exp',Date.now()+(d.expires_in||3600)*1000);
+    return d.access_token;
+  }
+  return localStorage.getItem('yt_tok');
+}
+
+function checkYtLogin(){
+  const tok = localStorage.getItem('yt_tok');
+  const exp = parseInt(localStorage.getItem('yt_exp')||'0');
+  if(tok && Date.now() < exp){
+    document.getElementById('yt-auth-section').classList.add('hidden');
+    document.getElementById('yt-playlist-section').classList.remove('hidden');
+    loadPlaylists();
+  }
+}
+
+async function loadPlaylists(){
+  const tok = await getYtTok();
+  if(!tok){ document.getElementById('yt-auth-section').classList.remove('hidden'); document.getElementById('yt-playlist-section').classList.add('hidden'); return; }
+  document.getElementById('pl-loading').classList.remove('hidden');
+  const r = await fetch(`${YT_API}/playlists?part=snippet&mine=true&maxResults=50`,{headers:{Authorization:`Bearer ${tok}`}});
+  document.getElementById('pl-loading').classList.add('hidden');
+  if(!r.ok) return;
+  const d = await r.json();
+  const list = document.getElementById('pl-list');
+  list.innerHTML = '';
+  (d.items||[]).forEach(item=>{
+    const s=item.snippet, img=s?.thumbnails?.medium?.url||s?.thumbnails?.default?.url||null;
+    const el=document.createElement('div');
+    el.className='pl-item';
+    el.dataset.id=item.id;
+    el.dataset.name=s?.title||'';
+    el.innerHTML=`${img?`<img class="pl-thumb" src="${img}">`:'<div class="pl-thumb-ph">🎵</div>'}<div class="pl-name">${esc(s?.title||'')}</div><span style="font-size:18px">○</span>`;
+    el.onclick=()=>{
+      document.querySelectorAll('.pl-item').forEach(x=>{x.classList.remove('sel');x.querySelector('span').textContent='○';});
+      el.classList.add('sel'); el.querySelector('span').textContent='✓';
+      settings.playlistId=item.id; settings.playlistName=s?.title||'';
+      document.getElementById('btn-create-room').disabled=false;
+    };
+    list.appendChild(el);
+  });
+}
+
+// ─────────────────────────────────────────
+//  HOST: ROOM CREATION
+// ─────────────────────────────────────────
+function startHost(){
+  role = 'host';
+  showOnly('host-setup');
+  checkYtLogin();
+}
+
+async function createRoom(){
+  if(!settings.playlistId){ alert('プレイリストを選択してください'); return; }
+  const code = genCode();
+  roomCode = code;
+  roomRef = db.ref(`rooms/${code}`);
+  const roomData = {
+    meta:{ createdAt: firebase.database.ServerValue.TIMESTAMP, hostId: myId, status:'waiting' },
+    settings:{ mode:settings.mode, introSec:settings.introSec, playlistId:settings.playlistId, playlistName:settings.playlistName, totalQ:parseInt(settings.mode) },
+    players:{}
+  };
+  await roomRef.set(roomData);
+  // ホスト自身もプレイヤーリストに追加（スコア集計のため）
+  await roomRef.child(`players/${myId}`).set({name:'ホスト', score:0, color:AVATAR_COLORS[0], isHost:true, joined:firebase.database.ServerValue.TIMESTAMP});
+  showHostWaiting(code);
+}
+
+function showHostWaiting(code){
+  document.getElementById('room-code-text').textContent = code;
+  const shareUrl = `${location.origin}${location.pathname}?room=${code}`;
+  document.getElementById('qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&bgcolor=1c1c2e&color=1db954&data=${encodeURIComponent(shareUrl)}`;
+  showOnly('host-waiting');
+  listenHostWaiting();
+}
+
+function listenHostWaiting(){
+  const ref = roomRef.child('players');
+  ref.on('value', snap => {
+    players = snap.val() || {};
+    const pArr = Object.entries(players).filter(([id,p])=>!p.isHost);
+    updateWaitingGrid(pArr);
+    document.getElementById('player-count-label').textContent = pArr.length;
+    const btn = document.getElementById('btn-start-game');
+    if(pArr.length >= 1){
+      btn.disabled = false;
+      btn.textContent = `ゲーム開始（${pArr.length}人参加中）`;
+    } else {
+      btn.disabled = true;
+      btn.textContent = 'ゲーム開始（参加者が必要）';
+    }
+  });
+  hostListeners.push({ref, fn:'value'});
+}
+
+function updateWaitingGrid(pArr){
+  const grid = document.getElementById('waiting-players-grid');
+  grid.innerHTML = '';
+  for(let i=0;i<4;i++){
+    const slot = document.createElement('div');
+    if(i < pArr.length){
+      const [id,p] = pArr[i];
+      slot.className = 'player-slot';
+      slot.innerHTML = `<div class="avatar" style="background:${p.color||AVATAR_COLORS[0]}">${(p.name||'?')[0]}</div><div><div class="player-name">${esc(p.name)}</div><div class="player-join-label">参加済み ✓</div></div>`;
+    } else {
+      slot.className = 'player-slot empty';
+      slot.innerHTML = `<div class="player-name">空き</div>`;
+    }
+    grid.appendChild(slot);
+  }
+}
+
+function copyCode(){
+  navigator.clipboard.writeText(roomCode).then(()=>{ document.getElementById('room-code-badge').querySelector('span:last-child').textContent='✓'; setTimeout(()=>document.getElementById('room-code-badge').querySelector('span:last-child').textContent='📋',1500); });
+}
+function copyLink(){
+  const url = `${location.origin}${location.pathname}?room=${roomCode}`;
+  navigator.clipboard.writeText(url).then(()=>showDlg('コピーしました','リンクをクリップボードにコピーしました:\n'+url,[{l:'OK',a:hideDlg,ok:true}]));
+}
+function toggleQR(){
+  const sec = document.getElementById('qr-section');
+  sec.classList.toggle('hidden');
+}
+function hostLeaveRoom(){
+  showDlg('部屋を解散しますか?','解散すると全員がゲームを抜けます。',[
+    {l:'キャンセル',a:hideDlg},{l:'解散',a:()=>{roomRef.remove();showOnly('top');},ok:true}
+  ]);
+}
+
+// ─────────────────────────────────────────
+//  HOST: GAME START
+// ─────────────────────────────────────────
+async function hostStartGame(){
+  document.getElementById('btn-start-game').disabled=true;
+  document.getElementById('btn-start-game').textContent='トラックを読み込み中...';
+
+  // 全トラック取得
+  const tok = await getYtTok();
+  if(!tok){ alert('YouTubeトークンが切れました。再ログインしてください。'); return; }
+  const loadedTracks = await fetchAllTracks(settings.playlistId, tok);
+  if(loadedTracks.length < 4){ alert(`プレイリストのトラックが少なすぎます (${loadedTracks.length}曲)。最低4曲必要です。`); return; }
+  tracks = shuf(loadedTracks);
+
+  // ステータスをstartingに
+  await roomRef.child('meta/status').set('starting');
+  showHostGame();
+  initYtPlayer();
+
+  // 少し待ってから1問目
+  await sleep(1000);
+  qIdx = 0; myScore = 0; myCombo = 0;
+  hostNextQuestion();
+}
+
+async function fetchAllTracks(plId, tok){
+  const arr=[]; let pt='';
+  while(true){
+    const url=`${YT_API}/playlistItems?part=snippet&playlistId=${plId}&maxResults=50${pt?'&pageToken='+pt:''}`;
+    const r=await fetch(url,{headers:{Authorization:`Bearer ${tok}`}});
+    if(!r.ok) break;
+    const d=await r.json();
+    (d.items||[]).forEach(it=>{
+      const s=it?.snippet,vid=s?.resourceId?.videoId;
+      if(!vid||s?.title==='Deleted video'||s?.title==='Private video') return;
+      arr.push({id:vid,name:s.title||'?',artist:s.videoOwnerChannelTitle||'YouTube',img:s.thumbnails?.medium?.url||null,videoId:vid});
+    });
+    pt=d.nextPageToken||''; if(!pt) break;
+  }
+  return arr;
+}
+
+function showHostGame(){
+  myScore = 0;
+  updateHostScore();
+  showOnly('host-game');
+}
+
+// ─────────────────────────────────────────
+//  HOST: QUESTION FLOW
+// ─────────────────────────────────────────
+async function hostNextQuestion(){
+  stopTimers();
+  const total = parseInt(settings.mode);
+  if(qIdx >= total){ hostFinishGame(); return; }
+
+  // 問題を作る
+  const correct = tracks[qIdx % tracks.length];
+  const pool = tracks.filter(t=>t.id!==correct.id);
+  shuf(pool);
+  const distractors = pool.slice(0,3);
+  const choices4 = shuf([correct,...distractors]);
+  const correctIdx = choices4.indexOf(correct);
+
+  // Firebase に書き込む（videoIdは含めるが、プレイヤーUIは表示しない）
+  const qData = {
+    idx: qIdx,
+    total,
+    startAt: firebase.database.ServerValue.TIMESTAMP,
+    durationMs: settings.introSec * 1000,
+    videoId: correct.videoId,
+    correctIdx: -1, // まだ非公開
+    choices: choices4.map(t=>({label:t.name, artist:t.artist||'', img:t.img||''}))
+  };
+  await roomRef.child('question').set(qData);
+  await roomRef.child('answers').remove();
+  await roomRef.child('meta/status').set('playing');
+
+  currentQ = { ...qData, correctIdx, correct };
+
+  // ホストUIを更新
+  updateHostQuestionUI(choices4, correctIdx, qIdx, total);
+
+  // YouTube再生
+  if(ytReady && ytPlayer) ytPlayer.loadVideoById(correct.videoId, 0);
+
+  // startAt を読み直してタイマー開始
+  const snap = await roomRef.child('question/startAt').get();
+  const startAt = snap.val();
+  hostStartTimer(startAt, settings.introSec * 1000);
+
+  // 制限時間後: 停止→正解公開
+  revealTimer = setTimeout(()=>{
+    if(ytPlayer && ytReady) ytPlayer.pauseVideo();
+    hostReveal(correctIdx, choices4);
+  }, settings.introSec * 1000 + 500); // 少し余裕を持たせる
+}
+
+function hostStartTimer(startAt, durationMs){
+  stopTimers();
+  tickTimer = setInterval(()=>{
+    const elapsed = now() - startAt;
+    const p = Math.max(0, 1 - elapsed / durationMs);
+    setRing('host-timer-ring', p);
+    if(p <= 0) clearInterval(tickTimer);
+  }, 80);
+}
+
+function updateHostQuestionUI(choices4, correctIdx, idx, total){
+  // プログレス
+  document.getElementById('host-q-lbl').textContent = `${idx+1} / ${total}`;
+  document.getElementById('host-prog').style.width = `${(idx/total)*100}%`;
+
+  // タイマーリセット
+  setRing('host-timer-ring', 1);
+
+  // アルバムアート非表示
+  document.getElementById('host-wave').style.display='flex';
+  document.getElementById('host-album').classList.add('hidden');
+  document.getElementById('host-album-ph').classList.add('hidden');
+  document.getElementById('host-track-reveal').style.opacity='0';
+
+  // 選択肢（曲名あり）
+  const el = document.getElementById('host-choices');
+  el.innerHTML = '';
+  choices4.forEach((t,i)=>{
+    const div = document.createElement('div');
+    div.className='host-choice';
+    div.id=`hc-${i}`;
+    div.innerHTML=`<div class="hc-label">${['A','B','C','D'][i]}</div>
+      <div class="hc-info"><div class="hc-name">${esc(t.name)}</div><div class="hc-artist">${esc(t.artist||'')}</div></div>
+      <div class="hc-icon" id="hci-${i}"></div>`;
+    el.appendChild(div);
+  });
+
+  // プレイヤーステータスドット
+  updateHostPlayerStatus();
+}
+
+function updateHostPlayerStatus(){
+  const el = document.getElementById('host-ps');
+  el.innerHTML = '';
+  Object.entries(players).filter(([id,p])=>!p.isHost).forEach(([id,p])=>{
+    const dot=document.createElement('div');
+    dot.className='ps-dot';
+    dot.id=`ps-${id}`;
+    dot.style.background=p.color||AVATAR_COLORS[0];
+    dot.textContent=(p.name||'?')[0];
+    dot.title=p.name;
+    el.appendChild(dot);
+  });
+}
+
+async function hostReveal(correctIdx, choices4){
+  stopTimers();
+  setRing('host-timer-ring', 0);
+
+  // Firebase に正解を書き込む
+  await roomRef.child('question/correctIdx').set(correctIdx);
+  await roomRef.child('meta/status').set('revealing');
+
+  // アルバムアート表示
+  const correct = choices4[correctIdx];
+  document.getElementById('host-wave').style.display='none';
+  if(correct.img){
+    const img=document.getElementById('host-album');
+    img.src=correct.img; img.classList.remove('hidden');
+    document.getElementById('host-album-ph').classList.add('hidden');
+  } else {
+    document.getElementById('host-album-ph').classList.remove('hidden');
+    document.getElementById('host-album').classList.add('hidden');
+  }
+  document.getElementById('host-track-name').textContent=correct.name;
+  document.getElementById('host-track-artist').textContent=correct.artist||'';
+  document.getElementById('host-track-reveal').style.opacity='1';
+
+  // 選択肢に色付け
+  document.querySelectorAll('.host-choice').forEach((el,i)=>{
+    if(i===correctIdx) el.classList.add('correct');
+  });
+
+  // 回答を読んでスコア計算
+  await sleep(500);
+  const ansSnap = await roomRef.child('answers').get();
+  const answers = ansSnap.val() || {};
+  const qSnap = await roomRef.child('question/startAt').get();
+  const startAt = qSnap.val();
+
+  // スコア計算して反映
+  const scoreUpdates = {};
+  for(const [pid, ans] of Object.entries(answers)){
+    if(ans.choice === correctIdx){
+      const responseMs = Math.max(0, ans.at - startAt);
+      const timeFrac = Math.min(1, responseMs / (settings.introSec * 1000));
+      const pts = Math.floor((100 + Math.floor(50*(1-timeFrac))) * (ans.combo>=10?3:ans.combo>=5?2:ans.combo>=3?1.5:1));
+      scoreUpdates[`players/${pid}/score`] = (players[pid]?.score||0) + pts;
+      // プレイヤードット更新
+      const dot = document.getElementById(`ps-${pid}`);
+      if(dot){ dot.classList.add('correct'); dot.innerHTML=`${(players[pid]?.name||'?')[0]}<div class="ps-dot-badge ok">✓</div>`; }
+    } else {
+      const dot = document.getElementById(`ps-${pid}`);
+      if(dot){ dot.classList.add('wrong'); dot.innerHTML=`${(players[pid]?.name||'?')[0]}<div class="ps-dot-badge ng">✗</div>`; }
+      // 回答したが不正解の選択肢に色
+      const choiceEl = document.getElementById(`hc-${ans.choice}`);
+      if(choiceEl) choiceEl.classList.add('wrong-sel');
+    }
+  }
+  if(Object.keys(scoreUpdates).length) await roomRef.update(scoreUpdates);
+
+  // 3秒後に次の問題
+  nextTimer = setTimeout(()=>{
+    qIdx++;
+    hostNextQuestion();
+  }, 3500);
+}
+
+function updateHostScore(){
+  document.getElementById('host-own-score').textContent = myScore+'pt';
+}
+
+// ─────────────────────────────────────────
+//  HOST: FINISH
+// ─────────────────────────────────────────
+async function hostFinishGame(){
+  stopTimers();
+  await roomRef.child('meta/status').set('finished');
+  if(ytPlayer && ytReady) ytPlayer.pauseVideo();
+  showHostFinal();
+}
+
+async function showHostFinal(){
+  // 最新スコアを取得
+  const snap = await roomRef.child('players').get();
+  const allP = snap.val() || {};
+  renderFinal(allP, 'ranking-list', 'final-pl-name');
+  showOnly('host-final');
+}
+
+function renderFinal(allP, listId, subId){
+  const sub = document.getElementById(subId);
+  if(sub) sub.textContent = settings.playlistName;
+  const sorted = Object.entries(allP)
+    .filter(([id,p])=>!p.isHost)
+    .sort((a,b)=>(b[1].score||0)-(a[1].score||0));
+  const list = document.getElementById(listId);
+  if(!list) return;
+  list.innerHTML = '';
+  const medals = ['🥇','🥈','🥉'];
+  sorted.forEach(([id,p],i)=>{
+    const card = document.createElement('div');
+    card.className='rank-card';
+    card.style.animationDelay=`${i*80}ms`;
+    const rankClass = i===0?'gold':i===1?'silver':i===2?'bronze':'';
+    card.innerHTML=`
+      <div class="rank-num ${rankClass}">${i<3?medals[i]:i+1}</div>
+      <div class="avatar" style="background:${p.color||AVATAR_COLORS[0]}">${(p.name||'?')[0]}</div>
+      <div class="rank-name">${esc(p.name)}${id===myId?'<span class="rank-me">（あなた）</span>':''}</div>
+      <div class="rank-score">${p.score||0}pt</div>`;
+    list.appendChild(card);
+  });
+}
+
+function hostPlayAgain(){
+  qIdx=0; myScore=0; myCombo=0;
+  roomRef.child('answers').remove();
+  roomRef.child('question').remove();
+  roomRef.child('meta/status').set('waiting');
+  // スコアリセット
+  const updates={};
+  Object.keys(players).forEach(id=>{ updates[`players/${id}/score`]=0; });
+  roomRef.update(updates);
+  showHostWaiting(roomCode);
+}
+
+// ─────────────────────────────────────────
+//  YOUTUBE PLAYER
+// ─────────────────────────────────────────
+function initYtPlayer(){
+  if(ytPlayer) return;
+  ytPlayer = new YT.Player('yt-player',{
+    height:'1',width:'1',
+    playerVars:{autoplay:0,controls:0,origin:location.origin,playsinline:1},
+    events:{onReady:()=>{ytReady=true;}}
+  });
+}
+function onYouTubeIframeAPIReady(){}
+
+// ─────────────────────────────────────────
+//  PLAYER: JOIN
+// ─────────────────────────────────────────
+const playerColors = [...AVATAR_COLORS];
+let playerColor = playerColors[ri(playerColors.length)];
+
+function startJoin(){
+  const urlParams = new URLSearchParams(location.search);
+  const code = urlParams.get('room');
+  if(!code){ showDlg('ルームコードが必要です','URLにルームコードが含まれていません。\nホストから共有リンクを受け取ってください。',[{l:'OK',a:hideDlg,ok:true}]); return; }
+  roomCode = code;
+  roomRef = db.ref(`rooms/${code}`);
+  document.getElementById('join-room-display').textContent = code;
+  renderColorPicker();
+  showOnly('player-join');
+}
+
+function renderColorPicker(){
+  const el=document.getElementById('color-picker');
+  el.innerHTML='';
+  playerColors.forEach(c=>{
+    const sw=document.createElement('div');
+    sw.className='color-swatch'+(c===playerColor?' sel':'');
+    sw.style.background=c;
+    sw.onclick=()=>{
+      playerColor=c;
+      document.querySelectorAll('.color-swatch').forEach(x=>x.classList.remove('sel'));
+      sw.classList.add('sel');
+    };
+    el.appendChild(sw);
+  });
+}
+
+async function playerJoin(){
+  const name = document.getElementById('player-name-inp').value.trim();
+  if(!name){ alert('名前を入力してください'); return; }
+  // 部屋の存在チェック
+  const snap = await roomRef.child('meta').get();
+  if(!snap.exists()){ showDlg('部屋が見つかりません','この部屋コードは存在しないか、すでに終了しています。',[{l:'OK',a:hideDlg,ok:true}]); return; }
+  const meta = snap.val();
+  if(meta.status==='finished'){ showDlg('ゲームが終了しています','このゲームはすでに終了しています。',[{l:'OK',a:hideDlg,ok:true}]); return; }
+
+  // 参加者数チェック
+  const playersSnap = await roomRef.child('players').get();
+  const existingPlayers = Object.values(playersSnap.val()||{}).filter(p=>!p.isHost);
+  if(existingPlayers.length >= 4){ showDlg('満員です','この部屋は満員（4人）です。',[{l:'OK',a:hideDlg,ok:true}]); return; }
+
+  // 参加
+  role = 'player';
+  await roomRef.child(`players/${myId}`).set({
+    name, score:0, color:playerColor, isHost:false,
+    joined: firebase.database.ServerValue.TIMESTAMP
+  });
+  settings.mode = meta.mode || '10';
+  settings.introSec = meta.introSec || 10;
+  // 切断時に自動削除
+  roomRef.child(`players/${myId}`).onDisconnect().remove();
+  showOnly('player-waiting');
+  listenAsPlayer();
+}
+
+// ─────────────────────────────────────────
+//  PLAYER: LISTEN
+// ─────────────────────────────────────────
+function listenAsPlayer(){
+  myScore=0; myCombo=0; myAnswer=null;
+
+  // プレイヤー一覧
+  roomRef.child('players').on('value', snap=>{
+    players = snap.val()||{};
+    myScore = players[myId]?.score || 0;
+    // 待機画面更新
+    if(!document.getElementById('screen-player-waiting').classList.contains('hidden')){
+      updatePlayerWaiting();
+    }
+    // ゲーム中はスコア更新
+    updatePlayerScore();
+  });
+
+  // ステータス監視
+  roomRef.child('meta/status').on('value', snap=>{
+    const status = snap.val();
+    if(status==='playing'){
+      showOnly('player-game');
+      listenPlayerQuestion();
+    } else if(status==='finished'){
+      showPlayerFinal();
+    }
+  });
+}
+
+function updatePlayerWaiting(){
+  const pArr = Object.values(players).filter(p=>!p.isHost);
+  const el = document.getElementById('pw-players');
+  el.innerHTML = pArr.map(p=>`<div class="wp-chip" style="border-color:${p.color};color:${p.color}">${esc(p.name)}</div>`).join('');
+}
+
+function updatePlayerScore(){
+  const el=document.getElementById('player-score');
+  if(el) el.textContent=(myScore||0)+'pt';
+}
+
+// ─────────────────────────────────────────
+//  PLAYER: QUESTION
+// ─────────────────────────────────────────
+let questionListener = null;
+
+function listenPlayerQuestion(){
+  if(questionListener) roomRef.child('question').off('value', questionListener);
+  myAnswer = null;
+
+  questionListener = roomRef.child('question').on('value', snap=>{
+    const q = snap.val();
+    if(!q) return;
+    currentQ = q;
+
+    if(q.correctIdx >= 0){
+      // 正解公開
+      playerShowReveal(q);
+    } else {
+      // 新問題
+      playerShowQuestion(q);
+    }
+  });
+}
+
+function playerShowQuestion(q){
+  myAnswer = null;
+  const total = q.total || parseInt(settings.mode);
+  document.getElementById('player-q-lbl').textContent = `${q.idx+1} / ${total}`;
+
+  // ボタンリセット
+  for(let i=0;i<4;i++){
+    const btn=document.getElementById(`pc-${i}`);
+    btn.className='player-choice';
+    btn.textContent=['A','B','C','D'][i];
+    btn.onclick=()=>playerAnswer(i);
+  }
+  document.getElementById('player-status-label').textContent='🎵 イントロを聴いて回答！';
+  document.getElementById('pts-pop').classList.add('hidden');
+  document.getElementById('pts-pop').textContent='';
+  setRing('player-timer-ring',1);
+
+  // タイマー
+  stopTimers();
+  tickTimer = setInterval(()=>{
+    const elapsed = now() - q.startAt;
+    const p = Math.max(0, 1 - elapsed / q.durationMs);
+    setRing('player-timer-ring', p);
+    const sec = Math.ceil(Math.max(0, (q.durationMs - elapsed)/1000));
+    document.getElementById('player-timer-sec').textContent = sec;
+    document.getElementById('player-timer-hint').textContent = '秒';
+    if(p<=0){
+      clearInterval(tickTimer);
+      document.getElementById('player-status-label').textContent='⏱ 時間切れ！';
+      document.getElementById('player-timer-hint').textContent='';
+      document.getElementById('player-timer-sec').textContent='⏱';
+    }
+  }, 80);
+}
+
+async function playerAnswer(idx){
+  if(myAnswer !== null) return;
+  if(currentQ?.correctIdx >= 0) return; // すでに公開済み
+  myAnswer = idx;
+  stopTimers();
+  clearInterval(tickTimer);
+
+  // 回答を送信
+  await roomRef.child(`answers/${myId}`).set({
+    choice: idx,
+    at: firebase.database.ServerValue.TIMESTAMP,
+    combo: myCombo
+  });
+
+  // 選択ボタンをハイライト
+  document.getElementById(`pc-${idx}`).classList.add('selected','ans');
+  document.getElementById('player-status-label').textContent='✅ 回答しました！結果を待っています...';
+}
+
+function playerShowReveal(q){
+  stopTimers();
+  setRing('player-timer-ring',0);
+  document.getElementById('player-timer-sec').textContent='🎵';
+  document.getElementById('player-timer-hint').textContent='';
+
+  const correctIdx = q.correctIdx;
+
+  for(let i=0;i<4;i++){
+    const btn=document.getElementById(`pc-${i}`);
+    btn.classList.add('ans');
+    btn.onclick=null;
+    if(i===correctIdx){
+      btn.classList.remove('selected');
+      btn.classList.add(myAnswer===i?'correct':'missed');
+    } else if(i===myAnswer){
+      btn.classList.add('wrong');
+    }
+  }
+
+  // スコア表示（Firebase上のスコアが更新されるまで少し待つ）
+  setTimeout(()=>{
+    const newScore = players[myId]?.score || 0;
+    if(newScore > myScore){
+      const gained = newScore - myScore;
+      myScore = newScore;
+      myCombo++;
+      const el=document.getElementById('pts-pop');
+      el.textContent=`+${gained}pts ${myCombo>=3?'🔥×'+myCombo:''}`;
+      el.classList.remove('hidden');
+      el.style.animation='none'; el.offsetHeight; el.style.animation='bounceIn .3s ease';
+    } else {
+      myCombo=0;
+    }
+    const combo=document.getElementById('player-combo');
+    if(myCombo>=2){combo.textContent=`${myCombo}コンボ`;combo.classList.remove('hidden');}
+    else combo.classList.add('hidden');
+    updatePlayerScore();
+  }, 800);
+
+  const status = myAnswer===correctIdx ? '🎉 正解！' : myAnswer===null ? '⏱ 時間切れ' : '❌ 不正解';
+  document.getElementById('player-status-label').textContent=status;
+}
+
+async function showPlayerFinal(){
+  stopTimers();
+  const snap=await roomRef.child('players').get();
+  renderFinal(snap.val()||{}, 'player-ranking-list', 'pfinal-sub');
+  // サブタイトル
+  const settingsSnap=await roomRef.child('settings').get();
+  const s=settingsSnap.val()||{};
+  const sub=document.getElementById('pfinal-sub');
+  if(sub) sub.textContent=s.playlistName||'';
+  showOnly('player-final');
+}
+
+// ─────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────
+(async()=>{
+  // URLパラメータ確認
+  const params = new URLSearchParams(location.search);
+  const code   = params.get('code');  // YouTube OAuth callback
+  const room   = params.get('room');  // 参加用ルームコード
+  const err    = params.get('error');
+
+  if(err){
+    history.replaceState({},'',location.pathname+'?room='+room);
+    alert('認証エラー: '+err);
+  }
+
+  if(code){
+    history.replaceState({},'',location.pathname+(room?'?room='+room:''));
+    const pending=localStorage.getItem('yt_pending');
+    if(pending==='multi') await handleYtCallback(code);
+  }
+
+  if(room){
+    roomCode=room;
+    roomRef=db.ref(`rooms/${room}`);
+    // プレイヤーとして参加フロー
+    renderColorPicker();
+    document.getElementById('join-room-display').textContent=room;
+    showOnly('player-join');
+    return;
+  }
+
+  showOnly('top');
+})();
+</script>
+</body>
+</html>

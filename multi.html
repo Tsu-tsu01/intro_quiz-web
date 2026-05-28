@@ -1088,10 +1088,11 @@ async function showPlayerFinal(){
   if(oauthCode&&!roomParam){
     history.replaceState({},'',location.pathname);
     if(localStorage.getItem('yt_pending')==='multi') await handleYtCb(oauthCode);
-    setupHostSetupEvents(); checkYtLogin(); showOnly('host-setup'); return;
+    setupFixedButtons(); setupHostSetupEvents(); checkYtLogin(); showOnly('host-setup'); return;
   }
-  if(roomParam){ enterRoom(roomParam); setupPlayerJoinEvents(); return; }
+  if(roomParam){ setupFixedButtons(); enterRoom(roomParam); setupPlayerJoinEvents(); return; }
 
+  setupFixedButtons();
   showOnly('top');
 
   $('btn-host').addEventListener('click',function(){
@@ -1106,18 +1107,31 @@ async function showPlayerFinal(){
     setTimeout(function(){ $('code-inp').focus(); },100);
   });
 
-  // 固定ボタン
-  $('btn-copy-link').addEventListener('click',function(){ var url=location.origin+location.pathname+'?room='+roomCode; navigator.clipboard.writeText(url).then(function(){ dlg('コピーしました',url,[{l:'OK',a:function(){},ok:true}]); }); });
-  $('room-badge').addEventListener('click',function(){ navigator.clipboard.writeText(roomCode).then(function(){ $('copy-icon').textContent='✓'; setTimeout(function(){ $('copy-icon').textContent='📋'; },1500); }); });
+  setupFixedButtons();
+})();
+
+function setupFixedButtons(){
+  // 重複登録防止: 一度だけ登録
+  if(window._fixedButtonsReady) return;
+  window._fixedButtonsReady = true;
+  $('btn-copy-link').addEventListener('click',function(){
+    var url=location.origin+location.pathname+'?room='+roomCode;
+    navigator.clipboard.writeText(url).then(function(){ dlg('コピーしました',url,[{l:'OK',a:function(){},ok:true}]); });
+  });
+  $('room-badge').addEventListener('click',function(){
+    navigator.clipboard.writeText(roomCode).then(function(){ $('copy-icon').textContent='✓'; setTimeout(function(){ $('copy-icon').textContent='📋'; },1500); });
+  });
   $('btn-show-qr').addEventListener('click',function(){ $('qr-section').classList.toggle('hidden'); });
-  $('back-from-waiting').addEventListener('click',function(){ dlg('部屋を解散しますか?','全員がゲームを退出します。',[{l:'キャンセル',a:function(){}},{l:'解散',a:function(){ roomRef.remove(); showOnly('top'); },ok:true}]); });
+  $('back-from-waiting').addEventListener('click',function(){
+    dlg('部屋を解散しますか?','全員がゲームを退出します。',[{l:'キャンセル',a:function(){}},{l:'解散',a:function(){ roomRef.remove(); showOnly('top'); },ok:true}]);
+  });
   $('btn-start-game').addEventListener('click',startGame);
   $('btn-force-next').addEventListener('click',function(){ roomRef.child('skipVotes').off(); doAdvance(); });
   $('btn-play-again').addEventListener('click',hostPlayAgain);
   $('btn-host-home').addEventListener('click',function(){ showOnly('top'); });
   $('btn-pg-skip').addEventListener('click',playerVoteSkip);
   $('btn-pf-home').addEventListener('click',function(){ location.href=location.origin+location.pathname; });
-})();
+}
 
 function setupYtSetupEvents(){
   var btnR=$('btn-yt-reset'),btnS=$('btn-yt-login-saved'),btnN=$('btn-yt-login-new');

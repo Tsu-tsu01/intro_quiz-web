@@ -250,6 +250,23 @@ body{background:var(--bg);color:var(--text);
 .dlg-b{font-size:13px;color:var(--sub);line-height:1.8;margin-bottom:18px;white-space:pre-wrap}
 .dlg-a{display:flex;gap:10px;justify-content:flex-end}
 
+
+/* ── YT SETUP ── */
+#screen-yt-setup{flex:1;display:flex;flex-direction:column;overflow-y:auto;padding:0 20px 24px}
+.setup-step{display:flex;gap:12px;margin-bottom:12px;padding:13px;
+  background:var(--sur);border-radius:13px;border:1px solid var(--border)}
+.step-num{width:24px;height:24px;border-radius:50%;background:var(--p);color:#fff;
+  font-size:12px;font-weight:700;display:flex;align-items:center;
+  justify-content:center;flex-shrink:0;margin-top:1px}
+.step-body{flex:1;font-size:13px;line-height:1.7;color:var(--text)}
+.step-body a{color:var(--p);text-decoration:none}
+.step-body a:hover{text-decoration:underline}
+.step-body code{background:var(--card);padding:2px 6px;border-radius:5px;
+  font-size:11px;color:var(--acc);word-break:break-all}
+.cred-inp{width:100%;margin-top:8px;padding:10px 12px;background:var(--card);
+  border:1.5px solid var(--border);border-radius:10px;color:var(--text);
+  font-size:13px;font-family:inherit;transition:border-color .15s}
+.cred-inp:focus{outline:none;border-color:var(--p)}
 </style>
 </head>
 <body>
@@ -273,6 +290,34 @@ body{background:var(--bg);color:var(--text);
   </div>
 </div>
 
+
+<!-- YT SETUP -->
+<div id="screen-yt-setup" class="page hidden">
+  <div class="hdr">
+    <button class="btn-back" id="back-from-yt-setup">&#8592;</button>
+    <div class="hdr-title">&#128308; YouTube Music &#35373;&#23450;</div>
+  </div>
+  <div style="padding:0 4px;overflow-y:auto">
+  <div id="yt-saved-section" class="hidden" style="margin-bottom:12px">
+    <div style="padding:12px;background:rgba(124,77,255,.1);border:1px solid rgba(124,77,255,.3);border-radius:12px;font-size:13px;color:var(--p);display:flex;align-items:center;gap:8px">
+      <span>&#10003; &#35469;&#35388;&#24773;&#22577;&#20445;&#23384;&#28168;</span>
+      <button id="btn-yt-reset" style="margin-left:auto;padding:4px 10px;border:1px solid rgba(124,77,255,.4);border-radius:8px;background:none;color:var(--p);font-size:11px;cursor:pointer;font-family:inherit">&#12522;&#12475;&#12483;&#12488;</button>
+    </div>
+    <button class="btn btn-p" id="btn-yt-login-saved" style="margin-top:12px">Google&#12391;&#12525;&#12464;&#12452;&#12531; &rarr;</button>
+  </div>
+  <div id="yt-new-section">
+    <p style="font-size:13px;color:var(--sub);line-height:1.7;margin-bottom:14px">&#21021;&#22238;&#12398;&#12415;Google Cloud&#12398;&#35373;&#23450;&#12364;&#24517;&#35201;&#12391;&#12377;&#12290;</p>
+    <div class="setup-step"><div class="step-num">1</div><div class="step-body"><a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a> &#12391;&#12503;&#12525;&#12472;&#12455;&#12463;&#12488;&#20316;&#25104;</div></div>
+    <div class="setup-step"><div class="step-num">2</div><div class="step-body">&#12300;YouTube Data API v3&#12301; &#12434;&#26377;&#21177;&#21270;</div></div>
+    <div class="setup-step"><div class="step-num">3</div><div class="step-body">OAuth&#12463;&#12521;&#12452;&#12450;&#12531;&#12488;ID &#20316;&#25104;&#65288;&#12454;&#12455;&#12502;&#12450;&#12503;&#12522;&#65289;<br>&#12522;&#12480;&#12452;&#12524;&#12463;&#12488;URI: <code id="redir-display-multi"></code></div></div>
+    <div class="setup-step"><div class="step-num">4</div><div class="step-body">&#20ข;&#20197;&#19979;&#12434;&#20837;&#21147;:<br>
+      <input class="cred-inp" id="yt-cid-inp" type="text" placeholder="&#12463;&#12521;&#12452;&#12450;&#12531;&#12488;ID" autocomplete="off"><br>
+      <input class="cred-inp" id="yt-cs-inp" type="password" placeholder="&#12463;&#12521;&#12452;&#12450;&#12531;&#12488;&#12471;&#12540;&#12463;&#12524;&#12483;&#12488;" style="margin-top:6px">
+    </div></div>
+    <button class="btn btn-p" id="btn-yt-login-new" style="margin-top:10px">Google&#12391;&#12525;&#12464;&#12452;&#12531; &rarr;</button>
+  </div>
+  </div>
+</div>
 <!-- ROOM CODE ENTRY -->
 <div id="screen-code-entry" class="page hidden">
   <div class="hdr">
@@ -371,7 +416,7 @@ body{background:var(--bg);color:var(--text);
 
 <!-- HOST GAME -->
 <div id="screen-host-game" class="page hidden">
-  <div id="yt-player" style="position:fixed;top:-9999px;left:-9999px;width:1px;height:1px"></div>
+  <div id="yt-player" style="position:fixed;top:-9999px;left:-9999px;width:320px;height:180px;opacity:0.01;pointer-events:none"></div>
   <div class="topbar">
     <div class="q-prog">
       <div class="q-lbl" id="hg-lbl">1 / 10</div>
@@ -638,26 +683,46 @@ async function pkce(){
   return {v:v,c:b64u(h)};
 }
 
-async function startYtAuth(){
-  var cid=localStorage.getItem('yt_cid')||'', cs=localStorage.getItem('yt_cs')||'';
-  if(!cid||!cs){
-    dlg('YouTube設定が必要です',
-      'index.htmlで先にYouTube Musicにログインしてください。\n同じブラウザであれば認証情報が共有されます。',
-      [{l:'OK',a:function(){},ok:true}]);
-    return;
+// YouTube設定画面を開く
+function openYtSetup(backScreen){
+  $('redir-display-multi').textContent = REDIR;
+  var savedCid = localStorage.getItem('yt_cid')||'';
+  var savedCs  = localStorage.getItem('yt_cs') ||'';
+  if(savedCid && savedCs){
+    $('yt-saved-section').classList.remove('hidden');
+    $('yt-new-section').classList.add('hidden');
+  } else {
+    $('yt-saved-section').classList.add('hidden');
+    $('yt-new-section').classList.remove('hidden');
+    $('yt-cid-inp').value = savedCid;
+    $('yt-cs-inp').value  = savedCs;
   }
-  var kc=await pkce();
-  localStorage.setItem('yt_v',kc.v); localStorage.setItem('yt_pending','multi');
-  var u=new URL('https://accounts.google.com/o/oauth2/v2/auth');
+  $('back-from-yt-setup').onclick = function(){ showOnly(backScreen); };
+  showOnly('yt-setup');
+}
+
+async function doYtLogin(cid, cs){
+  if(!cid||!cs){ alert('クライアントIDとシークレットを入力してください'); return; }
+  localStorage.setItem('yt_cid', cid);
+  localStorage.setItem('yt_cs',  cs);
+  var kc = await pkce();
+  localStorage.setItem('yt_v', kc.v);
+  localStorage.setItem('yt_pending', 'multi');
+  var u = new URL('https://accounts.google.com/o/oauth2/v2/auth');
   u.searchParams.set('response_type','code');
-  u.searchParams.set('client_id',cid);
-  u.searchParams.set('redirect_uri',REDIR);
+  u.searchParams.set('client_id', cid);
+  u.searchParams.set('redirect_uri', REDIR);
   u.searchParams.set('scope','https://www.googleapis.com/auth/youtube.readonly');
   u.searchParams.set('access_type','offline');
   u.searchParams.set('prompt','consent');
   u.searchParams.set('code_challenge_method','S256');
-  u.searchParams.set('code_challenge',kc.c);
-  location.href=u.toString();
+  u.searchParams.set('code_challenge', kc.c);
+  location.href = u.toString();
+}
+
+async function startYtAuth(){
+  // 旧インターフェース互換: 設定画面へ
+  openYtSetup('host-setup');
 }
 
 async function handleYtCb(code){
@@ -700,6 +765,9 @@ function checkYtLogin(){
     $('yt-auth-box').classList.add('hidden');
     $('yt-pl-box').classList.remove('hidden');
     loadPlaylists();
+  } else {
+    $('yt-auth-box').classList.remove('hidden');
+    $('yt-pl-box').classList.add('hidden');
   }
 }
 
@@ -1048,7 +1116,7 @@ function onYouTubeIframeAPIReady(){}
 function initYT(){
   if(ytPlayer) return;
   ytPlayer=new YT.Player('yt-player',{height:'1',width:'1',
-    playerVars:{autoplay:0,controls:0,origin:location.origin,playsinline:1},
+    playerVars:{autoplay:1,controls:0,disablekb:1,fs:0,modestbranding:1,rel:0,origin:location.origin,playsinline:1,enablejsapi:1},
     events:{onReady:function(){ ytOk=true; }}
   });
 }
@@ -1249,11 +1317,13 @@ async function showPlayerFinal(){
   // OAuth コールバック
   if(oauthCode && !roomParam){
     history.replaceState({},'',location.pathname);
-    if(localStorage.getItem('yt_pending')==='multi') await handleYtCb(oauthCode);
-    showOnly('host-setup');
-    checkYtLogin();
-    // イベント設定してから戻る
+    if(localStorage.getItem('yt_pending')==='multi'){
+      await handleYtCb(oauthCode);
+    }
+    // ログイン完了 → ホスト設定画面へ
     setupHostSetupEvents();
+    checkYtLogin();
+    showOnly('host-setup');
     return;
   }
 
@@ -1272,9 +1342,17 @@ async function showPlayerFinal(){
 
   // TOP ボタン
   $('btn-host').addEventListener('click', function(){
-    showOnly('host-setup');
-    checkYtLogin();
-    setupHostSetupEvents();
+    var tok=localStorage.getItem('yt_tok'), exp=parseInt(localStorage.getItem('yt_exp')||'0');
+    var hasCid=!!(localStorage.getItem('yt_cid')&&localStorage.getItem('yt_cs'));
+    if(!tok||Date.now()>=exp){
+      // 未ログイン → YouTube設定/ログイン画面へ
+      setupYtSetupEvents();
+      openYtSetup('top');
+    } else {
+      showOnly('host-setup');
+      checkYtLogin();
+      setupHostSetupEvents();
+    }
   });
 
   $('btn-join').addEventListener('click', function(){
@@ -1333,9 +1411,31 @@ async function doCodeGo(){
   }
 }
 
+function setupYtSetupEvents(){
+  var btnSaved   = $('btn-yt-login-saved');
+  var btnNew     = $('btn-yt-login-new');
+  var btnReset   = $('btn-yt-reset');
+  if(btnReset) btnReset.onclick = function(){
+    localStorage.removeItem('yt_cid'); localStorage.removeItem('yt_cs');
+    localStorage.removeItem('yt_tok'); localStorage.removeItem('yt_ref');
+    localStorage.removeItem('yt_exp');
+    $('yt-saved-section').classList.add('hidden');
+    $('yt-new-section').classList.remove('hidden');
+  };
+  if(btnSaved) btnSaved.onclick = function(){
+    doYtLogin(localStorage.getItem('yt_cid'), localStorage.getItem('yt_cs'));
+  };
+  if(btnNew) btnNew.onclick = function(){
+    doYtLogin($('yt-cid-inp').value.trim(), $('yt-cs-inp').value.trim());
+  };
+}
+
 function setupHostSetupEvents(){
   $('back-from-setup').onclick=function(){ showOnly('top'); };
-  $('btn-yt-login').onclick=startYtAuth;
+  $('btn-yt-login').onclick=function(){
+    setupYtSetupEvents();
+    openYtSetup('host-setup');
+  };
   $('btn-load-url').onclick=loadFromUrl;
   $('btn-create-room').onclick=createRoom;
 }

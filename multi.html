@@ -248,45 +248,6 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 .dlg-acts{display:flex;gap:10px;justify-content:flex-end}
 .btn-dlg-c{padding:8px 16px;border-radius:10px;border:none;background:var(--surface);color:var(--sub);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
 .btn-dlg-ok{padding:8px 16px;border-radius:10px;border:none;background:var(--p);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
-
-/* ── ROOM CODE ENTRY ── */
-#screen-code-entry{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;gap:20px}
-.code-entry-title{font-size:22px;font-weight:700;text-align:center;animation:slideUp .4s .1s both}
-.code-entry-sub{font-size:13px;color:var(--sub);text-align:center;animation:slideUp .4s .2s both}
-.code-inp{
-  width:100%;max-width:320px;
-  padding:18px 20px;
-  background:var(--card);
-  border:2px solid var(--border);
-  border-radius:16px;
-  color:var(--text);
-  font-size:32px;
-  font-weight:700;
-  text-align:center;
-  letter-spacing:6px;
-  text-transform:uppercase;
-  font-family:inherit;
-  transition:border-color .15s;
-  animation:slideUp .4s .3s both;
-}
-.code-inp:focus{outline:none;border-color:var(--p)}
-.btn-code-next{
-  width:100%;max-width:320px;
-  padding:16px;
-  border:none;
-  border-radius:30px;
-  background:linear-gradient(135deg,var(--p),var(--p2));
-  color:#fff;
-  font-size:17px;
-  font-weight:700;
-  cursor:pointer;
-  font-family:inherit;
-  transition:opacity .2s;
-  animation:slideUp .4s .4s both;
-}
-.btn-code-next:hover{opacity:.85}
-.btn-code-next:disabled{opacity:.35;cursor:not-allowed}
-.code-hint{font-size:12px;color:var(--sub);text-align:center;line-height:1.7;animation:slideUp .4s .5s both}
 </style>
 </head>
 <body>
@@ -302,7 +263,7 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
       <div class="top-card-name">部屋を作る</div>
       <div class="top-card-desc">ホストとして<br>ゲームを主催</div>
     </div>
-    <div class="top-card" onclick="startJoin()">
+    <div class="top-card" id="btn-top-join">
       <div class="top-card-icon">🎯</div>
       <div class="top-card-name">部屋に参加</div>
       <div class="top-card-desc">ルームコードで<br>参加する</div>
@@ -311,30 +272,33 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 </div>
 
 
-<!-- ══ ROOM CODE ENTRY ════════════════════════════════ -->
+<!-- ══ ROOM CODE ENTRY ════════════════════════ -->
 <div id="screen-code-entry" class="page hidden">
-  <button class="btn-back" style="align-self:flex-start;margin:12px 0 0 4px" onclick="showOnly('top')">←</button>
-  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:0 32px 40px">
-    <div style="font-size:52px;animation:scaleIn .4s cubic-bezier(.34,1.56,.64,1)">🎯</div>
-    <div class="code-entry-title">ルームコードを入力</div>
-    <div class="code-entry-sub">ホストから共有された6文字のコードを入力してください</div>
+  <button id="btn-back-code" class="btn-back" style="align-self:flex-start;margin:16px 0 0 8px">← 戻る</button>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:0 32px 48px">
+    <div style="font-size:52px">🎯</div>
+    <div style="font-size:22px;font-weight:700;text-align:center">ルームコードを入力</div>
+    <div style="font-size:13px;color:var(--sub);text-align:center;line-height:1.7">
+      ホストから共有された<br>6文字のコードを入力してください
+    </div>
     <input
-      class="code-inp"
       id="room-code-inp"
       type="text"
       maxlength="6"
-      placeholder="------"
+      placeholder="- - - - - -"
       autocomplete="off"
       autocorrect="off"
+      autocapitalize="characters"
       spellcheck="false"
-      oninput="onCodeInput(this)"
-      onkeydown="if(event.key==='Enter')codeNext()"
+      style="width:100%;max-width:300px;padding:18px 20px;background:var(--card);border:2px solid var(--border);border-radius:16px;color:var(--text);font-size:36px;font-weight:700;text-align:center;letter-spacing:8px;text-transform:uppercase;font-family:inherit;transition:border-color .15s;outline:none"
     >
-    <button class="btn-code-next" id="btn-code-next" disabled onclick="codeNext()">
-      参加する →
-    </button>
-    <div class="code-hint">
-      ホストの待機画面に表示されている<br>6文字のコードを入力してください
+    <div id="code-entry-msg" style="font-size:13px;color:var(--red);min-height:18px;text-align:center"></div>
+    <button
+      id="btn-code-go"
+      style="width:100%;max-width:300px;padding:16px;border:none;border-radius:30px;background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;opacity:.4;pointer-events:none"
+    >参加する →</button>
+    <div style="font-size:11px;color:var(--sub);text-align:center">
+      ※ コードは大文字英数字6文字です
     </div>
   </div>
 </div>
@@ -1048,39 +1012,61 @@ function initYtPlayer(){
 // ── プレイヤー: 参加 ──────────────────
 let playerColor=COLORS[ri(COLORS.length)];
 
-function startJoin(){
-  const code=new URLSearchParams(location.search).get('room');
-  if(code){ setRoomCode(code); return; }
-  // URLパラメータなし → コード入力画面
-  document.getElementById('room-code-inp').value='';
-  document.getElementById('btn-code-next').disabled=true;
+function goToCodeEntry(){
+  var inp=document.getElementById('room-code-inp');
+  if(inp){ inp.value=''; inp.style.borderColor='var(--border)'; }
+  document.getElementById('code-entry-msg').textContent='';
+  var btn=document.getElementById('btn-code-go');
+  if(btn){ btn.style.opacity='.4'; btn.style.pointerEvents='none'; btn.textContent='参加する →'; }
   showOnly('code-entry');
+  setTimeout(function(){ var i=document.getElementById('room-code-inp'); if(i) i.focus(); },100);
 }
 
-function onCodeInput(el){
-  el.value=el.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
-  document.getElementById('btn-code-next').disabled=el.value.length!==6;
+function onCodeInput(inp){
+  inp.value=inp.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+  var btn=document.getElementById('btn-code-go');
+  var ok=inp.value.length===6;
+  if(btn){ btn.style.opacity=ok?'1':'.4'; btn.style.pointerEvents=ok?'auto':'none'; }
+  inp.style.borderColor=ok?'var(--p)':'var(--border)';
+  document.getElementById('code-entry-msg').textContent='';
 }
 
-async function codeNext(){
-  const code=document.getElementById('room-code-inp').value.trim().toUpperCase();
+async function submitCode(){
+  var inp=document.getElementById('room-code-inp');
+  var code=inp.value.trim().toUpperCase();
   if(code.length!==6) return;
-  const btn=document.getElementById('btn-code-next');
-  btn.disabled=true; btn.textContent='確認中...';
-  const snap=await db.ref('rooms/'+code+'/meta').get();
-  if(!snap.exists()){
-    btn.disabled=false; btn.textContent='参加する →';
-    showDlg('部屋が見つかりません','ルームコード「'+code+'」の部屋は存在しないか、すでに終了しています。',[{l:'OK',a:hideDlg,ok:true}]);
-    return;
+  var btn=document.getElementById('btn-code-go');
+  var msgEl=document.getElementById('code-entry-msg');
+  btn.textContent='確認中...'; btn.style.opacity='.6'; btn.style.pointerEvents='none';
+  try{
+    var snap=await db.ref('rooms/'+code+'/meta').get();
+    if(!snap.exists()){
+      msgEl.textContent='コード「'+code+'」の部屋は見つかりません';
+      btn.textContent='参加する →'; btn.style.opacity='1'; btn.style.pointerEvents='auto';
+      return;
+    }
+    var m=snap.val()||{};
+    if(m.status==='finished'){
+      msgEl.textContent='このゲームはすでに終了しています';
+      btn.textContent='参加する →'; btn.style.opacity='1'; btn.style.pointerEvents='auto';
+      return;
+    }
+    enterRoom(code);
+  }catch(e){
+    msgEl.textContent='エラー: '+e.message;
+    btn.textContent='参加する →'; btn.style.opacity='1'; btn.style.pointerEvents='auto';
   }
-  setRoomCode(code);
 }
 
-function setRoomCode(code){
-  roomCode=code; roomRef=db.ref('rooms/'+code);
+function enterRoom(code){
+  roomCode=code;
+  roomRef=db.ref('rooms/'+code);
   document.getElementById('join-code-disp').textContent=code;
-  renderColorPicker(); showOnly('player-join');
+  renderColorPicker();
+  showOnly('player-join');
+  setTimeout(function(){ var i=document.getElementById('name-inp'); if(i) i.focus(); },100);
 }
+
 
 function renderColorPicker(){
   const el=document.getElementById('color-picker'); el.innerHTML='';
@@ -1239,19 +1225,48 @@ async function showPlayerFinal(){
 
 // ── 初期化 ────────────────────────────
 (async()=>{
-  const params=new URLSearchParams(location.search);
-  const code=params.get('code'), room=params.get('room'), err=params.get('error');
-  if(err){ history.replaceState({},'',location.pathname+(room?'?room='+room:'')); alert('認証エラー: '+err); }
-  if(code){
-    history.replaceState({},'',location.pathname+(room?'?room='+room:''));
-    const pend=localStorage.getItem('yt_pending');
-    if(pend==='multi') await handleYtCallback(code);
+  console.log('MULTI ' + VERSION + ' start');
+  var params    = new URLSearchParams(location.search);
+  var oauthCode = params.get('code');
+  var roomParam = params.get('room');
+  var errParam  = params.get('error');
+
+  if(errParam){
+    history.replaceState({},'',location.pathname+(roomParam?'?room='+roomParam:''));
+    alert('認証エラー: '+errParam);
   }
-  if(room){
-    setRoomCode(room); return;
+
+  if(oauthCode && !roomParam){
+    history.replaceState({},'',location.pathname);
+    var pend=localStorage.getItem('yt_pending');
+    if(pend==='multi') await handleYtCallback(oauthCode);
+    showOnly('host-setup');
+    checkYtLogin();
+    return;
   }
+
+  if(roomParam){
+    enterRoom(roomParam);
+    return;
+  }
+
   showOnly('top');
-  console.log(`イントロクイズ MULTI ${VERSION} 起動`);
+
+  var btnJoin=document.getElementById('btn-top-join');
+  if(btnJoin) btnJoin.addEventListener('click', goToCodeEntry);
+
+  var codeInp=document.getElementById('room-code-inp');
+  if(codeInp){
+    codeInp.addEventListener('input', function(){ onCodeInput(codeInp); });
+    codeInp.addEventListener('keydown', function(e){ if(e.key==='Enter') submitCode(); });
+  }
+
+  var btnCodeGo=document.getElementById('btn-code-go');
+  if(btnCodeGo) btnCodeGo.addEventListener('click', submitCode);
+
+  var btnBackCode=document.getElementById('btn-back-code');
+  if(btnBackCode) btnBackCode.addEventListener('click', function(){ showOnly('top'); });
+
 })();
 </script>
 </body>

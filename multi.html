@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>イントロクイズ マルチプレイ</title>
+<title>🎮 イントロクイズ MULTI</title>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database-compat.js"></script>
 <script src="https://www.youtube.com/iframe_api"></script>
 <style>
-:root{--bg:#0a0a0f;--surface:#141420;--card:#1c1c2e;--green:#1db954;--green2:#17a347;--red:#e74c3c;--accent:#9b59b6;--gold:#ffd700;--text:#eee;--sub:#888899;--border:#2a2a3e;--blue:#3498db}
+:root{--bg:#0d0d14;--surface:#13131f;--card:#1a1a2e;--green:#7c4dff;--green2:#6200ea;--red:#e74c3c;--accent:#e91e63;--gold:#ffd700;--text:#eee;--sub:#8899aa;--border:#252540;--blue:#00bcd4}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;min-height:100vh}
 .hidden{display:none!important}
@@ -24,12 +24,12 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 
 /* TOP */
 #screen-top{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;gap:24px}
-.top-logo{width:88px;height:88px;border-radius:24px;background:linear-gradient(135deg,var(--green),var(--green2));display:flex;align-items:center;justify-content:center;font-size:44px;box-shadow:0 0 40px rgba(29,185,84,.4);animation:scaleIn .5s cubic-bezier(.34,1.56,.64,1)}
+.top-logo{width:88px;height:88px;border-radius:24px;background:linear-gradient(135deg,#7c4dff,#6200ea);display:flex;align-items:center;justify-content:center;font-size:44px;box-shadow:0 0 40px rgba(124,77,255,.4);animation:scaleIn .5s cubic-bezier(.34,1.56,.64,1)}
 .top-title{font-size:26px;font-weight:700;letter-spacing:2px;animation:slideUp .4s .15s both}
 .top-sub{color:var(--sub);font-size:13px;animation:slideUp .4s .25s both}
 .top-cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%;max-width:400px;animation:slideUp .4s .3s both}
 .top-card{padding:24px 16px;border-radius:18px;border:2px solid var(--border);background:var(--card);cursor:pointer;text-align:center;transition:all .2s;user-select:none}
-.top-card:hover{transform:translateY(-4px);border-color:var(--green);box-shadow:0 8px 24px rgba(29,185,84,.25)}
+.top-card:hover{transform:translateY(-4px);border-color:var(--green);box-shadow:0 8px 24px rgba(124,77,255,.25)}
 .top-card-icon{font-size:36px;margin-bottom:10px}
 .top-card-name{font-size:15px;font-weight:700}
 .top-card-desc{font-size:11px;color:var(--sub);margin-top:4px}
@@ -48,7 +48,7 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 .chip.sel{background:var(--green);border-color:var(--green);color:#000}
 .pl-list{display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto}
 .pl-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;border:1.5px solid var(--border);background:var(--card);cursor:pointer;transition:all .15s}
-.pl-item:hover,.pl-item.sel{border-color:var(--green);background:rgba(29,185,84,.08)}
+.pl-item:hover,.pl-item.sel{border-color:var(--green);background:rgba(124,77,255,.08)}
 .pl-item.sel{border-width:2px}
 .pl-thumb{width:48px;height:48px;border-radius:8px;object-fit:cover;background:var(--surface)}
 .pl-thumb-ph{width:48px;height:48px;border-radius:8px;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--border)}
@@ -63,11 +63,11 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 
 /* HOST WAITING */
 #screen-host-waiting{flex:1;display:flex;flex-direction:column;padding:20px}
-.room-code-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:20px;background:linear-gradient(135deg,var(--green),var(--green2));color:#000;font-size:22px;font-weight:700;letter-spacing:4px;cursor:pointer;transition:opacity .15s;user-select:all}
+.room-code-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 20px;border-radius:20px;background:linear-gradient(135deg,#7c4dff,#6200ea);color:#000;font-size:22px;font-weight:700;letter-spacing:4px;cursor:pointer;transition:opacity .15s;user-select:all}
 .room-code-badge:hover{opacity:.85}
 .share-row{display:flex;gap:10px;margin-top:12px}
 .btn-share{flex:1;padding:11px;border:1.5px solid var(--border);border-radius:12px;background:var(--card);color:var(--text);font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px}
-.btn-share:hover{border-color:var(--green);background:rgba(29,185,84,.08)}
+.btn-share:hover{border-color:var(--green);background:rgba(124,77,255,.08)}
 .qr-wrap{display:flex;justify-content:center;margin:12px 0;padding:16px;background:var(--card);border-radius:16px;border:1px solid var(--border)}
 .qr-wrap img{border-radius:8px;display:block}
 .players-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:8px}
@@ -89,7 +89,7 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 .q-lbl{font-size:14px;font-weight:700;margin-bottom:3px}
 .prog-wrap{height:3px;background:var(--border);border-radius:2px;overflow:hidden}
 .prog-fill{height:100%;background:var(--green);border-radius:2px;transition:width .3s}
-.score-pill{padding:4px 12px;border-radius:12px;background:linear-gradient(135deg,var(--green),var(--green2));color:#000;font-weight:700;font-size:14px}
+.score-pill{padding:4px 12px;border-radius:12px;background:linear-gradient(135deg,#7c4dff,#6200ea);color:#000;font-weight:700;font-size:14px}
 .timer-section{display:flex;justify-content:center;margin:8px 0}
 .timer-cont{position:relative;display:inline-flex;align-items:center;justify-content:center}
 .timer-svg{width:min(38vw,180px);height:min(38vw,180px)}
@@ -98,7 +98,7 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 .wave-bar{width:6px;border-radius:3px;background:var(--green);animation:waveAnim 1s ease-in-out infinite}
 .wave-bar:nth-child(1){animation-delay:0s}.wave-bar:nth-child(2){animation-delay:.12s}
 .wave-bar:nth-child(3){animation-delay:.25s}.wave-bar:nth-child(4){animation-delay:.12s}.wave-bar:nth-child(5){animation-delay:0s}
-.album-art{width:min(38vw,180px);height:min(38vw,180px);border-radius:50%;object-fit:cover;animation:scaleIn .4s cubic-bezier(.34,1.56,.64,1);box-shadow:0 0 28px rgba(29,185,84,.3)}
+.album-art{width:min(38vw,180px);height:min(38vw,180px);border-radius:50%;object-fit:cover;animation:scaleIn .4s cubic-bezier(.34,1.56,.64,1);box-shadow:0 0 28px rgba(124,77,255,.3)}
 .album-ph{width:min(38vw,180px);height:min(38vw,180px);border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:56px}
 .track-reveal{text-align:center;margin:4px 0;min-height:40px;animation:fadeIn .3s ease}
 .track-reveal-name{font-size:16px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -167,17 +167,17 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 #screen-player-game{flex:1;display:flex;flex-direction:column;padding:16px}
 .player-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .player-q-lbl{flex:1;font-size:14px;font-weight:700}
-.player-score{padding:4px 12px;border-radius:12px;background:linear-gradient(135deg,var(--green),var(--green2));color:#000;font-weight:700;font-size:14px}
+.player-score{padding:4px 12px;border-radius:12px;background:linear-gradient(135deg,#7c4dff,#6200ea);color:#000;font-weight:700;font-size:14px}
 .player-timer-wrap{display:flex;justify-content:center;margin:8px 0}
 .player-timer-svg{width:min(50vw,200px);height:min(50vw,200px)}
 .player-status-label{text-align:center;font-size:14px;color:var(--sub);height:20px;margin-bottom:4px}
 .player-choices{display:flex;flex-direction:column;gap:12px;flex:1;justify-content:center}
 .player-choice{padding:18px 24px;border-radius:16px;border:2px solid var(--border);background:var(--card);cursor:pointer;font-size:28px;font-weight:700;text-align:center;transition:all .2s;user-select:none;letter-spacing:2px}
-.player-choice:hover:not(.ans){background:rgba(29,185,84,.1);border-color:var(--green);transform:scale(1.02)}
+.player-choice:hover:not(.ans){background:rgba(124,77,255,.1);border-color:var(--green);transform:scale(1.02)}
 .player-choice.selected{border-color:var(--blue);background:rgba(52,152,219,.15)}
 .player-choice.correct{border-color:#2ecc71;background:rgba(46,204,113,.2)}
 .player-choice.wrong{border-color:var(--red);background:rgba(231,76,60,.15)}
-.player-choice.missed{border-color:var(--green);background:rgba(29,185,84,.08)}
+.player-choice.missed{border-color:var(--green);background:rgba(124,77,255,.08)}
 .pts-pop{text-align:center;font-size:22px;font-weight:700;color:var(--gold);height:30px;animation:bounceIn .3s ease}
 
 /* PLAYER FINAL */
@@ -251,6 +251,15 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
     </div>
   </div>
 
+
+    <div style="margin-top:16px;padding:14px;background:var(--surface);border-radius:14px;border:1px solid var(--border)">
+      <div style="font-size:12px;color:var(--sub);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">▶ URLで直接指定（上記リストから選ぶか、こちらに貼り付け）</div>
+      <div style="display:flex;gap:8px">
+        <input class="inp" id="pl-url-inp" placeholder="https://www.youtube.com/playlist?list=..." style="flex:1;padding:10px 12px;font-size:13px">
+        <button onclick="loadFromUrl()" style="padding:10px 16px;border:none;border-radius:10px;background:var(--green);color:#fff;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit">読込</button>
+      </div>
+      <div id="url-pl-name" style="font-size:12px;color:var(--sub);margin-top:6px;min-height:18px"></div>
+    </div>
   <button class="btn-primary" id="btn-create-room" disabled onclick="createRoom()">
     部屋を作る →
   </button>
@@ -277,7 +286,7 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
   </div>
 
   <div id="qr-section" class="qr-wrap hidden">
-    <img id="qr-img" src="" alt="QR" style="width:180px;height:180px">
+    <img id="qr-img" src="" alt="QR" style="width:200px;height:200px;border-radius:12px">
   </div>
 
   <div style="margin-top:16px">
@@ -632,7 +641,7 @@ async function createRoom(){
 function showHostWaiting(code){
   document.getElementById('room-code-text').textContent = code;
   const shareUrl = `${location.origin}${location.pathname}?room=${code}`;
-  document.getElementById('qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&bgcolor=1c1c2e&color=1db954&data=${encodeURIComponent(shareUrl)}`;
+  document.getElementById('qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&bgcolor=ffffff&color=000000&qzone=1&data=${encodeURIComponent(shareUrl)}`;
   showOnly('host-waiting');
   listenHostWaiting();
 }
@@ -713,6 +722,44 @@ async function hostStartGame(){
   await sleep(1000);
   qIdx = 0; myScore = 0; myCombo = 0;
   hostNextQuestion();
+}
+
+
+async function loadFromUrl(){
+  const raw = document.getElementById('pl-url-inp').value.trim();
+  if(!raw) return;
+  // プレイリストID抽出
+  let plId = null;
+  try {
+    const u = new URL(raw);
+    plId = u.searchParams.get('list');
+  } catch(e) {
+    const m = raw.match(/[?&]list=([^&]+)/);
+    if(m) plId = m[1];
+    else plId = raw; // IDの直接入力
+  }
+  if(!plId){ alert('URLからプレイリストIDを取得できませんでした。\n例: https://www.youtube.com/playlist?list=PLxxxxxx'); return; }
+
+  // プレイリスト名を取得
+  document.getElementById('url-pl-name').textContent = '読み込み中...';
+  const tok = await getYtTok();
+  if(!tok){ document.getElementById('url-pl-name').textContent = '⚠ YouTubeにログインしてください'; return; }
+
+  try {
+    const r = await fetch(`${YT_API}/playlists?part=snippet&id=${plId}`,{headers:{Authorization:`Bearer ${tok}`}});
+    const d = await r.json();
+    const item = d.items?.[0];
+    if(!item){ document.getElementById('url-pl-name').textContent = '⚠ プレイリストが見つかりません（非公開または無効なID）'; return; }
+    const name = item.snippet?.title || plId;
+    // 選択状態にする
+    document.querySelectorAll('.pl-item').forEach(x=>{x.classList.remove('sel');if(x.querySelector('span'))x.querySelector('span').textContent='○';});
+    settings.playlistId = plId;
+    settings.playlistName = name;
+    document.getElementById('url-pl-name').textContent = '✓ 選択: ' + name;
+    document.getElementById('btn-create-room').disabled = false;
+  } catch(e) {
+    document.getElementById('url-pl-name').textContent = '⚠ 読み込みエラー: ' + e.message;
+  }
 }
 
 async function fetchAllTracks(plId, tok){

@@ -724,6 +724,7 @@ async function startGame(){
   var ss=await roomRef.child('settings').get(); var sc=ss.val()||{}; cfg.titleOnly=!!sc.titleOnly;
   await roomRef.child('meta/status').set('starting');
   showOnly('host-game'); initYT(); qIdx=0; myScore=0; myCombo=0;
+  $('hg-score').textContent='0pt';
   await sleep(800); hostNextQ();
 }
 
@@ -801,7 +802,16 @@ async function hostReveal(startAt){
       if(dot){ dot.classList.remove('voted'); dot.classList.add('ok'); dot.innerHTML=(players[pid]&&(players[pid].name||'?')[0]||'?')+'<div class="ps-badge ok">✓</div>'; }
     }else{ if(dot){ dot.classList.remove('voted'); dot.classList.add('ng'); dot.innerHTML=(players[pid]&&(players[pid].name||'?')[0]||'?')+'<div class="ps-badge ng">✗</div>'; } var wEl=$('hc-'+a.choice); if(wEl) wEl.classList.add('ng'); }
   });
-  if(Object.keys(upd).length) await roomRef.update(upd);
+  if(Object.keys(upd).length){
+    await roomRef.update(upd);
+    // ローカルの players も即更新（Firebase コールバック待ち不要）
+    Object.entries(upd).forEach(function(e){
+      var parts=e[0].split('/'); // ["players", pid, "score"]
+      if(parts.length===3 && players[parts[1]]) players[parts[1]].score=e[1];
+    });
+  }
+  // スコアをUIに反映
+  updateHostScoreUI();
 
   var postMs=Math.max(0,MAX_SEC*1000-cfg.introSec*1000);
   var audSec=Math.ceil(postMs/1000),totSec=audSec;
@@ -815,10 +825,58 @@ async function hostReveal(startAt){
 
   var pNH=Object.entries(players).filter(function(e){ return !e[1].isHost; });
   updateSkipUI(pNH,{});
-  roomRef.child('skipVotes').on('value',function(snap){ var votes=snap.val()||{}; updateSkipUI(pNH,votes); if(Object.keys(votes).length>=pNH.length&&pNH.length>0){ roomRef.child('skipVotes').off(); doAdvance(); } });
-  nextT=setTimeout(function(){ roomRef.child('skipVotes').off(); doAdvance(); },postMs+3000);
+  var _adv=false; // 二重進行防止フラグ
+  function skipHandler(snap){
+    if(_adv) return;
+    var votes=snap.val()||{};
+    updateSkipUI(pNH,votes);
+    if(pNH.length>0 && Object.keys(votes).length>=pNH.length){
+      _adv=true;
+      roomRef.child('skipVotes').off('value',skipHandler);
+      doAdvance();
+    }
+  }
+  roomRef.child('skipVotes').on('value',skipHandler);
+  nextT=setTimeout(function(){
+    if(_adv) return;
+    _adv=true;
+    roomRef.child('skipVotes').off('value',skipHandler);
+    doAdvance();
+  },postMs+3000);
 }
 
+
+function updateHostScoreUI(){
+  // topbar のスコアタグ → 1位のスコアを表示
+  var pArr=Object.entries(players).filter(function(e){ return !e[1].isHost; })
+    .sort(function(a,b){ return (b[1].score||0)-(a[1].score||0); });
+  if(pArr.length>0){
+    $('hg-score').textContent='1位: '+(pArr[0][1].score||0)+'pt';
+  }
+  // skip-box 内のドットにスコアを tooltip で表示
+  pArr.forEach(function(e){
+    var id=e[0],p=e[1];
+    var dot=$('ps-'+id);
+    if(dot) dot.title=p.name+': '+(p.score||0)+'pt';
+  });
+  // hg-skip 内にスコアリストを表示（なければ追加）
+  var skipBox=$('hg-skip');
+  if(!skipBox) return;
+  var scoreList=$('hg-score-list');
+  if(!scoreList){
+    scoreList=document.createElement('div');
+    scoreList.id='hg-score-list';
+    scoreList.style.cssText='display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;justify-content:center';
+    skipBox.insertBefore(scoreList,skipBox.firstChild);
+  }
+  scoreList.innerHTML=pArr.map(function(e,i){
+    var p=e[1];
+    var medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+    return '<div style="padding:4px 10px;border-radius:10px;background:'+p.color+
+      '22;border:1.5px solid '+p.color+';font-size:12px;font-weight:700;color:'+p.color+
+      ';white-space:nowrap">'+medal+esc(p.name)+' '+(p.score||0)+'pt</div>';
+  }).join('');
+}
 function updateSkipUI(pArr,votes){
   $('hg-sv-cnt').textContent=Object.keys(votes).length; $('hg-sv-tot').textContent=pArr.length;
   var dots=$('hg-sv-dots'); if(!dots) return;

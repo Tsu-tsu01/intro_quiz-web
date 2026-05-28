@@ -975,7 +975,9 @@ async function doJoin(){
   role='player';
   await roomRef.child('players/'+myId).set({name:name,score:0,color:myColor,isHost:false,joined:firebase.database.ServerValue.TIMESTAMP});
   roomRef.child('players/'+myId).onDisconnect().remove();
-  cfg.mode=meta.mode||'10'; cfg.introSec=parseInt(meta.introSec||10);
+  var settSnap=await roomRef.child('settings').get();
+  var sett=settSnap.val()||{};
+  cfg.titleOnly=!!sett.titleOnly;
   showOnly('player-waiting'); listenPlayer();
 }
 
@@ -1011,7 +1013,7 @@ function playerShowQ(q){
     b.innerHTML='<div class="pc-lbl" style="color:'+cc.lb+'">'+['A','B','C','D'][i]+'</div>'
       +'<div class="pc-info">'
       +'<div class="pc-name" style="color:var(--text)">'+esc(tname)+'</div>'
-      +(tart?'<div class="pc-art">'+esc(tart)+'</div>':'')
+      +(!cfg.titleOnly&&tart?'<div class="pc-art">'+esc(tart)+'</div>':'')
       +'</div>';
     (function(idx){ b.onclick=function(){ playerAns(idx); }; })(i);
   }

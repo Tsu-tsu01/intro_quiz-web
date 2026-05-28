@@ -25,7 +25,7 @@ body{background:var(--bg);color:var(--text);
 @keyframes bounce{0%{transform:scale(.3);opacity:0}60%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
 .page{width:100%;max-width:640px;margin:0 auto;min-height:100vh;
   display:flex;flex-direction:column;padding-bottom:24px}
-#screen-host-game{max-width:1200px!important;padding:12px 24px}
+#screen-host-game{max-width:1400px!important;padding:16px 32px}
 .spinner{width:36px;height:36px;border:3px solid var(--border);
   border-top-color:var(--p);border-radius:50%;animation:spin .8s linear infinite}
 .inp{width:100%;padding:11px 14px;background:var(--card);border:1.5px solid var(--border);
@@ -123,40 +123,42 @@ body{background:var(--bg);color:var(--text);
   justify-content:center;font-size:14px;font-weight:700;flex-shrink:0}
 
 /* HOST GAME */
-.topbar{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.topbar{display:flex;align-items:center;gap:10px;margin-bottom:14px}
 .q-prog{flex:1}
-.q-lbl{font-size:13px;font-weight:700;margin-bottom:3px}
-.prog-track{height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.q-lbl{font-size:15px;font-weight:700;margin-bottom:4px}
+.prog-track{height:6px;background:var(--border);border-radius:3px;overflow:hidden}
 .prog-bar{height:100%;background:linear-gradient(90deg,var(--p),var(--cyan));
   border-radius:2px;transition:width .35s}
-.score-tag{padding:4px 12px;border-radius:12px;
+.score-tag{padding:6px 16px;border-radius:14px;font-size:15px;
   background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;
   font-weight:700;font-size:13px;white-space:nowrap}
 .ps-row{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
-.hg-body{display:grid;grid-template-columns:240px 1fr;gap:22px;flex:1;align-items:start}
-@media(max-width:780px){.hg-body{grid-template-columns:1fr;gap:12px}}
-.hg-left{display:flex;flex-direction:column;align-items:center;gap:8px}
-.hg-right{display:flex;flex-direction:column;gap:9px}
+.hg-body{display:grid;grid-template-columns:300px 1fr;gap:28px;flex:1;align-items:start}
+@media(max-width:820px){.hg-body{grid-template-columns:1fr;gap:14px}}
+@media(min-width:1200px){.hg-body{grid-template-columns:360px 1fr;gap:36px}}
+.hg-left{display:flex;flex-direction:column;align-items:center;gap:10px}
+.hg-right{display:flex;flex-direction:column;gap:10px;justify-content:center}
 .timer-wrap{display:flex;justify-content:center}
 .timer-cont{position:relative;display:inline-flex;align-items:center;justify-content:center}
-.timer-svg{width:200px;height:200px}
+.timer-svg{width:260px;height:260px}
+@media(min-width:1200px){.timer-svg{width:300px;height:300px}}
 .timer-ctr{position:absolute;display:flex;align-items:center;
   justify-content:center;flex-direction:column}
-.wv{display:flex;align-items:center;gap:4px;height:44px}
-.wv-bar{width:6px;border-radius:3px;background:var(--p);
+.wv{display:flex;align-items:center;gap:5px;height:60px}
+.wv-bar{width:8px;border-radius:4px;background:var(--p);
   animation:wave 1s ease-in-out infinite}
 .wv-bar:nth-child(1){animation-delay:0s}
 .wv-bar:nth-child(2){animation-delay:.12s}
 .wv-bar:nth-child(3){animation-delay:.24s}
 .wv-bar:nth-child(4){animation-delay:.12s}
 .wv-bar:nth-child(5){animation-delay:0s}
-.alb{width:200px;height:200px;border-radius:50%;object-fit:cover;
+.alb{width:260px;height:260px;border-radius:50%;object-fit:cover;
   animation:scaleIn .4s cubic-bezier(.34,1.56,.64,1);
   box-shadow:0 0 28px rgba(124,77,255,.4)}
-.alb-ph{width:200px;height:200px;border-radius:50%;background:var(--sur);
+.alb-ph{width:260px;height:260px;border-radius:50%;background:var(--sur);
   display:flex;align-items:center;justify-content:center;font-size:56px}
 .trk{text-align:center;width:100%;min-height:40px}
-.trk-name{font-size:15px;font-weight:700;
+.trk-name{font-size:17px;font-weight:700;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .trk-art{font-size:12px;color:var(--sub)}
 .audio-bar{display:flex;align-items:center;gap:10px;padding:10px 13px;
@@ -165,19 +167,24 @@ body{background:var(--bg);color:var(--text);
 .audio-fill{height:100%;background:linear-gradient(90deg,var(--p),var(--cyan));
   border-radius:3px;transition:width 1s linear}
 .audio-time{font-size:12px;color:var(--sub);flex-shrink:0}
-.hc{display:flex;align-items:center;gap:11px;padding:13px 14px;
-  border-radius:13px;border:1.5px solid var(--border);background:var(--card);transition:all .25s}
-.hc.ok{background:rgba(46,204,113,.16);border-color:var(--ok)}
-.hc.ng{background:rgba(231,76,60,.1);border-color:var(--red)}
-.hc-lbl{width:30px;height:30px;border-radius:7px;background:var(--sur);
+.hc{display:flex;align-items:center;gap:14px;padding:16px 18px;
+  border-radius:14px;border:2px solid var(--border);background:var(--card);transition:all .25s}
+.hc.ok{background:rgba(46,204,113,.2)!important;border-color:var(--ok)!important}
+.hc.ng{background:rgba(231,76,60,.12)!important;border-color:var(--red)!important}
+.hc-lbl{width:38px;height:38px;border-radius:9px;
   display:flex;align-items:center;justify-content:center;
-  font-size:12px;font-weight:700;color:var(--p);flex-shrink:0}
-.hc.ok .hc-lbl{color:var(--ok)}
+  font-size:15px;font-weight:700;flex-shrink:0}
 .hc-info{flex:1;min-width:0}
-.hc-name{font-size:14px;font-weight:700;
+.hc-name{font-size:16px;font-weight:700;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.hc-art{font-size:12px;color:var(--sub);
+.hc-art{font-size:13px;color:var(--sub);margin-top:2px;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(min-width:1200px){
+  .hc{padding:20px 22px}
+  .hc-lbl{width:44px;height:44px;font-size:17px}
+  .hc-name{font-size:19px}
+  .hc-art{font-size:14px}
+}
 .ps-dot{width:32px;height:32px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
   font-size:12px;font-weight:700;border:2px solid var(--border);
@@ -216,27 +223,51 @@ body{background:var(--bg);color:var(--text);
 .rank-me{font-size:10px;color:var(--p);margin-left:4px}
 
 /* PLAYER GAME */
-#screen-player-game{flex:1;display:flex;flex-direction:column;padding:14px 16px}
-.ptop{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+#screen-player-game{
+  height:100dvh;height:100vh;
+  display:flex;flex-direction:column;
+  padding:10px 14px 8px;
+  overflow:hidden;
+  max-width:640px;margin:0 auto;width:100%;
+}
+.ptop{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-shrink:0}
 .ptop-lbl{flex:1;font-size:13px;font-weight:700}
 .p-score{padding:4px 12px;border-radius:11px;
   background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;
   font-weight:700;font-size:13px}
-.ptimer-svg{width:min(55vw,190px);height:min(55vw,190px)}
-.p-status{text-align:center;font-size:14px;color:var(--sub);height:20px;margin-bottom:4px}
-.pts-pop{text-align:center;font-size:22px;font-weight:700;
-  color:var(--gold);height:30px;animation:bounce .3s ease}
-.p-choices{display:flex;flex-direction:column;gap:11px;flex:1;justify-content:center}
-.pc{padding:18px 24px;border-radius:16px;border:2px solid var(--border);
-  background:var(--card);cursor:pointer;font-size:28px;font-weight:700;
-  text-align:center;transition:all .2s;user-select:none;letter-spacing:2px}
-.pc:hover:not(.ans){background:rgba(124,77,255,.1);border-color:var(--p);transform:scale(1.02)}
-.pc.selected{border-color:var(--cyan);background:rgba(0,188,212,.1)}
-.pc.correct{border-color:var(--ok);background:rgba(46,204,113,.15)}
-.pc.wrong{border-color:var(--red);background:rgba(231,76,60,.1)}
-.pc.missed{border-color:var(--p);background:rgba(124,77,255,.07)}
-.p-skip{margin-top:8px;padding:12px 13px;border-radius:13px;
-  border:1.5px dashed var(--border);background:var(--sur)}
+/* タイマーを小さめに固定してボタンのスペース確保 */
+.ptimer-svg{width:min(38vw,150px);height:min(38vw,150px)}
+.p-status{text-align:center;font-size:13px;color:var(--sub);
+  height:18px;margin-bottom:2px;flex-shrink:0}
+.pts-pop{text-align:center;font-size:20px;font-weight:700;
+  color:var(--gold);height:26px;animation:bounce .3s ease;flex-shrink:0}
+/* 4択が残りの高さをすべて使う */
+.p-choices{
+  display:grid;
+  grid-template-rows:repeat(4,1fr);
+  gap:8px;
+  flex:1;
+  min-height:0;
+}
+.pc{
+  display:flex;align-items:center;justify-content:center;
+  border-radius:14px;border:2px solid var(--border);
+  background:var(--card);cursor:pointer;
+  font-size:32px;font-weight:700;
+  text-align:center;transition:all .2s;user-select:none;
+  letter-spacing:4px;
+  min-height:0;
+}
+.pc:hover:not(.ans){filter:brightness(1.15);transform:scale(1.01)}
+.pc.selected{border-color:var(--cyan)!important;background:rgba(0,188,212,.18)!important;color:var(--cyan)!important}
+.pc.correct{border-color:var(--ok)!important;background:rgba(46,204,113,.25)!important;color:var(--ok)!important}
+.pc.wrong{border-color:var(--red)!important;background:rgba(231,76,60,.18)!important;color:var(--red)!important}
+.pc.missed{filter:brightness(0.7)}
+.p-skip{
+  flex-shrink:0;
+  margin-top:6px;padding:10px 12px;border-radius:12px;
+  border:1.5px dashed var(--border);background:var(--sur)
+}
 .combo-tag{padding:3px 10px;border-radius:10px;border:1px solid var(--acc);
   color:var(--acc);font-size:11px;font-weight:700;background:rgba(233,30,99,.1)}
 
@@ -597,11 +628,19 @@ let svOffset = 0;
 db.ref('.info/serverTimeOffset').on('value', function(s){ svOffset = s.val()||0; });
 function now(){ return Date.now() + svOffset; }
 
+
+// ABCD カラー（パステル）
+var ABCD_COLORS = [
+  {bg:'rgba(74,144,226,.14)',  border:'rgba(74,144,226,.75)',  label:'#4a90e2', name:'青'},  // A
+  {bg:'rgba(80,200,120,.14)',  border:'rgba(80,200,120,.75)',  label:'#50c878', name:'緑'},  // B
+  {bg:'rgba(255,186,0,.13)',   border:'rgba(255,186,0,.75)',   label:'#ffba00', name:'黄'},  // C
+  {bg:'rgba(255,100,150,.13)', border:'rgba(255,100,150,.75)', label:'#ff6496', name:'桃'},  // D
+];
 // ── 定数 ──
 const COLORS = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#1abc9c','#3498db','#9b59b6','#e91e63'];
 const REDIR  = location.origin + location.pathname;
 const YT_API = 'https://www.googleapis.com/youtube/v3';
-const MAX_SEC = 90;
+const MAX_SEC = 105;
 
 // ── 状態 ──
 let myId = localStorage.getItem('mq_id') || (function(){
@@ -940,8 +979,10 @@ async function hostNextQ(){
 
   var el=$('hg-choices'); el.innerHTML='';
   ch.forEach(function(t,i){
+    var cc=ABCD_COLORS[i];
     var div=document.createElement('div'); div.className='hc'; div.id='hc-'+i;
-    div.innerHTML='<div class="hc-lbl">'+['A','B','C','D'][i]+'</div>'
+    div.style.borderColor=cc.border; div.style.background=cc.bg;
+    div.innerHTML='<div class="hc-lbl" style="color:'+cc.label+';background:rgba(0,0,0,.15)">'+['A','B','C','D'][i]+'</div>'
       +'<div class="hc-info"><div class="hc-name">'+esc(t.name)+'</div>'
       +'<div class="hc-art">'+esc(t.artist||'')+'</div></div>'
       +'<div id="hci-'+i+'"></div>';
@@ -1037,7 +1078,7 @@ async function hostReveal(startAt){
     audSec=Math.max(0,audSec-1);
     $('hg-afill').style.width=(totSec>0?(audSec/totSec)*100:0)+'%';
     $('hg-atime').textContent=fmt(audSec);
-    if(audSec<=0){ clearInterval(audT); if(ytPlayer&&ytOk) ytPlayer.pauseVideo(); }
+    if(audSec<=0){ clearInterval(audT); fadeOutAndPause(); }
   },1000);
 
   // スキップ投票
@@ -1112,6 +1153,16 @@ function hostPlayAgain(){
 }
 
 // ── YouTube Player ──
+
+function fadeOutAndPause(){
+  if(!ytPlayer||!ytOk) return;
+  var vol=100;
+  var fi=setInterval(function(){
+    vol-=5;
+    if(vol<=0){ clearInterval(fi); ytPlayer.pauseVideo(); ytPlayer.setVolume(100); }
+    else ytPlayer.setVolume(vol);
+  },75); // 100→0 を 20steps×75ms = 1.5秒でフェード
+}
 function onYouTubeIframeAPIReady(){}
 function initYT(){
   if(ytPlayer) return;
@@ -1194,7 +1245,10 @@ function playerShowQ(q){
   var total=q.total||parseInt(cfg.mode);
   $('pg-lbl').textContent=(q.idx+1)+' / '+total;
   for(var i=0;i<4;i++){
-    var b=$('pc-'+i); b.className='pc'; b.textContent=['A','B','C','D'][i];
+    var b=$('pc-'+i), cc2=ABCD_COLORS[i];
+    b.className='pc'; b.textContent=['A','B','C','D'][i];
+    b.style.background=cc2.bg; b.style.borderColor=cc2.border;
+    b.style.color=cc2.label;
     (function(idx){ b.onclick=function(){ playerAns(idx); }; })(i);
   }
   $('pg-skip-box').classList.add('hidden');
@@ -1219,7 +1273,7 @@ async function playerAns(idx){
   if(myAns!==null||(curQ&&curQ.correctIdx>=0)) return;
   myAns=idx; clearInterval(tickT);
   await roomRef.child('answers/'+myId).set({choice:idx,at:firebase.database.ServerValue.TIMESTAMP,combo:myCombo});
-  $('pc-'+idx).classList.add('selected','ans');
+  var selBtn=$('pc-'+idx); selBtn.classList.add('selected','ans'); selBtn.style.borderColor='var(--cyan)'; selBtn.style.background='rgba(0,188,212,.18)';
   $('pg-status').textContent='✅ 回答済み！';
 }
 

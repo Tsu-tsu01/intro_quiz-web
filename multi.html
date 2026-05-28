@@ -191,6 +191,46 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 .dlg-acts{display:flex;gap:10px;justify-content:flex-end}
 .btn-dlg-cancel{padding:8px 16px;border-radius:10px;border:none;background:var(--surface);color:var(--sub);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
 .btn-dlg-ok{padding:8px 16px;border-radius:10px;border:none;background:var(--green);color:#000;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+
+/* ── PC 2カラムレイアウト ── */
+.host-game-body{display:flex;flex-direction:column;flex:1;gap:12px;overflow:hidden}
+@media(min-width:720px){
+  #screen-host-game{padding:12px 20px}
+  .host-game-body{flex-direction:row;gap:24px;align-items:flex-start;overflow:visible}
+  .host-left{width:240px;flex-shrink:0}
+  .host-right{flex:1;display:flex;flex-direction:column;gap:10px}
+  .timer-section{margin:0 0 8px}
+  .timer-svg{width:200px;height:200px}
+  .host-choices{flex:1}
+  .host-choice{padding:13px 14px}
+  .hc-name{font-size:15px}
+  .hc-artist{font-size:12px}
+  .track-reveal{margin:4px 0;text-align:center}
+  .track-reveal-name{font-size:15px}
+  .album-art{width:200px;height:200px}
+  .album-ph{width:200px;height:200px}
+}
+.host-left{display:flex;flex-direction:column;align-items:center}
+.host-right{flex:1;display:flex;flex-direction:column;gap:10px}
+
+/* ── 正解後オーディオバー ── */
+.audio-bar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--border);width:100%}
+.audio-bar-icon{font-size:18px;flex-shrink:0}
+.audio-progress-wrap{flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.audio-progress-fill{height:100%;background:var(--green);border-radius:3px;transition:width 1s linear}
+.audio-time{font-size:12px;color:var(--sub);flex-shrink:0;white-space:nowrap}
+
+/* ── スキップセクション ── */
+.skip-section{text-align:center;padding:12px 14px;border-radius:14px;border:1.5px dashed var(--border);background:var(--surface)}
+.skip-votes-label{font-size:12px;color:var(--sub);margin-bottom:8px}
+.skip-votes-dots{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:10px}
+.skip-vote-dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);background:var(--card);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.skip-vote-dot.voted{border-color:var(--green);background:rgba(124,77,255,.2)}
+.btn-skip{width:100%;padding:13px;border:none;border-radius:22px;background:linear-gradient(135deg,var(--green),var(--green2));color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s}
+.btn-skip:hover:not(:disabled){opacity:.85;transform:translateY(-1px)}
+.btn-skip:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.btn-force{padding:9px 20px;border:1.5px solid rgba(231,76,60,.5);border-radius:18px;background:none;color:var(--red);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px;transition:all .15s;width:100%}
+.btn-force:hover{background:rgba(231,76,60,.1)}
 </style>
 </head>
 <body>
@@ -307,6 +347,8 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
 <!-- HOST GAME -->
 <div id="screen-host-game" class="page hidden">
   <div id="yt-player"></div>
+
+  <!-- プログレスバー（全幅） -->
   <div class="game-top">
     <div class="q-progress">
       <div class="q-lbl" id="host-q-lbl">1 / 10</div>
@@ -316,32 +358,58 @@ body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic Pr
     <div class="score-pill" id="host-own-score">0pt</div>
   </div>
 
-  <div class="timer-section">
-    <div class="timer-cont">
-      <svg class="timer-svg" viewBox="0 0 200 200">
-        <circle cx="100" cy="100" r="86" fill="none" stroke="var(--border)" stroke-width="7"/>
-        <circle id="host-timer-ring" cx="100" cy="100" r="86" fill="none" stroke="var(--green)"
-          stroke-width="7" stroke-linecap="round" stroke-dasharray="540"
-          stroke-dashoffset="0" transform="rotate(-90 100 100)"
-          style="transition:stroke-dashoffset 80ms linear,stroke .3s"/>
-      </svg>
-      <div class="timer-ctr" id="host-timer-ctr">
-        <div class="wave" id="host-wave">
-          <div class="wave-bar"></div><div class="wave-bar"></div>
-          <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+  <!-- 2カラムボディ -->
+  <div class="host-game-body">
+
+    <!-- 左列: タイマー・アルバムアート・曲名 -->
+    <div class="host-left">
+      <div class="timer-section">
+        <div class="timer-cont">
+          <svg class="timer-svg" viewBox="0 0 200 200">
+            <circle cx="100" cy="100" r="86" fill="none" stroke="var(--border)" stroke-width="7"/>
+            <circle id="host-timer-ring" cx="100" cy="100" r="86" fill="none" stroke="var(--green)"
+              stroke-width="7" stroke-linecap="round" stroke-dasharray="540"
+              stroke-dashoffset="0" transform="rotate(-90 100 100)"
+              style="transition:stroke-dashoffset 80ms linear,stroke .3s"/>
+          </svg>
+          <div class="timer-ctr" id="host-timer-ctr">
+            <div class="wave" id="host-wave">
+              <div class="wave-bar"></div><div class="wave-bar"></div>
+              <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+            </div>
+            <img id="host-album" class="album-art hidden" src="" alt="">
+            <div id="host-album-ph" class="album-ph hidden">🎵</div>
+          </div>
         </div>
-        <img id="host-album" class="album-art hidden" src="" alt="">
-        <div id="host-album-ph" class="album-ph hidden">🎵</div>
+      </div>
+
+      <div class="track-reveal" id="host-track-reveal" style="opacity:0;width:100%">
+        <div class="track-reveal-name" id="host-track-name"></div>
+        <div class="track-reveal-artist" id="host-track-artist"></div>
+      </div>
+
+      <!-- 正解後: オーディオ継続バー -->
+      <div id="host-audio-bar" class="audio-bar hidden" style="width:100%;margin-top:6px">
+        <span class="audio-bar-icon">🎵</span>
+        <div class="audio-progress-wrap">
+          <div class="audio-progress-fill" id="host-audio-fill" style="width:100%"></div>
+        </div>
+        <span class="audio-time" id="host-audio-time">1:30</span>
+      </div>
+    </div>
+
+    <!-- 右列: 4択＋スキップ -->
+    <div class="host-right">
+      <div class="host-choices" id="host-choices"></div>
+
+      <!-- スキップ投票（正解後に表示） -->
+      <div id="host-skip-section" class="skip-section hidden">
+        <div class="skip-votes-label">スキップ投票 <span id="host-skip-count">0</span>/<span id="host-skip-total">0</span></div>
+        <div class="skip-votes-dots" id="host-skip-dots"></div>
+        <button class="btn-force" onclick="hostForceNext()">⏭ 強制スキップ（ホスト）</button>
       </div>
     </div>
   </div>
-
-  <div class="track-reveal" id="host-track-reveal" style="opacity:0">
-    <div class="track-reveal-name" id="host-track-name"></div>
-    <div class="track-reveal-artist" id="host-track-artist"></div>
-  </div>
-
-  <div class="host-choices" id="host-choices"></div>
 </div>
 
 <!-- HOST FINAL -->
@@ -946,11 +1014,85 @@ async function hostReveal(correctIdx, choices4){
   }
   if(Object.keys(scoreUpdates).length) await roomRef.update(scoreUpdates);
 
-  // 3秒後に次の問題
+  // ビデオを止めずに1:30まで再生継続
+  const postMs = Math.max(0, 90000 - settings.introSec * 1000);
+  let audioSec = Math.ceil(postMs / 1000);
+  const totalAudioSec = audioSec;
+
+  function fmtTime(s){ return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}` }
+
+  const audioFill = document.getElementById('host-audio-fill');
+  const audioTime = document.getElementById('host-audio-time');
+  document.getElementById('host-audio-bar').classList.remove('hidden');
+  document.getElementById('host-skip-section').classList.remove('hidden');
+  if(audioFill) audioFill.style.width='100%';
+  if(audioTime) audioTime.textContent=fmtTime(audioSec);
+
+  // オーディオカウントダウン
+  const audioTick = setInterval(()=>{
+    audioSec = Math.max(0, audioSec-1);
+    const pct = totalAudioSec>0 ? (audioSec/totalAudioSec)*100 : 0;
+    if(audioFill) audioFill.style.width=pct+'%';
+    if(audioTime) audioTime.textContent=fmtTime(audioSec);
+    if(audioSec<=0){
+      clearInterval(audioTick);
+      if(ytPlayer && ytReady) ytPlayer.pauseVideo();
+    }
+  }, 1000);
+
+  // スキップ投票監視
+  await roomRef.child('skipVotes').remove();
+  const skipRef = roomRef.child('skipVotes');
+  const pNonHost = Object.entries(players).filter(([id,p])=>!p.isHost);
+  updateHostSkipUI(pNonHost, {});
+
+  skipRef.on('value', snap=>{
+    const votes = snap.val()||{};
+    updateHostSkipUI(pNonHost, votes);
+    if(Object.keys(votes).length >= pNonHost.length && pNonHost.length > 0){
+      skipRef.off();
+      clearInterval(audioTick);
+      if(ytPlayer && ytReady) ytPlayer.pauseVideo();
+      hostAdvanceNext();
+    }
+  });
+
+  // バックアップ: 最大90秒後に自動進行
   nextTimer = setTimeout(()=>{
-    qIdx++;
-    hostNextQuestion();
-  }, 3500);
+    skipRef.off();
+    clearInterval(audioTick);
+    if(ytPlayer && ytReady) ytPlayer.pauseVideo();
+    hostAdvanceNext();
+  }, postMs + 2000);
+}
+
+function updateHostSkipUI(pArr, votes){
+  const count = Object.keys(votes).length;
+  const total = pArr.length;
+  document.getElementById('host-skip-count').textContent = count;
+  document.getElementById('host-skip-total').textContent = total;
+  const dots = document.getElementById('host-skip-dots');
+  if(dots){
+    dots.innerHTML = pArr.map(([id,p])=>`
+      <div class="skip-vote-dot ${votes[id]?'voted':''}" style="background:${p.color||'#7c4dff'};color:#fff" title="${p.name}">
+        ${(p.name||'?')[0]}
+      </div>`).join('');
+  }
+}
+
+function hostForceNext(){
+  roomRef.child('skipVotes').off();
+  stopTimers();
+  if(ytPlayer && ytReady) ytPlayer.pauseVideo();
+  hostAdvanceNext();
+}
+
+function hostAdvanceNext(){
+  document.getElementById('host-audio-bar').classList.add('hidden');
+  document.getElementById('host-skip-section').classList.add('hidden');
+  roomRef.child('skipVotes').remove();
+  qIdx++;
+  hostNextQuestion();
 }
 
 function updateHostScore(){
@@ -1162,6 +1304,11 @@ function playerShowQuestion(q){
     btn.textContent=['A','B','C','D'][i];
     btn.onclick=()=>playerAnswer(i);
   }
+  // スキップUIを隠す
+  document.getElementById('player-skip-section').classList.add('hidden');
+  clearInterval(window._playerAudioTick);
+  roomRef.child('skipVotes').off();
+
   document.getElementById('player-status-label').textContent='🎵 イントロを聴いて回答！';
   document.getElementById('pts-pop').classList.add('hidden');
   document.getElementById('pts-pop').textContent='';
@@ -1246,6 +1393,49 @@ function playerShowReveal(q){
 
   const status = myAnswer===correctIdx ? '🎉 正解！' : myAnswer===null ? '⏱ 時間切れ' : '❌ 不正解';
   document.getElementById('player-status-label').textContent=status;
+
+  // スキップセクション表示
+  document.getElementById('player-skip-section').classList.remove('hidden');
+  const btn=document.getElementById('btn-player-skip');
+  if(btn){ btn.disabled=false; btn.textContent='次の問題へ ▶'; }
+
+  // オーディオバー（ホストと同期したカウントダウン）
+  const postMs2 = Math.max(0, 90000 - (currentQ?.durationMs||10000));
+  let audSec2 = Math.ceil(postMs2/1000);
+  const totAudSec2 = audSec2;
+  function fmtT(s){ return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}` }
+  const pFill=document.getElementById('player-audio-fill');
+  const pTime=document.getElementById('player-audio-time');
+  if(pFill) pFill.style.width='100%';
+  if(pTime) pTime.textContent=fmtT(audSec2);
+  clearInterval(window._playerAudioTick);
+  window._playerAudioTick = setInterval(()=>{
+    audSec2=Math.max(0,audSec2-1);
+    const pct2=totAudSec2>0?(audSec2/totAudSec2)*100:0;
+    if(pFill) pFill.style.width=pct2+'%';
+    if(pTime) pTime.textContent=fmtT(audSec2);
+    if(audSec2<=0) clearInterval(window._playerAudioTick);
+  },1000);
+
+  // スキップ投票状況を監視
+  roomRef.child('skipVotes').on('value', snap=>{
+    const votes=snap.val()||{};
+    const pArr=Object.values(players).filter(p=>!p.isHost);
+    const total=pArr.length;
+    const count=Object.keys(votes).length;
+    const dots=document.getElementById('player-skip-dots');
+    if(dots) dots.innerHTML=pArr.map(p=>`
+      <div class="skip-vote-dot ${votes[Object.keys(players).find(id=>players[id]===p&&!players[id].isHost)]?'voted':''}"
+        style="background:${p.color||'#7c4dff'};color:#fff">${(p.name||'?')[0]}</div>`).join('');
+    if(btn) btn.textContent=`次の問題へ ▶ (${count}/${total})`;
+  });
+}
+
+async function playerVoteSkip(){
+  const btn=document.getElementById('btn-player-skip');
+  if(btn){ btn.disabled=true; btn.textContent='投票済み ✓'; }
+  clearInterval(window._playerAudioTick);
+  await roomRef.child(`skipVotes/${myId}`).set(true);
 }
 
 async function showPlayerFinal(){

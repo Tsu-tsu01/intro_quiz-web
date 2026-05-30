@@ -1067,6 +1067,35 @@ async function hostCloseReplay(){
 }
 
 // ── YouTube Player ──
+
+// Firebase配列/オブジェクトを安全に配列化
+function getChoicesArr(choices){
+  if(!choices) return [];
+  if(Array.isArray(choices)) return choices;
+  var keys=Object.keys(choices).map(Number).sort(function(a,b){return a-b;});
+  return keys.map(function(k){
+    return choices[k]||choices[String(k)]||{};
+  });
+}
+
+// 選択肢ボタンにデータをセット
+function renderChoiceBtns(choicesArr){
+  for(var i=0;i<4;i++){
+    var b=$('pc-'+i); if(!b) continue;
+    var cc=ABCD[i];
+    var ch=choicesArr[i]||{};
+    var tname=ch.label||ch.name||'';
+    var tart=ch.artist||'';
+    b.style.background=cc.bg;
+    b.style.borderColor=cc.bd;
+    b.innerHTML=
+      '<div class="pc-lbl" style="color:'+cc.lb+'">'+['A','B','C','D'][i]+'</div>'
+      +'<div class="pc-info">'
+      +'<div class="pc-name" style="color:var(--text)">'+esc(tname)+'</div>'
+      +(!cfg.titleOnly&&tart?'<div class="pc-art">'+esc(tart)+'</div>':'')
+      +'</div>';
+  }
+}
 function onYouTubeIframeAPIReady(){}
 function initYT(){
   if(ytPlayer) return;
@@ -1139,37 +1168,47 @@ var _qL=null;
 function listenPlayerQ(){
   if(_qL){ roomRef.child('question').off('value',_qL); }
   myAns=null;
-  _qL=roomRef.child('question').on('value',function(snap){ var q=snap.val(); if(!q) return; curQ=q; if(q.correctIdx>=0) playerReveal(q); else playerShowQ(q); });
+  _qL=roomRef.child('question').on('value',function(snap){
+    var q=snap.val(); if(!q) return;
+    curQ=q;
+    if(q.correctIdx>=0){ playerReveal(q); }
+    else{
+      // choicesをスナップショットに必ずセットしてからplayerShowQへ
+      if(!q.choices){
+        roomRef.child('question/choices').get().then(function(cs){
+          if(cs.val()) curQ.choices=cs.val();
+          playerShowQ(curQ);
+        });
+      } else {
+        playerShowQ(q);
+      }
+    }
+  });
 }
 
 function playerShowQ(q){
   myAns=null; clearInterval(window._pAT); roomRef.child('skipVotes').off();
   document.body.style.overflow='hidden';
   var total=q.total||parseInt(cfg.mode); $('pg-lbl').textContent=(q.idx+1)+' / '+total;
+  // 選択肢ボタンのonclick設定
   for(var i=0;i<4;i++){
-    var b=$('pc-'+i),cc=ABCD[i]; b.className='pc';
-    b.style.background=cc.bg; b.style.borderColor=cc.bd;
-    // Firebase配列→オブジェクト変換対応
-    var _choiceArr=[];
-    if(q.choices){
-      if(Array.isArray(q.choices)){
-        _choiceArr=q.choices;
-      } else {
-        // {"0":{...},"1":{...},...} 形式
-        var _keys=Object.keys(q.choices).map(Number).sort(function(a,b){return a-b;});
-        _choiceArr=_keys.map(function(k){return q.choices[k]||q.choices[String(k)];});
-      }
-    }
-    var ch=_choiceArr[i]||{};
-    var tname=ch.label||ch.name||'';
-    var tart=ch.artist||'';
-    b.innerHTML='<div class="pc-lbl" style="color:'+cc.lb+'">'+['A','B','C','D'][i]+'</div>'
-      +'<div class="pc-info">'
-      +'<div class="pc-name" style="color:var(--text)">'+esc(tname)+'</div>'
-      +(!cfg.titleOnly&&tart?'<div class="pc-art">'+esc(tart)+'</div>':'')
-      +'</div>';
-    (function(idx){ b.onclick=function(){ playerAns(idx); }; })(i);
+    $('pc-'+i).className='pc';
+    (function(idx){ $('pc-'+idx).onclick=function(){ playerAns(idx); }; })(i);
   }
+  // 1: スナップショットから直接描画
+  if(q.choices){
+    renderChoiceBtns(getChoicesArr(q.choices));
+  }
+  // 2: Firebaseから直接取得（スナップショットに欠落があっても確実に表示）
+  roomRef.child('question/choices').get().then(function(snap){
+    var data=snap.val();
+    if(!data) return;
+    renderChoiceBtns(getChoicesArr(data));
+    // onclick再設定（renderChoiceBtnsがinnerHTMLを書き換えるため）
+    for(var j=0;j<4;j++){
+      (function(idx){ $('pc-'+idx).onclick=function(){ playerAns(idx); }; })(j);
+    }
+  });
   $('pg-skip-box').classList.add('hidden'); $('pg-status').textContent='🎵 イントロを聴いて回答！';
   $('pg-pts').classList.add('hidden'); setRing('pg-ring',1); $('pg-sec').textContent='--'; $('pg-hint').textContent='秒';
   clearInterval(tickT);

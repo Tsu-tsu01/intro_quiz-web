@@ -213,7 +213,6 @@ body{background:var(--bg);color:var(--text);
 :root { --vh: 1vh; }
 #screen-player-game{
   height:calc(var(--vh,1vh)*100)!important;
-  touch-action:none;
 }
 /* ボタン: ダブルタップズーム防止 */
 button,.pc,.top-card,.chip{touch-action:manipulation}
@@ -1105,7 +1104,7 @@ function initYT(){
   });
 }
 
-// ── PLAYER ──
+// ── PLAYER ──────────────────────────
 function renderColorPicker(){
   var el=$('color-picker'); el.innerHTML='';
   el.style.cssText='display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:320px';
@@ -1131,193 +1130,275 @@ function enterRoom(code){
 
 async function doJoin(){
   var name=$('name-inp').value.trim(); if(!name){ alert('名前を入力してください'); return; }
-  var snap=await roomRef.child('meta').get(); if(!snap.exists()){ dlg('部屋が見つかりません','この部屋は存在しないか終了しています。',[{l:'OK',a:function(){},ok:true}]); return; }
-  var meta=snap.val()||{}; if(meta.status==='finished'){ dlg('ゲーム終了','このゲームはすでに終了しています。',[{l:'OK',a:function(){},ok:true}]); return; }
+  var snap=await roomRef.child('meta').get();
+  if(!snap.exists()){ dlg('部屋が見つかりません','この部屋は存在しないか終了しています。',[{l:'OK',a:function(){},ok:true}]); return; }
+  var meta=snap.val()||{};
+  if(meta.status==='finished'){ dlg('ゲーム終了','このゲームはすでに終了しています。',[{l:'OK',a:function(){},ok:true}]); return; }
   var pSnap=await roomRef.child('players').get();
   var existing=Object.values(pSnap.val()||{}).filter(function(p){ return !p.isHost; });
   if(existing.length>=25){ dlg('満員です','この部屋は満員（25人）です。',[{l:'OK',a:function(){},ok:true}]); return; }
   role='player';
-  await roomRef.child('players/'+myId).set({name:name,score:0,color:myColor,isHost:false,joined:firebase.database.ServerValue.TIMESTAMP});
-  roomRef.child('players/'+myId).onDisconnect().remove();
   var settSnap=await roomRef.child('settings').get();
   var sett=settSnap.val()||{};
   cfg.titleOnly=!!sett.titleOnly;
+  await roomRef.child('players/'+myId).set({name:name,score:0,color:myColor,isHost:false,joined:firebase.database.ServerValue.TIMESTAMP});
+  roomRef.child('players/'+myId).onDisconnect().remove();
   showOnly('player-waiting'); listenPlayer();
 }
 
+// ─── プレイヤー: ゲーム監視 ───────────
 function listenPlayer(){
   myScore=0; myCombo=0; myAns=null;
   roomRef.child('players').on('value',function(snap){
-    players=snap.val()||{}; myScore=players[myId]&&players[myId].score||0;
+    players=snap.val()||{};
+    myScore=(players[myId]&&players[myId].score)||0;
     var sc=$('pg-score'); if(sc) sc.textContent=myScore+'pt';
     if(!$('screen-player-waiting').classList.contains('hidden')){
       var pArr=Object.values(players).filter(function(p){ return !p.isHost; });
-      $('pw-players').innerHTML=pArr.map(function(p){ return '<div style="padding:6px 14px;border-radius:16px;font-size:13px;font-weight:700;border:2px solid '+p.color+';color:'+p.color+';background:var(--card)">'+esc(p.name)+'</div>'; }).join('');
+      $('pw-players').innerHTML=pArr.map(function(p){
+        return '<div style="padding:6px 14px;border-radius:16px;font-size:13px;font-weight:700;background:'+p.color+';color:'+ctxt(p.color||'#888888')+'">'+esc(p.name)+'</div>';
+      }).join('');
     }
   });
-  roomRef.child('meta/status').on('value',function(snap){ var st=snap.val(); if(st==='playing'||st==='starting'){
-    showOnly('player-game');
-    window.scrollTo(0,0);
-    document.documentElement.scrollTop=0;
-    setVh();
-    listenPlayerQ();
-  } else if(st==='finished'){ showPlayerFinal(); } else if(st==='replay_vote'){ showReplayVote(); } });
+  roomRef.child('meta/status').on('value',function(snap){
+    var st=snap.val();
+    if(st==='playing'||st==='starting'){ showOnly('player-game'); startPlayerGame(); }
+    else if(st==='finished'){ showPlayerFinal(); }
+    else if(st==='replay_vote'){ showReplayVote(); }
+  });
+}
+
+// ─── プレイヤー: ゲーム画面 ───────────
+function startPlayerGame(){
+  window.scrollTo(0,0); document.documentElement.scrollTop=0; setVh();
+  // ABCD ボタンの色とクリックイベントを設定
+  for(var i=0;i<4;i++){
+    var b=$('pc-'+i); if(!b) continue;
+    b.className='pc';
+    b.style.background=ABCD[i].bg;
+    b.style.borderColor=ABCD[i].bd;
+    b.style.color=ABCD[i].lb;
+    b.style.cursor='pointer';
+    b.textContent=['A','B','C','D'][i]; // 初期はラベルのみ
+    (function(idx){
+      b.addEventListener('click',function(){ playerAns(idx); });
+      b.addEventListener('touchend',function(e){ e.preventDefault(); playerAns(idx); });
+    })(i);
+  }
+  // question リスナーを開始
+  listenPlayerQ();
 }
 
 var _qL=null;
 function listenPlayerQ(){
-  if(_qL){ roomRef.child('question').off('value',_qL); }
+  if(_qL){ roomRef.child('question').off('value',_qL); _qL=null; }
   myAns=null;
   _qL=roomRef.child('question').on('value',function(snap){
     var q=snap.val(); if(!q) return;
     curQ=q;
-    if(q.correctIdx>=0){ playerReveal(q); }
-    else{
-      // choicesをスナップショットに必ずセットしてからplayerShowQへ
-      if(!q.choices){
-        roomRef.child('question/choices').get().then(function(cs){
-          if(cs.val()) curQ.choices=cs.val();
-          playerShowQ(curQ);
-        });
-      } else {
-        playerShowQ(q);
-      }
-    }
+    if(q.correctIdx>=0) playerReveal(q);
+    else playerShowQ(q);
   });
 }
 
 function playerShowQ(q){
-  myAns=null; clearInterval(window._pAT); roomRef.child('skipVotes').off();
-  document.body.style.overflow='hidden';
-  var total=q.total||parseInt(cfg.mode); $('pg-lbl').textContent=(q.idx+1)+' / '+total;
-  // 選択肢ボタンのonclick設定
-  for(var i=0;i<4;i++){
-    $('pc-'+i).className='pc';
-    (function(idx){ $('pc-'+idx).onclick=function(){ playerAns(idx); }; })(i);
-  }
-  // 1: スナップショットから直接描画
-  if(q.choices){
-    renderChoiceBtns(getChoicesArr(q.choices));
-  }
-  // 2: Firebaseから直接取得（スナップショットに欠落があっても確実に表示）
-  roomRef.child('question/choices').get().then(function(snap){
-    var data=snap.val();
-    if(!data) return;
-    renderChoiceBtns(getChoicesArr(data));
-    // onclick再設定（renderChoiceBtnsがinnerHTMLを書き換えるため）
-    for(var j=0;j<4;j++){
-      (function(idx){ $('pc-'+idx).onclick=function(){ playerAns(idx); }; })(j);
+  myAns=null; clearInterval(window._pAT); clearInterval(tickT);
+  roomRef.child('skipVotes').off();
+  $('pg-skip-box').classList.add('hidden');
+  $('pg-status').textContent='🎵 イントロを聴いて回答！';
+  $('pg-pts').classList.add('hidden');
+
+  // 問題番号
+  var total=q.total||parseInt(cfg.mode)||10;
+  $('pg-lbl').textContent=(q.idx+1)+' / '+total;
+
+  // タイマーリング
+  setRing('pg-ring',1);
+  $('pg-sec').textContent='--'; $('pg-hint').textContent='秒';
+
+  // 選択肢の曲名を設定（Firebaseから直接取得して確実に表示）
+  roomRef.child('question/choices').get().then(function(cs){
+    var choices=cs.val();
+    if(!choices) return;
+    // Firebase配列/オブジェクトを配列化
+    var arr=[];
+    if(Array.isArray(choices)){
+      arr=choices;
+    } else {
+      Object.keys(choices).sort().forEach(function(k){ arr.push(choices[k]); });
+    }
+    for(var i=0;i<4;i++){
+      var b=$('pc-'+i); if(!b) continue;
+      var ch=arr[i]||{};
+      var tname=ch.label||ch.name||'?';
+      var tart=ch.artist||'';
+      b.innerHTML=
+        '<div style="width:30px;height:30px;border-radius:7px;background:rgba(0,0,0,.2);'
+        +'display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;'
+        +'color:'+ABCD[i].lb+';flex-shrink:0">'+['A','B','C','D'][i]+'</div>'
+        +'<div style="flex:1;min-width:0">'
+        +'<div style="font-size:14px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(tname)+'</div>'
+        +(!cfg.titleOnly&&tart?'<div style="font-size:11px;color:var(--sub);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(tart)+'</div>':'')
+        +'</div>';
+      // innerHTML設定後にもonclick/ontouchendを再設定
+      (function(idx){
+        var btn=$('pc-'+idx);
+        btn.onclick=function(){ playerAns(idx); };
+        btn.ontouchend=function(e){ e.preventDefault(); playerAns(idx); };
+      })(i);
     }
   });
-  $('pg-skip-box').classList.add('hidden'); $('pg-status').textContent='🎵 イントロを聴いて回答！';
-  $('pg-pts').classList.add('hidden'); setRing('pg-ring',1); $('pg-sec').textContent='--'; $('pg-hint').textContent='秒';
+
+  // タイマー開始（startAtが確定した後に動かす）
+  var startAt=q.startAt;
+  var durationMs=q.durationMs||10000;
+  // startAtが有効な数値でない場合は現在時刻を使用
+  if(typeof startAt !== 'number') startAt=now();
   clearInterval(tickT);
-  tickT=setInterval(function(){ var elapsed=now()-q.startAt,p=Math.max(0,1-elapsed/q.durationMs); setRing('pg-ring',p); var sec=Math.ceil(Math.max(0,(q.durationMs-elapsed)/1000)); $('pg-sec').textContent=sec; $('pg-hint').textContent='秒'; if(p<=0){ clearInterval(tickT); $('pg-status').textContent='⏱ 時間切れ！'; $('pg-sec').textContent='⏱'; $('pg-hint').textContent=''; } },80);
+  tickT=setInterval(function(){
+    var elapsed=now()-startAt;
+    var p=Math.max(0,1-elapsed/durationMs);
+    setRing('pg-ring',p);
+    var sec=Math.ceil(Math.max(0,(durationMs-elapsed)/1000));
+    $('pg-sec').textContent=sec; $('pg-hint').textContent='秒';
+    if(p<=0){
+      clearInterval(tickT);
+      $('pg-status').textContent='⏱ 時間切れ！';
+      $('pg-sec').textContent='⏱'; $('pg-hint').textContent='';
+    }
+  },80);
 }
 
 async function playerAns(idx){
-  if(myAns!==null||(curQ&&curQ.correctIdx>=0)) return; myAns=idx; clearInterval(tickT);
+  if(myAns!==null||(curQ&&curQ.correctIdx>=0)) return;
+  myAns=idx; clearInterval(tickT);
   await roomRef.child('answers/'+myId).set({choice:idx,at:firebase.database.ServerValue.TIMESTAMP,combo:myCombo});
-  var b=$('pc-'+idx); b.classList.add('selected','ans'); b.style.borderColor='var(--cyan)'; b.style.background='rgba(0,188,212,.18)'; b.style.color='var(--cyan)';
-  $('pg-status').textContent='✅ 回答済み！';
+  var b=$('pc-'+idx); if(!b) return;
+  b.style.borderColor='var(--cyan)'; b.style.background='rgba(0,188,212,.18)'; b.style.color='var(--cyan)';
+  $('pg-status').textContent='✅ 回答済み！結果を待っています...';
+  // 全ボタンを無効化
+  for(var i=0;i<4;i++){
+    var bi=$('pc-'+i); if(bi){ bi.onclick=null; bi.ontouchend=null; bi.style.cursor='default'; }
+  }
 }
 
 function playerReveal(q){
-  clearInterval(tickT); setRing('pg-ring',0); $('pg-sec').textContent='🎵'; $('pg-hint').textContent='';
+  clearInterval(tickT);
+  setRing('pg-ring',0); $('pg-sec').textContent='🎵'; $('pg-hint').textContent='';
   var ci=q.correctIdx;
+
+  // 正解・不正解の色付け
   for(var i=0;i<4;i++){
-    var b=$('pc-'+i); b.classList.add('ans'); b.onclick=null;
-    if(i===ci){ b.classList.remove('selected'); b.classList.add(myAns===i?'correct':'missed'); }
-    else if(i===myAns){ b.classList.add('wrong'); }
+    var b=$('pc-'+i); if(!b) continue;
+    b.onclick=null; b.ontouchend=null; b.style.cursor='default';
+    if(i===ci){
+      b.style.borderColor='var(--ok)'; b.style.background='rgba(46,204,113,.25)'; b.style.color='var(--ok)';
+    } else if(i===myAns){
+      b.style.borderColor='var(--red)'; b.style.background='rgba(231,76,60,.18)'; b.style.color='var(--red)';
+    } else {
+      b.style.opacity='0.5';
+    }
   }
+
+  // スコア更新
   setTimeout(function(){
-    var ns=players[myId]&&players[myId].score||0;
-    if(ns>myScore){ var g=ns-myScore; myScore=ns; myCombo++; var el=$('pg-pts'); el.textContent='+'+g+'pts'+(myCombo>=3?' 🔥×'+myCombo:''); el.classList.remove('hidden'); el.style.animation='none'; el.offsetHeight; el.style.animation='bounce .3s ease'; } else myCombo=0;
+    var ns=(players[myId]&&players[myId].score)||0;
+    if(ns>myScore){
+      var g=ns-myScore; myScore=ns; myCombo++;
+      var el=$('pg-pts'); if(el){ el.textContent='+'+g+'pts'+(myCombo>=3?' 🔥×'+myCombo:''); el.classList.remove('hidden'); el.style.animation='none'; el.offsetHeight; el.style.animation='bounce .3s ease'; }
+    } else myCombo=0;
     var sc=$('pg-score'); if(sc) sc.textContent=myScore+'pt';
-    var cb=$('pg-combo'); if(myCombo>=2){ cb.textContent=myCombo+'コンボ'; cb.classList.remove('hidden'); } else cb.classList.add('hidden');
+    var cb=$('pg-combo'); if(cb){ if(myCombo>=2){ cb.textContent=myCombo+'コンボ'; cb.classList.remove('hidden'); } else cb.classList.add('hidden'); }
   },800);
+
+  // 正解・不正解テキスト
   $('pg-status').textContent=(myAns===ci)?'🎉 正解！':(myAns===null)?'⏱ 時間切れ':'❌ 不正解';
-  // 曲名を表示（ラグなし: 既に受信済みのcurQから読む）
-  if(curQ&&curQ.choices&&curQ.choices[ci]){
-    var trk=curQ.choices[ci];
-    var _ra2=Array.isArray(curQ.choices)?curQ.choices:Object.keys(curQ.choices).map(Number).sort(function(a,b){return a-b;}).map(function(k){return curQ.choices[k];});
-    var trk2=_ra2[ci]||{};
-    $('pg-track-name').textContent=trk2.label||trk2.name||'';
-    $('pg-track-art').textContent=trk2.artist||'';
+
+  // 曲名表示（skip-box 内）
+  if(q.choices){
+    var arr=Array.isArray(q.choices)?q.choices:Object.keys(q.choices).sort().map(function(k){return q.choices[k];});
+    var trk=arr[ci]||{};
+    $('pg-track-name').textContent=trk.label||trk.name||'';
+    $('pg-track-art').textContent=trk.artist||'';
   }
-  $('pg-skip-box').classList.remove('hidden'); $('btn-pg-skip').disabled=false; $('btn-pg-skip').textContent='次の問題へ ▶';
-  var postMs=Math.max(0,MAX_SEC*1000-(curQ.durationMs||10000)); var audSec=Math.ceil(postMs/1000),totSec=audSec;
-  $('pg-afill').style.width='100%'; $('pg-atime').textContent=fmt(audSec);
+
+  // スキップボックス表示
+  $('pg-skip-box').classList.remove('hidden');
+  var btn=$('btn-pg-skip'); if(btn){ btn.disabled=false; btn.textContent='次の問題へ ▶'; }
+
+  // オーディオカウントダウン
+  var postMs=Math.max(0,MAX_SEC*1000-(curQ&&curQ.durationMs||10000));
+  var audSec=Math.ceil(postMs/1000), totSec=audSec;
+  var pFill=$('pg-afill'), pTime=$('pg-atime');
+  if(pFill) pFill.style.width='100%'; if(pTime) pTime.textContent=fmt(audSec);
   clearInterval(window._pAT);
-  window._pAT=setInterval(function(){ audSec=Math.max(0,audSec-1); $('pg-afill').style.width=(totSec>0?(audSec/totSec)*100:0)+'%'; $('pg-atime').textContent=fmt(audSec); if(audSec<=0) clearInterval(window._pAT); },1000);
+  window._pAT=setInterval(function(){
+    audSec=Math.max(0,audSec-1);
+    if(pFill) pFill.style.width=(totSec>0?(audSec/totSec)*100:0)+'%';
+    if(pTime) pTime.textContent=fmt(audSec);
+    if(audSec<=0) clearInterval(window._pAT);
+  },1000);
+
+  // スキップ投票状況
   var pArr=Object.values(players).filter(function(p){ return !p.isHost; });
   roomRef.child('skipVotes').on('value',function(snap){
-    var votes=snap.val()||{},cnt=Object.keys(votes).length,tot=pArr.length;
-    $('btn-pg-skip').textContent='次の問題へ ▶ ('+cnt+'/'+tot+')';
-    var pids=Object.keys(players);
-    $('pg-sv-dots').innerHTML=pArr.map(function(p){ var pid=pids.find(function(id){ return players[id]===p&&!p.isHost; })||''; return '<div class="sdot'+(votes[pid]?' voted':'')+'" style="background:'+(p.color||COLORS[0])+';color:#fff">'+(p.name||'?')[0]+'</div>'; }).join('');
+    var votes=snap.val()||{}, cnt=Object.keys(votes).length, tot=pArr.length;
+    if(btn) btn.textContent='次の問題へ ▶ ('+cnt+'/'+tot+')';
     $('pg-skip-lbl').textContent='スキップ投票: '+cnt+'/'+tot;
+    $('pg-sv-dots').innerHTML=Object.values(players).filter(function(p){return !p.isHost;}).map(function(p){
+      var pid=Object.keys(players).find(function(id){return players[id]===p;});
+      return '<div class="sdot'+(votes[pid]?' voted':'')+'" style="background:'+(p.color||COLORS[0])+';color:'+ctxt(p.color||COLORS[0])+'">'+esc((p.name||'?')[0])+'</div>';
+    }).join('');
   });
 }
 
 async function playerVoteSkip(){
-  $('btn-pg-skip').disabled=true; $('btn-pg-skip').textContent='投票済み ✓';
+  var btn=$('btn-pg-skip'); if(btn){ btn.disabled=true; btn.textContent='投票済み ✓'; }
   clearInterval(window._pAT);
-  // 自分の票を書く
   await roomRef.child('skipVotes/'+myId).set(true);
   // 全員投票済みか確認
   try{
     var vSnap=await roomRef.child('skipVotes').get();
     var pSnap=await roomRef.child('players').get();
     var vCnt=Object.keys(vSnap.val()||{}).length;
-    var total=Object.values(pSnap.val()||{}).filter(function(p){ return !p.isHost; }).length;
-    if(total>0 && vCnt>=total){
-      // 全員揃った → ホストへ通知
-      await roomRef.child('meta/skipReady').set(true);
-    }
+    var total=Object.values(pSnap.val()||{}).filter(function(p){return !p.isHost;}).length;
+    if(total>0&&vCnt>=total) await roomRef.child('meta/skipReady').set(true);
   }catch(e){}
 }
-
 
 function showReplayVote(){
   showOnly('player-replay');
   $('btn-vote-replay').disabled=false; $('btn-vote-exit').disabled=false;
   $('player-replay-status').textContent='';
-  // 投票状況を監視（リアルタイム表示）
   roomRef.child('replayVotes').on('value',function(snap){
-    var votes=snap.val()||{};
-    var myVote=votes[myId];
-    if(myVote==='replay'){
-      $('player-replay-status').textContent='🎮 もう一度プレイに投票済み';
-    } else if(myVote==='exit'){
-      $('player-replay-status').textContent='🚪 退出に投票済み';
-    }
+    var votes=snap.val()||{}, myVote=votes[myId];
+    if(myVote==='replay') $('player-replay-status').textContent='🎮 もう一度プレイに投票済み';
+    else if(myVote==='exit') $('player-replay-status').textContent='🚪 退出に投票済み';
   });
-  // waiting状態に戻ったら待機画面へ（ホストが締め切った）
-  roomRef.child('meta/status').once('value',function(){});
 }
 
 async function playerVoteReplay(){
   $('btn-vote-replay').disabled=true; $('btn-vote-exit').disabled=true;
   await roomRef.child('replayVotes/'+myId).set('replay');
-  $('btn-vote-replay').disabled=false; $('btn-vote-exit').disabled=false;
   $('player-replay-status').textContent='🎮 もう一度プレイに投票しました';
+  $('btn-vote-replay').disabled=false; $('btn-vote-exit').disabled=false;
 }
 
 async function playerVoteExit(){
   $('btn-vote-replay').disabled=true; $('btn-vote-exit').disabled=true;
   await roomRef.child('replayVotes/'+myId).set('exit');
   $('player-replay-status').textContent='🚪 退出しました';
-  // 退出: プレイヤーをリストから削除してホームへ
   await roomRef.child('players/'+myId).remove();
   roomRef.child('replayVotes').off();
   location.href=location.origin+location.pathname;
 }
+
 async function showPlayerFinal(){
-  document.body.style.overflow='';
   stopAll(); clearInterval(window._pAT); roomRef.child('skipVotes').off();
+  document.body.style.overflow='';
   var snap=await roomRef.child('players').get(); players=snap.val()||{};
-  var ss=await roomRef.child('settings').get(); var s=ss.val()||{}; $('pf-sub').textContent=s.playlistName||'';
+  var ss=await roomRef.child('settings').get(); var s=ss.val()||{};
+  $('pf-sub').textContent=s.playlistName||'';
   renderRank('pf-list'); showOnly('player-final');
 }
 

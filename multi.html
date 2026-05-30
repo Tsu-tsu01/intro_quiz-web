@@ -829,8 +829,14 @@ async function hostNextQ(){
   var correct=tracks[qIdx%tracks.length];
   var pool=shuf(tracks.filter(function(t){ return t.id!==correct.id; }));
   var ch=shuf([correct].concat(pool.slice(0,3))); var ci=ch.indexOf(correct);
-  var qData={idx:qIdx,total:total,startAt:firebase.database.ServerValue.TIMESTAMP,durationMs:cfg.introSec*1000,videoId:correct.videoId,correctIdx:-1,choices:ch.map(function(t){ return{label:t.name,artist:t.artist||'',img:t.img||''}; })};
-  await roomRef.child('question').set(qData); await roomRef.child('answers').remove(); await roomRef.child('skipVotes').remove(); await roomRef.child('meta/skipReady').remove(); await roomRef.child('meta/status').set('playing');
+  // choices を別パスに先に書く
+  await roomRef.child('choices').set(ch.map(function(t){ return{label:t.name,artist:t.artist||''}; }));
+  // qData（choices なし）
+  var qData={idx:qIdx,total:total,durationMs:cfg.introSec*1000,videoId:correct.videoId,correctIdx:-1};
+  await roomRef.child('question').set(qData);
+  // startAt を別パスで管理（ServerTimestamp）
+  await roomRef.child('qstart').set(firebase.database.ServerValue.TIMESTAMP);
+  await roomRef.child('answers').remove(); await roomRef.child('skipVotes').remove(); await roomRef.child('meta/skipReady').remove(); await roomRef.child('meta/status').set('playing');
   curQ={idx:qIdx,total:total,correct:correct,choices:ch,ci:ci,durationMs:cfg.introSec*1000,_revealed:false};
 
   $('hg-lbl').textContent=(qIdx+1)+' / '+total; $('hg-prog').style.width=((qIdx/total)*100)+'%';
@@ -878,8 +884,8 @@ async function hostReveal(startAt){
   $('hg-trk').style.opacity='1';
   var ciEl=$('hc-'+ci); if(ciEl) ciEl.classList.add('ok');
   await sleep(400);
-  var aSnap=await roomRef.child('answers').get(); var sSnap=await roomRef.child('question/startAt').get();
-  var ans=aSnap.val()||{},qSt=sSnap.val(); var upd={};
+  var aSnap=await roomRef.child('answers').get(); var sSnap=await roomRef.child('qstart').get();
+  var ans=aSnap.val()||{},qSt=sSnap.val()||now(); var upd={};
   Object.entries(ans).forEach(function(e){ var pid=e[0],a=e[1]; var dot=$('ps-'+pid);
     if(a.choice===ci){ var rms=Math.max(0,a.at-qSt),tf=Math.min(1,rms/(cfg.introSec*1000)),mult=a.combo>=10?3:a.combo>=5?2:a.combo>=3?1.5:1;
       var pts=Math.floor((100+Math.floor(50*(1-tf)))*mult); upd['players/'+pid+'/score']=(players[pid]&&players[pid].score||0)+pts;
@@ -989,6 +995,7 @@ function doAdvance(){
   $('hg-audio-bar').classList.add('hidden'); $('hg-skip').classList.add('hidden');
   roomRef.child('meta/skipReady').remove();
   roomRef.child('skipVotes').remove();
+  roomRef.child('qstart').remove();
   qIdx++; hostNextQ();
 }
 
@@ -1190,9 +1197,54 @@ function startPlayerGame(){
 }
 
 var _qL=null;
+var _pChoices=[], _pStartAt=null;
+
+function renderPlayerChoices(){
+  if(!_pChoices||!_pChoices.length) return;
+  for(var i=0;i<4;i++){
+    var b=$('pc-'+i); if(!b) continue;
+    var ch2=_pChoices[i]||{};
+    var tn=ch2.label||ch2.name||'';
+    var ta=ch2.artist||'';
+    if(!tn) continue;
+    b.style.display='flex'; b.style.alignItems='center'; b.style.gap='10px'; b.style.padding='10px 12px';
+    b.innerHTML=
+      '<div style="width:30px;height:30px;border-radius:7px;background:rgba(0,0,0,.2);'
+      +'display:flex;align-items:center;justify-content:center;'
+      +'font-size:13px;font-weight:700;color:'+ABCD[i].lb+';flex-shrink:0">'
+      +['A','B','C','D'][i]+'</div>'
+      +'<div style="flex:1;min-width:0">'
+      +'<div style="font-size:14px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(tn)+'</div>'
+      +(!cfg.titleOnly&&ta?'<div style="font-size:11px;color:var(--sub);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(ta)+'</div>':'')
+      +'</div>';
+    (function(idx){
+      var btn=$('pc-'+idx);
+      btn.onclick=function(){ playerAns(idx); };
+      btn.ontouchend=function(e){ e.preventDefault(); playerAns(idx); };
+    })(i);
+  }
+}
+
 function listenPlayerQ(){
   if(_qL){ roomRef.child('question').off('value',_qL); _qL=null; }
-  myAns=null;
+  _pChoices=[]; _pStartAt=null; myAns=null;
+
+  // choices を別パスから監視
+  roomRef.child('choices').off();
+  roomRef.child('choices').on('value',function(snap){
+    var data=snap.val(); if(!data) return;
+    _pChoices=Array.isArray(data)?data:Object.keys(data).sort().map(function(k){return data[k];});
+    if(curQ&&curQ.correctIdx<0) renderPlayerChoices();
+  });
+
+  // startAt を別パスから監視
+  roomRef.child('qstart').off();
+  roomRef.child('qstart').on('value',function(snap){
+    var ts=snap.val();
+    if(typeof ts==='number'){ _pStartAt=ts; }
+  });
+
+  // question 本体を監視
   _qL=roomRef.child('question').on('value',function(snap){
     var q=snap.val(); if(!q) return;
     curQ=q;
@@ -1216,57 +1268,45 @@ function playerShowQ(q){
   setRing('pg-ring',1);
   $('pg-sec').textContent='--'; $('pg-hint').textContent='秒';
 
-  // 選択肢の曲名を設定（Firebaseから直接取得して確実に表示）
-  roomRef.child('question/choices').get().then(function(cs){
-    var choices=cs.val();
-    if(!choices) return;
-    // Firebase配列/オブジェクトを配列化
-    var arr=[];
-    if(Array.isArray(choices)){
-      arr=choices;
-    } else {
-      Object.keys(choices).sort().forEach(function(k){ arr.push(choices[k]); });
-    }
-    for(var i=0;i<4;i++){
-      var b=$('pc-'+i); if(!b) continue;
-      var ch=arr[i]||{};
-      var tname=ch.label||ch.name||'?';
-      var tart=ch.artist||'';
-      b.innerHTML=
-        '<div style="width:30px;height:30px;border-radius:7px;background:rgba(0,0,0,.2);'
-        +'display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;'
-        +'color:'+ABCD[i].lb+';flex-shrink:0">'+['A','B','C','D'][i]+'</div>'
-        +'<div style="flex:1;min-width:0">'
-        +'<div style="font-size:14px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(tname)+'</div>'
-        +(!cfg.titleOnly&&tart?'<div style="font-size:11px;color:var(--sub);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(tart)+'</div>':'')
-        +'</div>';
-      // innerHTML設定後にもonclick/ontouchendを再設定
-      (function(idx){
-        var btn=$('pc-'+idx);
-        btn.onclick=function(){ playerAns(idx); };
-        btn.ontouchend=function(e){ e.preventDefault(); playerAns(idx); };
-      })(i);
-    }
-  });
+
 
   // タイマー開始（startAtが確定した後に動かす）
-  var startAt=q.startAt;
   var durationMs=q.durationMs||10000;
-  // startAtが有効な数値でない場合は現在時刻を使用
-  if(typeof startAt !== 'number') startAt=now();
+  // choices を描画（_pChoices が到着済みなら即表示）
+  renderPlayerChoices();
+  // タイマー: qstart パスから来たサーバー時刻を使用
   clearInterval(tickT);
-  tickT=setInterval(function(){
-    var elapsed=now()-startAt;
-    var p=Math.max(0,1-elapsed/durationMs);
-    setRing('pg-ring',p);
-    var sec=Math.ceil(Math.max(0,(durationMs-elapsed)/1000));
-    $('pg-sec').textContent=sec; $('pg-hint').textContent='秒';
-    if(p<=0){
-      clearInterval(tickT);
-      $('pg-status').textContent='⏱ 時間切れ！';
-      $('pg-sec').textContent='⏱'; $('pg-hint').textContent='';
-    }
-  },80);
+  var _timerStarted=false;
+  function _startTimer(startAt){
+    if(_timerStarted) return; _timerStarted=true;
+    tickT=setInterval(function(){
+      var elapsed=now()-startAt;
+      var p=Math.max(0,1-elapsed/durationMs);
+      setRing('pg-ring',p);
+      var sec=Math.ceil(Math.max(0,(durationMs-elapsed)/1000));
+      $('pg-sec').textContent=sec; $('pg-hint').textContent='秒';
+      if(p<=0){
+        clearInterval(tickT);
+        $('pg-status').textContent='⏱ 時間切れ！';
+        $('pg-sec').textContent='⏱'; $('pg-hint').textContent='';
+      }
+    },80);
+  }
+  // _pStartAt がすでに来ていれば即開始、来ていなければ待機
+  if(_pStartAt && typeof _pStartAt==='number'){
+    _startTimer(_pStartAt);
+  } else {
+    // qstart を直接取得してタイマー開始
+    roomRef.child('qstart').get().then(function(snap){
+      var ts=snap.val();
+      _pStartAt=(typeof ts==='number')?ts:now();
+      _startTimer(_pStartAt);
+    });
+    // バックアップ: 500ms後に現在時刻でタイマー開始
+    setTimeout(function(){
+      if(!_timerStarted){ _pStartAt=now(); _startTimer(_pStartAt); }
+    },500);
+  }
 }
 
 async function playerAns(idx){

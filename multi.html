@@ -459,7 +459,7 @@ input,select,textarea{font-size:16px!important}
     <div style="font-size:16px;font-weight:700;text-align:center">&#12507;&#12473;&#12488;&#12398;&#12473;&#12479;&#12540;&#12488;&#12434;&#24453;&#12387;&#12390;&#12356;&#12414;&#12377;...</div>
     <div style="font-size:13px;color:var(--sub);text-align:center">&#28310;&#20633;&#12364;&#12391;&#12365;&#12383;&#12425;&#12466;&#12540;&#12512;&#12364;&#22987;&#12414;&#12426;&#12414;&#12377;</div>
     <div id="pw-players" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:6px"></div>
-    <div class="fs-prompt" id="btn-fullscreen" style="margin-top:8px">&#9974;&#65039; &#12479;&#12483;&#12503;&#12375;&#12390;&#12501;&#12523;&#12473;&#12463;&#12522;&#12540;&#12531;&#12395;</div>
+    <div class="fs-prompt" id="btn-fullscreen" style="margin-top:8px">&#9633; &#12501;&#12523;&#12473;&#12463;&#12522;&#12540;&#12531;&#12395;&#12377;&#12427;</div>
   </div>
 </div>
 
@@ -1149,9 +1149,20 @@ function playerShowQ(q){
   for(var i=0;i<4;i++){
     var b=$('pc-'+i),cc=ABCD[i]; b.className='pc';
     b.style.background=cc.bg; b.style.borderColor=cc.bd;
-    var ch=q.choices&&q.choices[i];
-    var tname=ch?ch.label||'':'';
-    var tart=ch?ch.artist||'':'';
+    // Firebase配列→オブジェクト変換対応
+    var _choiceArr=[];
+    if(q.choices){
+      if(Array.isArray(q.choices)){
+        _choiceArr=q.choices;
+      } else {
+        // {"0":{...},"1":{...},...} 形式
+        var _keys=Object.keys(q.choices).map(Number).sort(function(a,b){return a-b;});
+        _choiceArr=_keys.map(function(k){return q.choices[k]||q.choices[String(k)];});
+      }
+    }
+    var ch=_choiceArr[i]||{};
+    var tname=ch.label||ch.name||'';
+    var tart=ch.artist||'';
     b.innerHTML='<div class="pc-lbl" style="color:'+cc.lb+'">'+['A','B','C','D'][i]+'</div>'
       +'<div class="pc-info">'
       +'<div class="pc-name" style="color:var(--text)">'+esc(tname)+'</div>'
@@ -1190,8 +1201,10 @@ function playerReveal(q){
   // 曲名を表示（ラグなし: 既に受信済みのcurQから読む）
   if(curQ&&curQ.choices&&curQ.choices[ci]){
     var trk=curQ.choices[ci];
-    $('pg-track-name').textContent=trk.label||'';
-    $('pg-track-art').textContent=trk.artist||'';
+    var _ra2=Array.isArray(curQ.choices)?curQ.choices:Object.keys(curQ.choices).map(Number).sort(function(a,b){return a-b;}).map(function(k){return curQ.choices[k];});
+    var trk2=_ra2[ci]||{};
+    $('pg-track-name').textContent=trk2.label||trk2.name||'';
+    $('pg-track-art').textContent=trk2.artist||'';
   }
   $('pg-skip-box').classList.remove('hidden'); $('btn-pg-skip').disabled=false; $('btn-pg-skip').textContent='次の問題へ ▶';
   var postMs=Math.max(0,MAX_SEC*1000-(curQ.durationMs||10000)); var audSec=Math.ceil(postMs/1000),totSec=audSec;
@@ -1333,11 +1346,30 @@ function setupFixedButtons(){
   $('btn-vote-replay').addEventListener('click',playerVoteReplay);
   $('btn-vote-exit').addEventListener('click',playerVoteExit);
   var fsBtn=$('btn-fullscreen');
-  if(fsBtn) fsBtn.addEventListener('click',function(){
-    var el=document.documentElement;
-    var fn=el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen;
-    if(fn) fn.call(el);
-  });
+  if(fsBtn){
+    document.addEventListener('fullscreenchange',function(){
+      if(document.fullscreenElement){
+        fsBtn.textContent='\u25a0 \u30d5\u30eb\u30b9\u30af\u30ea\u30fc\u30f3\u89e3\u9664';
+      } else {
+        fsBtn.textContent='\u25a1 \u30d5\u30eb\u30b9\u30af\u30ea\u30fc\u30f3\u306b\u3059\u308b';
+      }
+    });
+    document.addEventListener('webkitfullscreenchange',function(){
+      var inFs=!!(document.fullscreenElement||document.webkitFullscreenElement);
+      fsBtn.textContent=inFs?'\u25a0 \u30d5\u30eb\u30b9\u30af\u30ea\u30fc\u30f3\u89e3\u9664':'\u25a1 \u30d5\u30eb\u30b9\u30af\u30ea\u30fc\u30f3\u306b\u3059\u308b';
+    });
+    fsBtn.addEventListener('click',function(){
+      var inFs=!!(document.fullscreenElement||document.webkitFullscreenElement);
+      if(inFs){
+        var ex=document.exitFullscreen||document.webkitExitFullscreen||document.mozCancelFullScreen;
+        if(ex) ex.call(document);
+      } else {
+        var el=document.documentElement;
+        var fn=el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen;
+        if(fn) fn.call(el);
+      }
+    });
+  }
 }
 
 function setupYtSetupEvents(){
